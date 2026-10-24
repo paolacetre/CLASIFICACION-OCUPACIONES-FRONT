@@ -1,0 +1,145 @@
+<section class="settings-wrapper">
+  <header class="settings-header">
+    <h1 id="settings-title">{{ 'settings.title' | translate }}</h1>
+    <p class="settings-tagline">{{ 'settings.tagline' | translate }}</p>
+    <p class="settings-disclaimer">{{ 'settings.subtitle' | translate }}</p>
+  </header>
+
+  <div class="settings-layout">
+    <!-- Área izquierda: pestañas + contenido de la pestaña activa, juntos
+         en la misma columna (a diferencia de antes, donde las pestañas
+         eran una franja aparte sobre las 2 columnas). -->
+    <div class="settings-left">
+      <div class="settings-tabs" role="tablist" [attr.aria-label]="'settings.tabsAriaLabel' | translate" (keydown)="onTabsKeydown($event)">
+        <button
+          *ngFor="let tab of tabs"
+          type="button"
+          role="tab"
+          [id]="'settings-tab-' + tab.id"
+          aria-controls="settings-tabpanel"
+          [class.active]="activeTab() === tab.id"
+          [attr.aria-selected]="activeTab() === tab.id"
+          [attr.tabindex]="activeTab() === tab.id ? 0 : -1"
+          (click)="selectTab(tab.id)">
+          <!-- Resplandor de la pestaña seleccionada (como la referencia: azul marino al 20 %, desenfocado). -->
+          <span *ngIf="activeTab() === tab.id" class="tab-glow" aria-hidden="true"></span>
+          <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="tab.icon"/></svg>
+          <span class="tab-label">{{ tab.labelKey | translate }}</span>
+        </button>
+      </div>
+
+      <div class="settings-body" role="tabpanel" id="settings-tabpanel" [attr.aria-labelledby]="'settings-tab-' + activeTab()">
+        <app-appearance-tab *ngIf="activeTab() === 'apariencia'"></app-appearance-tab>
+        <app-logos-tab *ngIf="activeTab() === 'logos'"></app-logos-tab>
+        <app-language-tab *ngIf="activeTab() === 'idioma'"></app-language-tab>
+        <app-about-tab *ngIf="activeTab() === 'acerca'"></app-about-tab>
+      </div>
+    </div>
+
+    <!-- Preview en vivo: fijo, el mismo en las 6 pestañas -->
+    <aside class="preview-column" [attr.aria-label]="'appearance.previewColumnAria' | translate">
+      <section class="preview-sticky-card" [style]="previewVariables()" [class.preview-dark]="draft().theme === 'oscuro'"
+               [class.preview-contrast]="draft().highContrast" [attr.data-density]="draft().density" [attr.aria-label]="'appearance.previewCardAria' | translate">
+        <p class="preview-eyebrow">{{ 'appearance.previewEyebrow' | translate }}</p>
+        <h3>{{ 'appearance.previewTitle' | translate }}</h3>
+        <p class="preview-note">{{ 'appearance.previewNote' | translate }}</p>
+
+        <div class="mini-stats">
+          <div class="mini-card"><span class="lab">{{ 'appearance.statsLabel' | translate }}</span><span class="val">12.4K</span></div>
+          <div class="mini-card"><span class="lab">{{ 'appearance.growthLabel' | translate }}</span><span class="val up">+8.7%</span></div>
+        </div>
+
+        <!-- Gráfico y tabla lado a lado: ahorra una fila de alto para que con
+             letra grande / densidad amplia todo quepa sin recortar el gráfico. -->
+        <div class="mini-widgets">
+          <div class="mini-chart">
+            <span class="lab">{{ 'appearance.chartLabel' | translate }}</span>
+            <div class="bars" aria-hidden="true">
+              <span *ngFor="let height of previewBars; let i = index" [style.height.%]="height" [style.background-color]="i % 3 === 2 ? draft().accentColor : 'var(--primary-color)'" [style.opacity]="i === 1 ? 0.45 : 0.85"></span>
+            </div>
+          </div>
+
+          <div class="mini-table">
+            <span class="lab">{{ 'appearance.tableLabel' | translate }}</span>
+            <ng-container *ngFor="let width of previewTableRows; let i = index">
+              <div class="mtable-bar" [style.width.%]="width" [style.background-color]="i === 0 ? 'var(--primary-color)' : i === 1 ? draft().accentColor : '#8F8F8F'"></div>
+              <div class="mtable-track" [style.width.%]="width"></div>
+            </ng-container>
+          </div>
+        </div>
+      </section>
+
+      <div class="summary-card">
+        <div id="summary-title" class="summary-heading" role="heading" aria-level="3">{{ 'appearance.summaryTitle' | translate }}</div>
+        <!-- Pares nombre-valor: lista de definiciones. -->
+        <dl class="summary-list" aria-labelledby="summary-title">
+          <div class="summary-row"><dt>{{ 'appearance.summaryTheme' | translate }}</dt><dd>{{ themeLabelKey(draft().theme) | translate }}</dd></div>
+          <div class="summary-row"><dt>{{ 'appearance.summaryFont' | translate }}</dt><dd>{{ sizeLabelKey(draft().fontSize) | translate }}</dd></div>
+          <div class="summary-row"><dt>{{ 'appearance.summaryDensity' | translate }}</dt><dd>{{ densityLabelKey(draft().density) | translate }}</dd></div>
+          <div class="summary-row"><dt>{{ 'appearance.summaryLanguage' | translate }}</dt><dd>{{ languageCode() }}</dd></div>
+        </dl>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="settings-footer">
+    <div class="status-text">
+      <span class="status-dot" [class.dirty]="isDirty()" aria-hidden="true"></span>
+      <span>{{ (isDirty() ? 'settings.dirty' : 'settings.clean') | translate }}</span>
+    </div>
+    <div class="footer-actions">
+      <button type="button" class="secondary-btn" (click)="requestReset()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 1 3 6.7M3 12v6h6"/></svg>
+        {{ 'settings.reset' | translate }}
+      </button>
+      <button type="button" class="save-primary-btn" [disabled]="!isDirty()" (click)="requestSave()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        {{ 'settings.save' | translate }}
+      </button>
+    </div>
+  </footer>
+
+  <!-- Confirmación de guardado: mismo patrón visual que "Eliminar"/"Cambio de estado" en Usuarios -->
+  <div class="dialog-backdrop" *ngIf="pendingSave()" (click)="cancelSave()">
+    <section class="confirm-dialog alert-dialog" role="dialog" aria-modal="true" aria-labelledby="save-dialog-title" aria-describedby="save-dialog-description" tabindex="-1" appDialog (dialogEscape)="isSavePending || cancelSave()" (click)="$event.stopPropagation()">
+      <header class="alert-dialog-header">
+        <div class="dialog-icon activate-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="alert-dialog-titles">
+          <h2 id="save-dialog-title">{{ 'settings.saveDialogTitle' | translate }}</h2>
+          <p id="save-dialog-description">
+            {{ 'settings.saveDialogDesc' | translate }}
+          </p>
+        </div>
+      </header>
+      <footer class="dialog-actions">
+        <button type="button" class="secondary-button" (click)="cancelSave()" [disabled]="isSavePending">{{ 'settings.cancel' | translate }}</button>
+        <button class="status-confirm-btn activate" type="button" (click)="confirmSave()" [disabled]="isSavePending">
+          {{ (isSavePending ? 'settings.saving' : 'settings.save') | translate }}
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <!-- Confirmación de restablecer: mismo patrón, icono "reset" como en Usuarios -->
+  <div class="dialog-backdrop" *ngIf="pendingReset()" (click)="cancelReset()">
+    <section class="confirm-dialog alert-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title" aria-describedby="reset-dialog-description" tabindex="-1" appDialog (dialogEscape)="cancelReset()" (click)="$event.stopPropagation()">
+      <header class="alert-dialog-header">
+        <div class="dialog-icon reset-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 1 3 6.7M3 12v6h6"/></svg>
+        </div>
+        <div class="alert-dialog-titles">
+          <h2 id="reset-dialog-title">{{ 'settings.resetDialogTitle' | translate }}</h2>
+          <p id="reset-dialog-description">
+            {{ 'settings.resetDialogDesc' | translate }}
+          </p>
+        </div>
+      </header>
+      <footer class="dialog-actions">
+        <button type="button" class="secondary-button" (click)="cancelReset()">{{ 'settings.cancel' | translate }}</button>
+        <button class="reset-confirm-btn" type="button" (click)="confirmReset()">{{ 'settings.resetConfirm' | translate }}</button>
+      </footer>
+    </section>
+  </div>
+</section>

@@ -1,0 +1,5 @@
+<!-- Región viva fija (siempre en el DOM): los lectores de pantalla anuncian
+     con fiabilidad lo que se agrega dentro. Los errores además usan role="alert". -->
+<div class="toast-stack" role="status" aria-live="polite">
+  <app-toast-item *ngFor="let toast of toasts(); trackBy: trackByToastId" [toast]="toast" (closed)="dismiss(toast.id)"></app-toast-item>
+</div>

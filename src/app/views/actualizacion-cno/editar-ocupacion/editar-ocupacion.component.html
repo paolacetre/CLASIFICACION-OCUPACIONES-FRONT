@@ -1,0 +1,284 @@
+<section class="ui-page ui-stack">
+  <div class="ui-card eo-card">
+    <!-- Encabezado -->
+    <header class="ui-card-header eo-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4ZM14 6l4 4"/></svg>
+      </div>
+      <div class="ui-card-header-main">
+        <h1 class="ui-page-title">{{ 'editarOcupacion.title' | ctranslate }} <small class="eo-title-note">{{ 'editarOcupacion.titleNote' | ctranslate }}</small></h1>
+        <p class="ui-page-subtitle">{{ 'editarOcupacion.subtitle' | ctranslate }}</p>
+      </div>
+      <div class="ui-page-actions">
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="saving" (click)="requestClose()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          {{ 'editarOcupacion.back' | ctranslate }}
+        </button>
+      </div>
+    </header>
+
+    <div *ngIf="loading" class="ui-empty"><p>{{ 'editarOcupacion.loading' | ctranslate }}</p></div>
+    <div *ngIf="loadError" class="ui-empty">
+      <p>{{ loadError }}</p>
+      <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="load()">{{ 'actualizacionCno.retry' | ctranslate }}</button>
+    </div>
+
+    <ng-container *ngIf="!loading && occupation as current">
+      <!-- Pestañas -->
+      <div class="ui-tabs eo-tabs" role="tablist" [attr.aria-label]="'editarOcupacion.tabsAria' | ctranslate">
+        <button *ngFor="let option of tabs" type="button" class="ui-tab" role="tab" [id]="'eo-tab-' + option" [class.active]="tab === option" [class.error]="tabHasError(option)"
+                [attr.aria-selected]="tab === option" aria-controls="eo-panel" (click)="setTab(option)">
+          <svg *ngIf="!tabHasError(option)" class="ui-icon eo-tab-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+          <svg *ngIf="tabHasError(option)" class="ui-icon eo-tab-check" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          {{ 'editarOcupacion.tab.' + option | ctranslate }}
+          <span *ngIf="count(option) !== null" class="ui-badge ui-badge-info">{{ count(option) }}</span>
+        </button>
+      </div>
+
+      <div class="eo-columns">
+        <!-- Izquierda: la pestaña abierta -->
+        <section id="eo-panel" class="eo-panel" role="tabpanel" [attr.aria-labelledby]="'eo-tab-' + tab">
+          <!-- ============ Información básica ============ -->
+          <ng-container *ngIf="tab === 'basic'">
+            <h2 class="eo-panel-title">{{ 'editarOcupacion.basicTitle' | ctranslate }}</h2>
+            <div class="eo-grid">
+              <div class="ui-field">
+                <label class="ui-label" for="eo-code">{{ 'ocupacionWizard.code' | ctranslate }}</label>
+                <input id="eo-code" class="ui-input" name="code" disabled [value]="current.code" aria-describedby="eo-code-hint">
+                <span id="eo-code-hint" class="ui-hint">{{ 'editarOcupacion.codeHint' | ctranslate }}</span>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="eo-name">{{ 'ocupacionWizard.name' | ctranslate }} *</label>
+                <input id="eo-name" class="ui-input" name="name" autocomplete="off" [maxlength]="limits.nameMax" [(ngModel)]="current.name"
+                       [attr.aria-invalid]="submitted && !!fieldError('name')" aria-describedby="eo-name-hint">
+                <span id="eo-name-hint" class="ui-hint">{{ 'ocupacionWizard.nameHint' | ctranslate }}</span>
+                <span *ngIf="submitted && fieldError('name') as error" class="eo-error" role="alert">{{ error | ctranslate: { min: limits.nameMin, max: limits.nameMax } }}</span>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="eo-area">{{ 'ocupacionWizard.area' | ctranslate }}</label>
+                <select id="eo-area" class="ui-select" name="area" [(ngModel)]="current.areaCode" aria-describedby="eo-area-hint">
+                  <option value="">{{ 'ocupacionWizard.areaPlaceholder' | ctranslate }}</option>
+                  <option *ngFor="let item of catalogs?.areas" [value]="item.code">{{ item.name }}</option>
+                </select>
+                <span id="eo-area-hint" class="ui-hint">{{ 'editarOcupacion.areaHint' | ctranslate }}</span>
+                <span *ngIf="submitted && fieldError('area') as error" class="eo-error" role="alert">{{ error | ctranslate }}</span>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="eo-level">{{ 'ocupacionWizard.level' | ctranslate }}</label>
+                <select id="eo-level" class="ui-select" name="level" [(ngModel)]="current.levelCode" aria-describedby="eo-level-hint">
+                  <option value="">{{ 'ocupacionWizard.levelPlaceholder' | ctranslate }}</option>
+                  <option *ngFor="let item of catalogs?.levels" [value]="item.code">{{ item.name }}</option>
+                </select>
+                <span id="eo-level-hint" class="ui-hint">{{ 'editarOcupacion.levelHint' | ctranslate }}</span>
+                <span *ngIf="submitted && fieldError('level') as error" class="eo-error" role="alert">{{ error | ctranslate }}</span>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="eo-date">{{ 'ocupacionWizard.registeredOn' | ctranslate }}</label>
+                <input id="eo-date" class="ui-input" name="registeredAt" disabled [value]="current.registeredAt || ('editarOcupacion.noDate' | ctranslate)" aria-describedby="eo-date-hint">
+                <span id="eo-date-hint" class="ui-hint">{{ 'editarOcupacion.dateHint' | ctranslate }}</span>
+              </div>
+              <div class="ui-field">
+                <span class="ui-label" id="eo-status-label">{{ 'ocupacionWizard.status' | ctranslate }}</span>
+                <div class="eo-status">
+                  <button type="button" class="ui-switch" role="switch" [class.on]="current.active" [attr.aria-checked]="current.active" aria-labelledby="eo-status-label"
+                          (click)="current.active = !current.active"></button>
+                  <strong>{{ (current.active ? 'ocupacionWizard.active' : 'ocupacionWizard.inactive') | ctranslate }}</strong>
+                </div>
+                <span class="ui-hint">{{ (current.active ? 'editarOcupacion.activeHint' : 'editarOcupacion.inactiveHint') | ctranslate }}</span>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="eo-inactive">{{ 'editarOcupacion.inactiveAt' | ctranslate }}</label>
+                <input id="eo-inactive" class="ui-input" name="inactiveAt" disabled [value]="current.inactiveAt || ('editarOcupacion.noDate' | ctranslate)" aria-describedby="eo-inactive-hint">
+                <span id="eo-inactive-hint" class="ui-hint">{{ 'editarOcupacion.inactiveAtHint' | ctranslate }}</span>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="eo-previous">{{ 'editarOcupacion.previousCode' | ctranslate }}</label>
+                <input id="eo-previous" class="ui-input" name="previousCode" disabled [value]="current.previousCode || ('editarOcupacion.noPreviousCode' | ctranslate)" aria-describedby="eo-previous-hint">
+                <span id="eo-previous-hint" class="ui-hint">{{ 'editarOcupacion.previousCodeHint' | ctranslate }}</span>
+              </div>
+              <div class="ui-field eo-wide">
+                <label class="ui-label" for="eo-description">{{ 'ocupacionWizard.description' | ctranslate }}</label>
+                <textarea id="eo-description" class="ui-textarea" name="description" rows="4" [maxlength]="limits.descriptionMax" [(ngModel)]="current.description"
+                          aria-describedby="eo-description-hint"></textarea>
+                <div class="eo-hint-row">
+                  <span id="eo-description-hint" class="ui-hint">{{ 'editarOcupacion.descriptionHint' | ctranslate }}</span>
+                  <span class="ui-hint">{{ current.description.length }} / {{ limits.descriptionMax }}</span>
+                </div>
+              </div>
+              <div class="ui-field eo-wide">
+                <label class="ui-label" for="eo-traceability">{{ 'ocupacionWizard.traceability' | ctranslate }}</label>
+                <textarea id="eo-traceability" class="ui-textarea" name="traceability" rows="2" [maxlength]="limits.traceabilityMax" [(ngModel)]="current.traceability"
+                          [placeholder]="'editarOcupacion.traceabilityPlaceholder' | ctranslate"></textarea>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Buscador de las listas -->
+          <div *ngIf="tab !== 'basic'" class="eo-list-head">
+            <h2 class="eo-panel-title">
+              {{ 'editarOcupacion.listTitle.' + tab | ctranslate }} <span class="ui-badge ui-badge-info">{{ count(tab) }}</span>
+            </h2>
+            <button *ngIf="tab === 'denominations' || tab === 'functions'" type="button" class="ui-btn ui-btn-primary ui-btn-sm" (click)="addRow(tab)">
+              + {{ 'editarOcupacion.addRow.' + tab | ctranslate }}
+            </button>
+            <button *ngIf="isLinkedTab(tab)" type="button" class="ui-btn ui-btn-primary ui-btn-sm" [disabled]="!catalogs" (click)="selector = tab">
+              + {{ 'editarOcupacion.addLinked.' + tab | ctranslate }}
+            </button>
+          </div>
+          <div *ngIf="tab !== 'basic'" class="ui-input-icon eo-search">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input class="ui-input" type="text" name="eo-search" autocomplete="off" [placeholder]="'editarOcupacion.search.' + tab | ctranslate"
+                   [attr.aria-label]="'editarOcupacion.search.' + tab | ctranslate" [(ngModel)]="listSearch">
+          </div>
+          <p *ngIf="(tab === 'denominations' || tab === 'functions') && submitted && listError(tab) as error" class="eo-error" role="alert">{{ error | ctranslate: { max: limits.denominationMax } }}</p>
+
+          <!-- ============ Denominaciones ============ -->
+          <ng-container *ngIf="tab === 'denominations'">
+            <p *ngIf="!rows('denominations').length" class="eo-empty">{{ (listSearch ? 'editarOcupacion.noResults' : 'editarOcupacion.empty.denominations') | ctranslate: { query: listSearch } }}</p>
+            <div *ngIf="rows('denominations').length" class="ui-table-wrap ui-table-responsive">
+              <table class="ui-table eo-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'actualizacionCno.colCode' | ctranslate }}</th>
+                    <th scope="col">{{ 'actualizacionCno.colDescription' | ctranslate }}</th>
+                    <th scope="col">{{ 'actualizacionCno.colStatus' | ctranslate }}</th>
+                    <th scope="col">{{ 'actualizacionCno.colDate' | ctranslate }}</th>
+                    <th scope="col"><span class="eo-sr">{{ 'common.actions' | ctranslate }}</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of rows('denominations'); trackBy: trackByKey" [class.inactive]="row.active === false">
+                    <td class="eo-code" [attr.data-label]="'actualizacionCno.colCode' | ctranslate">{{ row.code || '—' }}</td>
+                    <td [attr.data-label]="'actualizacionCno.colDescription' | ctranslate">
+                      <input class="ui-input eo-row-input" [name]="'den-' + row.key" [maxlength]="limits.denominationMax" [(ngModel)]="row.text"
+                             [attr.aria-label]="'editarOcupacion.denominationAria' | ctranslate: { code: row.code || ('editarOcupacion.stateNew' | ctranslate) }">
+                    </td>
+                    <td [attr.data-label]="'actualizacionCno.colStatus' | ctranslate">
+                      <span *ngIf="rowState(row)" class="ui-badge" [ngClass]="!row.code ? 'ui-badge-warn' : row.active ? 'ui-badge-ok' : 'ui-badge-neutral'">{{ rowState(row) | ctranslate }}</span>
+                    </td>
+                    <td [attr.data-label]="'actualizacionCno.colDate' | ctranslate">{{ row.registeredAt || ('editarOcupacion.noDate' | ctranslate) }}</td>
+                    <td>
+                      <button type="button" class="ui-icon-btn eo-remove" [attr.aria-label]="'editarOcupacion.removeAria' | ctranslate: { name: row.text || row.code }" (click)="removeRow('denominations', row)">
+                        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ng-container>
+
+          <!-- ============ Funciones ============ -->
+          <ng-container *ngIf="tab === 'functions'">
+            <p *ngIf="!rows('functions').length" class="eo-empty">{{ (listSearch ? 'editarOcupacion.noResults' : 'editarOcupacion.empty.functions') | ctranslate: { query: listSearch } }}</p>
+            <ul class="eo-accordion">
+              <li *ngFor="let row of rows('functions'); trackBy: trackByKey" [class.open]="openFunctions.has(row.key)" [class.inactive]="row.active === false">
+                <div class="eo-accordion-head">
+                  <button type="button" class="eo-accordion-toggle" [attr.aria-expanded]="openFunctions.has(row.key)" (click)="toggleFunction(row)">
+                    <span class="eo-code">{{ row.code || '—' }}</span>
+                    <span class="eo-accordion-text">{{ row.text || ('editarOcupacion.noText' | ctranslate) }}</span>
+                    <svg class="ui-icon eo-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                  </button>
+                  <span *ngIf="rowState(row)" class="ui-badge" [ngClass]="!row.code ? 'ui-badge-warn' : row.active ? 'ui-badge-ok' : 'ui-badge-neutral'">{{ rowState(row) | ctranslate }}</span>
+                  <button type="button" class="ui-icon-btn eo-remove" [attr.aria-label]="'editarOcupacion.removeAria' | ctranslate: { name: row.text || row.code }" (click)="removeRow('functions', row)">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                  </button>
+                </div>
+                <textarea *ngIf="openFunctions.has(row.key)" class="ui-textarea eo-function-text" rows="3" [name]="'fun-' + row.key" [(ngModel)]="row.text"
+                          [attr.aria-label]="'editarOcupacion.functionAria' | ctranslate: { code: row.code || ('editarOcupacion.stateNew' | ctranslate) }"></textarea>
+              </li>
+            </ul>
+          </ng-container>
+
+          <!-- ============ Habilidades/destrezas, conocimientos y relacionadas ============ -->
+          <ng-container *ngIf="isLinkedTab(tab)">
+            <p *ngIf="!linkedRows($any(tab)).length" class="eo-empty">{{ (listSearch ? 'editarOcupacion.noResults' : 'editarOcupacion.empty.' + tab) | ctranslate: { query: listSearch } }}</p>
+            <ul class="eo-linked">
+              <li *ngFor="let item of linkedRows($any(tab))">
+                <span class="eo-code">{{ item.code || '—' }}</span>
+                <span class="eo-linked-name">{{ item.label }}</span>
+                <button type="button" class="ui-icon-btn eo-remove" [attr.aria-label]="'editarOcupacion.removeAria' | ctranslate: { name: item.label }" (click)="removeLinked($any(tab), item)">
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+              </li>
+            </ul>
+          </ng-container>
+        </section>
+
+        <!-- Derecha: resumen de la ocupación -->
+        <aside class="eo-summary" [attr.aria-label]="'editarOcupacion.summaryTitle' | ctranslate">
+          <h2 class="eo-panel-title">{{ 'editarOcupacion.summaryTitle' | ctranslate }}</h2>
+          <dl class="eo-summary-list">
+            <div><dt>{{ 'actualizacionCno.colCode' | ctranslate }}</dt><dd>{{ current.code }}</dd></div>
+            <div><dt>{{ 'ocupacionWizard.summaryName' | ctranslate }}</dt><dd>{{ current.name || '—' }}</dd></div>
+            <div><dt>{{ 'ocupacionWizard.area' | ctranslate }}</dt><dd>{{ areaName() || '—' }}</dd></div>
+            <div *ngIf="current.primaryGroup"><dt>{{ 'editarOcupacion.primaryGroup' | ctranslate }}</dt><dd>{{ current.primaryGroup }}</dd></div>
+            <div><dt>{{ 'ocupacionWizard.level' | ctranslate }}</dt><dd>{{ levelName() || '—' }}</dd></div>
+            <div>
+              <dt>{{ 'ocupacionWizard.status' | ctranslate }}</dt>
+              <dd><span class="ui-badge" [ngClass]="current.active ? 'ui-badge-ok' : 'ui-badge-neutral'">{{ (current.active ? 'ocupacionWizard.active' : 'ocupacionWizard.inactive') | ctranslate }}</span></dd>
+            </div>
+            <div><dt>{{ 'ocupacionWizard.registeredOn' | ctranslate }}</dt><dd>{{ current.registeredAt || ('editarOcupacion.noDate' | ctranslate) }}</dd></div>
+            <div><dt>{{ 'editarOcupacion.inactiveAt' | ctranslate }}</dt><dd>{{ current.inactiveAt || ('editarOcupacion.noDate' | ctranslate) }}</dd></div>
+            <div><dt>{{ 'editarOcupacion.previousCode' | ctranslate }}</dt><dd>{{ current.previousCode || '—' }}</dd></div>
+            <div><dt>{{ 'ocupacionWizard.traceability' | ctranslate }}</dt><dd>{{ current.traceability || ('editarOcupacion.noRecords' | ctranslate) }}</dd></div>
+          </dl>
+          <div class="eo-summary-description">
+            <h3>{{ 'ocupacionWizard.description' | ctranslate }}</h3>
+            <p [class.clamped]="!descriptionExpanded">{{ current.description || '—' }}</p>
+            <button *ngIf="current.description.length > 240" type="button" class="ui-btn ui-btn-ghost ui-btn-sm" [attr.aria-expanded]="descriptionExpanded"
+                    (click)="descriptionExpanded = !descriptionExpanded">{{ (descriptionExpanded ? 'editarOcupacion.seeLess' : 'editarOcupacion.seeMore') | ctranslate }}</button>
+          </div>
+          <ul class="eo-counts">
+            <li *ngFor="let option of tabs.slice(1)">
+              <button type="button" (click)="setTab(option)">
+                {{ 'editarOcupacion.tab.' + option | ctranslate }} <span class="ui-badge ui-badge-info">{{ count(option) }}</span>
+              </button>
+            </li>
+          </ul>
+        </aside>
+      </div>
+
+      <div *ngIf="saveError" class="ui-alert ui-alert-error" role="alert">
+        <div><strong>{{ 'editarOcupacion.saveErrorTitle' | ctranslate }}</strong><p>{{ saveError }}</p></div>
+      </div>
+
+      <!-- Pie -->
+      <footer class="eo-footer">
+        <button type="button" class="ui-btn ui-btn-secondary" [disabled]="saving" (click)="requestClose()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          {{ 'common.cancel' | ctranslate }}
+        </button>
+        <span class="eo-grow"></span>
+        <button *ngIf="tabIndex > 0" type="button" class="ui-btn ui-btn-secondary" (click)="previous()">← {{ 'ocupacionWizard.previous' | ctranslate }}</button>
+        <button *ngIf="tabIndex < tabs.length - 1" type="button" class="ui-btn ui-btn-outline" (click)="next()">{{ 'ocupacionWizard.next' | ctranslate }} →</button>
+        <button type="button" class="ui-btn ui-btn-primary" [disabled]="saving" (click)="save()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>
+          {{ (saving ? 'ocupacionWizard.saving' : 'actualizacionCno.saveChanges') | ctranslate }}
+        </button>
+      </footer>
+    </ng-container>
+  </div>
+</section>
+
+<app-catalog-selector
+  *ngIf="selector as list"
+  [title]="'editarOcupacion.addLinked.' + list | ctranslate"
+  [source]="'editarOcupacion.source.' + list | ctranslate"
+  [searchPlaceholder]="'editarOcupacion.search.' + list | ctranslate"
+  [options]="selectorOptions(list)"
+  [linked]="linkedCodes(list)"
+  (added)="addLinked(list, $event)"
+  (cancel)="selector = null">
+</app-catalog-selector>
+
+<app-confirm-dialog
+  *ngIf="discardOpen"
+  variant="warn"
+  [title]="'editarOcupacion.discardTitle' | ctranslate"
+  [message]="'editarOcupacion.discardText' | ctranslate"
+  [confirmLabel]="'ocupacionWizard.discardConfirm' | ctranslate"
+  [cancelLabel]="'ocupacionWizard.discardCancel' | ctranslate"
+  (confirm)="confirmDiscard()"
+  (cancel)="discardOpen = false">
+</app-confirm-dialog>

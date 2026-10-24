@@ -1,0 +1,78 @@
+# Override de producción — límites, logs y superficie mínima.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# Atajo: bash scripts/deploy-prod.sh
+
+services:
+  db:
+    logging: &json-logs
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '5'
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  redis:
+    # Sin puerto en el host: solo el backend lo usa, por la red interna.
+    ports: !override []
+    logging: *json-logs
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 320M
+        reservations:
+          cpus: '0.10'
+          memory: 64M
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+      target: production
+    environment:
+      NODE_ENV: production
+      DB_SYNCHRONIZE: 'false'
+    # API solo en red interna. Nginx (frontend) proxea /api → backend:3000
+    ports: !override []
+    logging: *json-logs
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - '${FRONTEND_PORT:-80}:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    logging: *json-logs
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.10'
+          memory: 64M

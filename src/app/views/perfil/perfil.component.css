@@ -1,0 +1,659 @@
+/* Perfil: solo lo específico de la vista; tarjetas, campos, botones y avisos son los de ui.css.
+   Disposición: tarjeta de identidad a la izquierda (foto con "Subir foto", nombre, rol, datos de
+   la cuenta e indicadores) y, a la derecha, las pestañas Perfil | Seguridad con sus formularios. */
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.profile-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 1240px;
+  margin-inline: auto;
+}
+
+.profile-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* ---------- Tarjeta de identidad ---------- */
+.profile-identity {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px 20px;
+  text-align: center;
+}
+
+.avatar-frame {
+  width: 112px;
+  height: 112px;
+  overflow: hidden;
+  border: 4px solid var(--neutral-100);
+  border-radius: 50%;
+  background: var(--neutral-50);
+}
+
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--primary-color);
+  font-size: calc(36px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1px;
+}
+
+.photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Etiqueta con el input de archivo oculto: el foco del input se refleja en ella. */
+.btn-upload-photo {
+  cursor: pointer;
+}
+
+.btn-upload-photo:focus-within {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.btn-upload-photo.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-remove-photo {
+  color: var(--state-error-fg);
+}
+
+.photo-hint {
+  margin: 6px 0 0;
+  color: var(--neutral-400);
+  font-size: calc(12px * var(--type-scale));
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.hero-name {
+  margin: 14px 0 0;
+  color: var(--ui-text);
+  font-size: var(--fs-subtitle) !important;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.hero-mail {
+  margin: 4px 0 0;
+  color: var(--neutral-700);
+  overflow-wrap: anywhere;
+}
+
+.hero-topline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-size: calc(11px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.badge-role {
+  background: var(--primary-on-dark-soft);
+  color: var(--primary-color);
+}
+
+.status-online {
+  background: var(--neutral-50);
+  color: var(--ui-text);
+}
+
+.status-online .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--state-ok-fg);
+}
+
+/* Datos de la cuenta, alineados a la izquierda bajo un divisor. */
+.identity-data {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--neutral-100);
+  text-align: left;
+}
+
+.identity-item {
+  margin: 0;
+}
+
+.identity-label,
+.hero-meta strong {
+  display: block;
+  margin: 0 0 2px;
+  color: var(--neutral-400);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.identity-value,
+.hero-meta {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  overflow-wrap: anywhere;
+}
+
+.identity-value.identity-empty {
+  color: var(--neutral-400);
+  font-weight: var(--fw-regular);
+}
+
+/* Indicadores: el backend todavía no los entrega (se muestran con "—"). */
+.hero-metrics {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--neutral-100);
+  list-style: none;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 4px;
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.metric-label {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(11px * var(--type-scale));
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.metric-value {
+  margin: 0;
+  color: var(--ui-text);
+  font-weight: var(--fw-semibold);
+}
+
+/* ---------- Columna derecha ---------- */
+.profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  align-self: flex-start;
+  padding: 4px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+}
+
+.profile-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--neutral-700);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-tabs button .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.profile-tabs button:hover {
+  color: var(--ui-text);
+}
+
+.profile-tabs button.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.profile-tabs button:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.profile-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-personal,
+.panel-institutional,
+.panel-security {
+  padding: 24px 28px;
+}
+
+/* Encabezado de tarjeta: ícono en un cuadro a la izquierda del título. */
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panel-head .ui-card-title {
+  margin: 0;
+}
+
+.panel-head .ui-card-desc {
+  margin: 4px 0 0;
+}
+
+.panel-icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+  color: var(--primary-color);
+}
+
+.panel-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Etiquetas en mayúscula pequeña y campos de fondo claro, como el diseño de referencia. */
+.profile-fields {
+  row-gap: 16px;
+}
+
+/* Información personal en seis columnas: los campos normales ocupan dos (tres por fila),
+   correo y rol ocupan tres (dos por fila) y la descripción todo el ancho. */
+.personal-fields {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  column-gap: 16px;
+}
+
+.personal-fields > .ui-field {
+  grid-column: span 2;
+}
+
+.personal-fields > .field-half {
+  grid-column: span 3;
+}
+
+/* Nombre y apellido (un solo campo) ocupa lo que antes ocupaban nombre y apellido. */
+.personal-fields > .field-name {
+  grid-column: span 4;
+}
+
+.profile-main .ui-label {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.required {
+  color: var(--state-error-fg);
+}
+
+.profile-main .ui-input,
+.profile-main .ui-textarea {
+  border-color: #e6e9ef;
+  background: #f7f8fb;
+}
+
+.profile-main .ui-input:focus,
+.profile-main .ui-textarea:focus {
+  background: #fff;
+}
+
+.personal-fields > .field-full,
+.field-full {
+  grid-column: 1 / -1;
+}
+
+/* Campos de solo lectura (correo y rol): atenuados y con candado a la derecha. */
+.locked-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.locked-field .ui-input {
+  width: 100%;
+  padding-right: 44px;
+  color: var(--neutral-400);
+  cursor: default;
+}
+
+.lock-icon {
+  position: absolute;
+  right: 16px;
+  width: 18px;
+  height: 18px;
+  color: var(--neutral-400);
+  pointer-events: none;
+}
+
+.role-field .ui-input {
+  padding-left: 32px;
+}
+
+.role-dot {
+  position: absolute;
+  left: 16px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  pointer-events: none;
+}
+
+.panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.panel-actions .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Información institucional ---------- */
+.inst-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.inst-card {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e6e9ef;
+  border-radius: var(--border-radius);
+  background: #f7f8fb;
+}
+
+.inst-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.inst-label {
+  margin: 0;
+  color: var(--neutral-400);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.inst-value {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: calc(15px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.inst-value.inst-empty {
+  color: var(--neutral-400);
+  font-weight: var(--fw-regular);
+}
+
+/* ---------- Seguridad ---------- */
+.password-hint {
+  margin-top: 14px;
+}
+
+.password-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--neutral-700);
+  cursor: pointer;
+}
+
+.password-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-color);
+}
+
+.profile-footer {
+  padding: 6px 0 2px;
+  color: var(--neutral-400);
+  font-size: calc(13px * var(--type-scale));
+  text-align: center;
+}
+
+/* ---------- Pantallas angostas (según el ancho que deja el menú) ---------- */
+@container (max-width: 900px) {
+  .profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-identity {
+    position: static;
+  }
+
+  .profile-fields.ui-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .personal-fields > .ui-field {
+    grid-column: span 3;
+  }
+
+  .personal-fields > .field-full {
+    grid-column: 1 / -1;
+  }
+}
+
+@container (max-width: 620px) {
+  .panel-personal,
+  .panel-institutional,
+  .panel-security {
+    padding: 22px 18px;
+  }
+
+  .panel-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .profile-tabs {
+    align-self: stretch;
+  }
+
+  .profile-tabs button {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .personal-fields > .ui-field,
+  .personal-fields > .field-half {
+    grid-column: 1 / -1;
+  }
+
+  .panel-actions .ui-btn {
+    flex: 1;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .avatar-frame {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .avatar-initials,
+:host-context(.shell.dark-mode) .badge-role,
+:host-context(.shell.dark-mode) .panel-icon {
+  color: var(--primary-on-dark);
+}
+
+:host-context(.shell.dark-mode) .hero-badge,
+:host-context(.shell.dark-mode) .inst-icon {
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .status-online,
+:host-context(.shell.dark-mode) .metric-card,
+:host-context(.shell.dark-mode) .panel-icon,
+:host-context(.shell.dark-mode) .inst-card {
+  background: var(--dark-recessed);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .inst-card {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .hero-mail,
+:host-context(.shell.dark-mode) .metric-label,
+:host-context(.shell.dark-mode) .password-toggle,
+:host-context(.shell.dark-mode) .profile-main .ui-label,
+:host-context(.shell.dark-mode) .profile-tabs button {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .profile-tabs {
+  border-color: #3d5470;
+  background: var(--dark-surface);
+}
+
+:host-context(.shell.dark-mode) .profile-tabs button:hover {
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .profile-tabs button.active {
+  background: var(--primary-on-dark);
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .profile-main .ui-input,
+:host-context(.shell.dark-mode) .profile-main .ui-textarea {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .role-dot {
+  background: var(--primary-on-dark);
+}
+
+:host-context(.shell.dark-mode) .identity-data,
+:host-context(.shell.dark-mode) .hero-metrics,
+:host-context(.shell.dark-mode) .panel-actions {
+  border-top-color: #3d5470;
+}
+
+/* ---------- Alto contraste ---------- */
+:host-context([data-high-contrast='true']) .hero-badge,
+:host-context([data-high-contrast='true']) .metric-card,
+:host-context([data-high-contrast='true']) .inst-card,
+:host-context([data-high-contrast='true']) .avatar-frame,
+:host-context([data-high-contrast='true']) .profile-tabs {
+  border: 1px solid var(--hc-border);
+}
+
+:host-context([data-high-contrast='true']) .hero-badge,
+:host-context([data-high-contrast='true']) .inst-icon,
+:host-context([data-high-contrast='true']) .avatar-initials,
+:host-context([data-high-contrast='true']) .inst-value.inst-empty,
+:host-context([data-high-contrast='true']) .identity-label,
+:host-context([data-high-contrast='true']) .lock-icon {
+  color: var(--hc-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-tabs button {
+    transition: none;
+  }
+}

@@ -1,0 +1,41 @@
+<!-- Vista "Inicio": saludo, indicadores del sistema y bitácora de la actividad reciente (datos de InicioService). -->
+<section class="ui-page">
+  <header class="ui-page-header inicio-header">
+    <div>
+      <h1 class="ui-page-title">{{ 'nav.inicio' | translate }}</h1>
+    </div>
+    <p class="inicio-welcome" *ngIf="userName">{{ 'inicio.welcome' | translate }} <strong>{{ userName }}</strong></p>
+  </header>
+
+  <div class="ui-stack">
+    <!-- Indicadores: una tarjeta por cifra. -->
+    <div class="inicio-indicators">
+      <article *ngFor="let indicator of indicators" class="ui-card inicio-indicator">
+        <div class="inicio-indicator-top">
+          <span class="inicio-indicator-label">{{ indicator.labelKey | translate }}</span>
+          <span class="ui-badge" [ngClass]="'ui-badge-' + indicator.badgeTone">{{ indicator.badgeKey | translate }}</span>
+        </div>
+        <p class="inicio-indicator-value">{{ indicator.value === null ? '—' : (indicator.value | number) }}</p>
+      </article>
+    </div>
+
+    <!-- Bitácora: los últimos movimientos registrados. -->
+    <section class="ui-card" aria-labelledby="inicio-bitacora-title">
+      <h2 class="ui-card-title" id="inicio-bitacora-title">{{ 'inicio.bitacoraTitle' | translate }}</h2>
+      <p class="ui-card-desc">{{ 'inicio.bitacoraDesc' | translate }}</p>
+
+      <ul *ngIf="activity.length; else noActivity" class="ui-list inicio-activity">
+        <li *ngFor="let entry of activity" class="ui-list-item">
+          <div>
+            <strong>{{ entry.title }}</strong>
+            <p *ngIf="entry.detail">{{ entry.detail }}</p>
+          </div>
+          <time class="ui-hint" [attr.datetime]="entry.date">{{ entry.date | date: 'dd/MM/yyyy hh:mm a' }}</time>
+        </li>
+      </ul>
+      <ng-template #noActivity>
+        <p class="ui-hint inicio-activity">{{ 'inicio.bitacoraEmpty' | translate }}</p>
+      </ng-template>
+    </section>
+  </div>
+</section>

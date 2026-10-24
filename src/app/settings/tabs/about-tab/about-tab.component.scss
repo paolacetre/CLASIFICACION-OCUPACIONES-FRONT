@@ -1,0 +1,7 @@
+@use '../../settings-shared';
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}

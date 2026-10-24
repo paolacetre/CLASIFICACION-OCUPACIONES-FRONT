@@ -1,0 +1,364 @@
+<section class="ui-page ui-stack">
+  <div class="ui-card rp-card">
+    <!-- Encabezado -->
+    <header class="rp-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 16v-4M12 16V8M16 16v-6"/></svg>
+      </div>
+      <div class="rp-header-text">
+        <h1 class="ui-page-title">{{ 'reportes.title' | translate }}</h1>
+        <p class="ui-page-subtitle">{{ 'reportes.subtitle' | translate }}</p>
+      </div>
+      <div class="rp-header-actions">
+        <span class="rp-count-pill"><span class="rp-dot" aria-hidden="true"></span>{{ filtered.length === 1 ? ('reportes.recordsPillOne' | translate) : ('reportes.recordsPill' | translate: { count: filtered.length }) }}</span>
+        <button type="button" class="ui-btn ui-btn-outline" [class.rp-active]="activeFilters > 0" (click)="openFilters()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+          {{ 'reportes.filter' | translate }}<span *ngIf="activeFilters" class="rp-badge-count">{{ activeFilters }}</span>
+        </button>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="!records.length" (click)="statsOpen = true">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"/></svg>
+          {{ 'reportes.statistics' | translate }}
+        </button>
+        <button type="button" class="ui-btn ui-btn-primary" [disabled]="exporting || !filtered.length" (click)="exportExcel()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          {{ (exporting ? 'reportes.exporting' : 'reportes.exportExcel') | translate }}
+        </button>
+      </div>
+    </header>
+
+    <!-- Indicadores por resultado -->
+    <div class="rp-kpis">
+      <div *ngFor="let evaluation of evaluations" class="rp-kpi" [ngClass]="'rp-kpi-' + evaluation">
+        <span class="rp-kpi-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path [attr.d]="evaluationIcons[evaluation]"/></svg></span>
+        <span class="rp-kpi-text">
+          <strong class="rp-kpi-count">{{ count(evaluation) }}</strong>
+          <span class="rp-kpi-label">{{ 'reportes.kpi.' + evaluation | translate }}</span>
+          <span class="rp-kpi-hint">{{ 'reportes.kpiHint.' + evaluation | translate }}</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="ui-input-icon rp-search">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input class="ui-input" type="search" autocomplete="off" [placeholder]="'reportes.searchPlaceholder' | translate" [attr.aria-label]="'reportes.searchPlaceholder' | translate"
+             [(ngModel)]="search" (ngModelChange)="onSearchChange()">
+    </div>
+
+    <!-- Vistas -->
+    <div class="rp-views">
+      <div class="rp-view-tabs" role="tablist" [attr.aria-label]="'reportes.viewsAria' | translate">
+        <button type="button" role="tab" class="rp-view-tab" [class.active]="view === 'full'" [attr.aria-selected]="view === 'full'" (click)="view = 'full'">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM3 10h18M3 15h18M9 5v14M15 5v14"/></svg>
+          {{ 'reportes.view.full' | translate }}<span class="rp-badge-count">{{ columns.length + 2 }}</span>
+        </button>
+        <button type="button" role="tab" class="rp-view-tab" [class.active]="view === 'cards'" [attr.aria-selected]="view === 'cards'" (click)="view = 'cards'">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM9 5v14"/></svg>
+          {{ 'reportes.view.cards' | translate }}
+        </button>
+      </div>
+      <span class="ui-hint">{{ (view === 'full' ? 'reportes.view.fullHint' : 'reportes.view.cardsHint') | translate }}</span>
+    </div>
+
+    <p *ngIf="loading" class="ui-hint" role="status">{{ 'reportes.loading' | translate }}</p>
+    <div *ngIf="!loading && loadError" class="ui-alert ui-alert-error" role="alert">
+      <p>{{ 'reportes.loadError' | translate }}</p>
+      <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="load()">{{ 'reportes.retry' | translate }}</button>
+    </div>
+
+    <ng-container *ngIf="!loading && !loadError">
+      <div *ngIf="filtered.length === 0" class="ui-empty">
+        <strong>{{ (records.length ? 'reportes.noMatches' : 'reportes.empty') | translate }}</strong>
+        <p>{{ (records.length ? 'reportes.noMatchesHint' : 'reportes.emptyHint') | translate }}</p>
+        <button *ngIf="records.length" type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="resetAll()">{{ 'reportes.clearFilters' | translate }}</button>
+      </div>
+
+      <!-- Reporte completo: todas las columnas, desplazamiento horizontal -->
+      <div *ngIf="filtered.length > 0 && view === 'full'" class="rp-table-wrap" tabindex="0" [attr.aria-label]="'reportes.scrollAria' | translate">
+        <table class="rp-table">
+          <thead>
+            <tr>
+              <ng-container *ngFor="let column of columns">
+                <th scope="col" [class.rp-col-fixed]="column === 'id'" [attr.aria-sort]="ariaSort(column)">
+                  <button type="button" class="rp-sort" [class.active]="sort === column" (click)="sortBy(column)">
+                    {{ 'reportes.column.' + column | translate }}
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                      <path *ngIf="sort !== column" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                      <path *ngIf="sort === column && ascending" d="m8 14 4-4 4 4"/>
+                      <path *ngIf="sort === column && !ascending" d="m8 10 4 4 4-4"/>
+                    </svg>
+                  </button>
+                </th>
+                <th *ngIf="column === 'kind'" scope="col">{{ 'reportes.column.occupations' | translate }}</th>
+              </ng-container>
+              <th scope="col" [attr.aria-sort]="ariaSort('evaluation')">
+                <button type="button" class="rp-sort" [class.active]="sort === 'evaluation'" (click)="sortBy('evaluation')">{{ 'reportes.column.evaluation' | translate }}</button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let record of pageRows; trackBy: trackRecord" class="rp-row" tabindex="0" (click)="detail = record" (keydown.enter)="detail = record">
+              <ng-container *ngFor="let column of columns">
+                <td [class.rp-col-fixed]="column === 'id'">{{ cell(record, column) || '—' }}</td>
+                <td *ngIf="column === 'kind'">
+                  <span class="rp-chips">
+                    <span *ngFor="let occupation of record.occupations" class="rp-chip" [title]="occupation.name"><strong>{{ occupation.code }}</strong> {{ occupation.name }}</span>
+                  </span>
+                </td>
+              </ng-container>
+              <td><span class="rp-result" [ngClass]="'rp-result-' + record.evaluation"><span class="rp-dot" aria-hidden="true"></span>{{ 'reportes.evaluation.' + record.evaluation | translate }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Fichas: resumen con el mapa de calificaciones y la ficha desplegable -->
+      <div *ngIf="filtered.length > 0 && view === 'cards'" class="rp-table-wrap">
+        <table class="rp-table rp-cards">
+          <thead>
+            <tr>
+              <th scope="col" class="rp-col-toggle"><span class="sr-only">{{ 'reportes.cards.toggle' | translate }}</span></th>
+              <th scope="col" [attr.aria-sort]="ariaSort('id')">
+                <button type="button" class="rp-sort" [class.active]="sort === 'id'" (click)="sortBy('id')">
+                  {{ 'reportes.cards.number' | translate }}
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path *ngIf="sort !== 'id'" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                    <path *ngIf="sort === 'id' && ascending" d="m8 14 4-4 4 4"/>
+                    <path *ngIf="sort === 'id' && !ascending" d="m8 10 4 4 4-4"/>
+                  </svg>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('date')">
+                <button type="button" class="rp-sort" [class.active]="sort === 'date'" (click)="sortBy('date')">
+                  {{ 'reportes.column.date' | translate }}
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path *ngIf="sort !== 'date'" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                    <path *ngIf="sort === 'date' && ascending" d="m8 14 4-4 4 4"/>
+                    <path *ngIf="sort === 'date' && !ascending" d="m8 10 4 4 4-4"/>
+                  </svg>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('kind')">
+                <button type="button" class="rp-sort" [class.active]="sort === 'kind'" (click)="sortBy('kind')">
+                  {{ 'reportes.column.occupations' | translate }}
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path *ngIf="sort !== 'kind'" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                    <path *ngIf="sort === 'kind' && ascending" d="m8 14 4-4 4 4"/>
+                    <path *ngIf="sort === 'kind' && !ascending" d="m8 10 4 4 4-4"/>
+                  </svg>
+                </button>
+              </th>
+              <th scope="col" [attr.aria-sort]="ariaSort('fullName')">
+                <button type="button" class="rp-sort" [class.active]="sort === 'fullName'" (click)="sortBy('fullName')">
+                  {{ 'reportes.cards.informant' | translate }}
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path *ngIf="sort !== 'fullName'" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                    <path *ngIf="sort === 'fullName' && ascending" d="m8 14 4-4 4 4"/>
+                    <path *ngIf="sort === 'fullName' && !ascending" d="m8 10 4 4 4-4"/>
+                  </svg>
+                </button>
+              </th>
+              <th scope="col">{{ 'reportes.cards.evaluation' | translate }}</th>
+              <th scope="col" class="rp-col-result" [attr.aria-sort]="ariaSort('evaluation')">
+                <button type="button" class="rp-sort" [class.active]="sort === 'evaluation'" (click)="sortBy('evaluation')">
+                  {{ 'reportes.cards.result' | translate }}
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path *ngIf="sort !== 'evaluation'" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                    <path *ngIf="sort === 'evaluation' && ascending" d="m8 14 4-4 4 4"/>
+                    <path *ngIf="sort === 'evaluation' && !ascending" d="m8 10 4 4 4-4"/>
+                  </svg>
+                </button>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let record of pageRows; trackBy: trackRecord">
+              <tr class="rp-row" [class.open]="isExpanded(record)" (click)="toggleCard(record)">
+                <td class="rp-col-toggle">
+                  <button type="button" class="ui-icon-btn rp-toggle" [attr.aria-expanded]="isExpanded(record)"
+                          [attr.aria-label]="(isExpanded(record) ? 'reportes.cards.hide' : 'reportes.cards.show') | translate" (click)="$event.stopPropagation(); toggleCard(record)">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                  </button>
+                </td>
+                <td>{{ record.id }}</td>
+                <td>{{ dateTime(record.date) || '—' }}</td>
+                <td>
+                  <span class="rp-chips">
+                    <span *ngFor="let occupation of record.occupations" class="rp-chip" [title]="occupation.name"><strong>{{ occupation.code }}</strong> {{ occupation.name }}</span>
+                  </span>
+                  <span class="rp-meta">{{ 'reportes.kind.' + record.kind | translate }} · {{ 'reportes.column.group' | translate }} {{ record.group }}</span>
+                </td>
+                <td>
+                  <span class="rp-informant" [title]="record.fullName">{{ record.fullName || '—' }}</span>
+                  <span class="rp-meta">{{ record.company }}</span>
+                </td>
+                <td>
+                  <span class="rp-map" [attr.aria-label]="'reportes.cards.mapAria' | translate: { count: criteriaOf(record).length }">
+                    <!-- Cada cuadro es un criterio: al pasar el mouse dice cuál es y su calificación; el clic abre su respuesta -->
+                    <button *ngFor="let criterion of criteriaOf(record)" type="button" class="rp-map-cell" [ngClass]="'rp-map-' + criterion.state"
+                            [title]="cellLabel(record, criterion)" [attr.aria-label]="cellLabel(record, criterion)"
+                            (click)="$event.stopPropagation(); openCriterion(record, criterion)"></button>
+                  </span>
+                  <span class="rp-meta">{{ 'reportes.cards.applyCount' | translate: { count: applyCount(record), total: criteriaOf(record).length } }}</span>
+                </td>
+                <td class="rp-col-result"><span class="rp-result" [ngClass]="'rp-result-' + record.evaluation"><span class="rp-dot" aria-hidden="true"></span>{{ 'reportes.evaluation.' + record.evaluation | translate }}</span></td>
+              </tr>
+              <tr *ngIf="isExpanded(record)" class="rp-card-row">
+                <td colspan="7">
+                  <div class="rp-sheet">
+                    <!-- Registro | Informante | Ocupación, como la desplegada -->
+                    <div class="rp-sheet-blocks">
+                      <section class="rp-sheet-block">
+                        <h3>{{ 'reportes.cards.recordBlock' | translate }}</h3>
+                        <dl>
+                          <div><dt>{{ 'reportes.column.id' | translate }}</dt><dd>{{ record.id }}</dd></div>
+                          <div><dt>{{ 'reportes.column.group' | translate }}</dt><dd>{{ record.group }}</dd></div>
+                          <div><dt>{{ 'reportes.column.kind' | translate }}</dt><dd>{{ 'reportes.kind.' + record.kind | translate }}</dd></div>
+                          <div><dt>{{ 'reportes.column.date' | translate }}</dt><dd>{{ dateTime(record.date) || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.startedAt' | translate }}</dt><dd>{{ dateTime(record.startedAt) || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.finishedAt' | translate }}</dt><dd>{{ dateTime(record.finishedAt) || '—' }}</dd></div>
+                        </dl>
+                      </section>
+                      <section class="rp-sheet-block">
+                        <h3>{{ 'reportes.cards.informantBlock' | translate }}</h3>
+                        <dl>
+                          <div><dt>{{ 'reportes.column.fullName' | translate }}</dt><dd>{{ record.fullName || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.email' | translate }}</dt><dd>{{ record.email || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.phone' | translate }}</dt><dd>{{ record.phone || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.department' | translate }}</dt><dd>{{ record.department || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.city' | translate }}</dt><dd>{{ record.city || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.company' | translate }}</dt><dd>{{ record.company || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.position' | translate }}</dt><dd>{{ record.position || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.column.profession' | translate }}</dt><dd>{{ record.profession || '—' }}</dd></div>
+                        </dl>
+                      </section>
+                      <section class="rp-sheet-block">
+                        <h3>{{ 'reportes.cards.occupationBlock' | translate }}</h3>
+                        <dl>
+                          <div><dt>{{ 'reportes.column.occupations' | translate }}</dt><dd>{{ occupationsText(record) }}</dd></div>
+                          <div><dt>{{ 'reportes.column.sector' | translate }}</dt><dd>{{ record.sector || '—' }}</dd></div>
+                          <div><dt>{{ 'reportes.cards.classification' | translate }}</dt><dd>{{ 'reportes.classification.' + record.classification | translate }}</dd></div>
+                          <div *ngIf="record.observations"><dt>{{ 'reportes.cards.observations' | translate }}</dt><dd>{{ record.observations }}</dd></div>
+                        </dl>
+                      </section>
+                    </div>
+
+                    <div class="rp-sheet-actions">
+                      <button type="button" class="ui-btn ui-btn-primary" (click)="detail = record">
+                        {{ 'reportes.cards.byOccupation' | translate }}<span class="rp-badge-count rp-badge-light">{{ record.occupations.length }}</span>
+                      </button>
+                    </div>
+
+                    <section class="rp-sheet-block">
+                      <h3>{{ 'reportes.cards.byCriterion' | translate }} <span class="rp-badge-count">{{ criteriaOf(record).length }}</span></h3>
+                      <div class="rp-verdicts" role="group" [attr.aria-label]="'reportes.cards.verdictAria' | translate">
+                        <button *ngFor="let item of verdictCounts(record)" type="button" class="rp-verdict-btn" [ngClass]="'rp-verdict-' + item.state" [class.active]="verdictOf(record) === item.state"
+                                [attr.aria-pressed]="verdictOf(record) === item.state" (click)="setVerdict(record, item.state)">
+                          {{ (item.state === 'todos' ? 'reportes.cards.all' : 'reportes.state.' + item.state) | translate }}<span>{{ item.total }}</span>
+                        </button>
+                      </div>
+                      <div *ngFor="let group of cardGroups(record)" class="rp-group">
+                        <p class="rp-group-title">{{ group.titleKey | translate }} <span>{{ group.items.length }}</span></p>
+                        <ul class="rp-criteria">
+                          <li *ngFor="let item of group.items">
+                            <span class="rp-verdict-text" [ngClass]="'rp-verdict-text-' + item.criterion.state">{{ 'reportes.state.' + item.criterion.state | translate }}</span>
+                            <span class="rp-criterion-text">
+                              <strong *ngIf="group.withTitles">{{ item.title }}</strong>
+                              <span class="rp-criterion-value">{{ item.criterion.value || '—' }}</span>
+                              <em *ngIf="item.criterion.comment" class="rp-comment">{{ item.criterion.comment }}</em>
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    </section>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+
+      <nav app-pagination *ngIf="filtered.length > 0" [page]="page" [pageSize]="pageSize" [total]="filtered.length" summaryKey="reportes.showingRange"
+           sizeLabelKey="reportes.perPageAria" (pageChange)="goToPage($event)" (pageSizeChange)="pageSize = $event; page = 1"></nav>
+    </ng-container>
+  </div>
+</section>
+
+<!-- Filtrar -->
+<div *ngIf="filtersOpen" class="ui-modal-backdrop" (click)="filtersOpen = false">
+  <section class="ui-modal rp-filters" role="dialog" aria-modal="true" aria-labelledby="rp-filters-title" tabindex="-1" appDialog (dialogEscape)="filtersOpen = false"
+           (click)="$event.stopPropagation()">
+    <header class="ui-modal-header rp-modal-header">
+      <h2 id="rp-filters-title">{{ 'reportes.filters.title' | translate }}</h2>
+      <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="filtersOpen = false">{{ 'common.close' | translate }}</button>
+    </header>
+    <div class="ui-modal-body rp-filters-grid">
+      <div class="ui-field">
+        <label class="ui-label" for="rp-from">{{ 'reportes.filters.from' | translate }}</label>
+        <input class="ui-input" id="rp-from" type="date" [(ngModel)]="draftFilters.from">
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-to">{{ 'reportes.filters.to' | translate }}</label>
+        <input class="ui-input" id="rp-to" type="date" [(ngModel)]="draftFilters.to">
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-department">{{ 'reportes.column.department' | translate }}</label>
+        <select class="ui-select" id="rp-department" [(ngModel)]="draftFilters.department" (ngModelChange)="draftFilters.city = ''">
+          <option value="">{{ 'reportes.filters.allM' | translate }}</option>
+          <option *ngFor="let item of options('department')" [value]="item">{{ item }}</option>
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-city">{{ 'reportes.column.city' | translate }}</label>
+        <select class="ui-select" id="rp-city" [(ngModel)]="draftFilters.city">
+          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
+          <option *ngFor="let item of options('city')" [value]="item">{{ item }}</option>
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-company">{{ 'reportes.filters.company' | translate }}</label>
+        <select class="ui-select" id="rp-company" [(ngModel)]="draftFilters.company">
+          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
+          <option *ngFor="let item of options('company')" [value]="item">{{ item }}</option>
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-profession">{{ 'reportes.column.profession' | translate }}</label>
+        <select class="ui-select" id="rp-profession" [(ngModel)]="draftFilters.profession">
+          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
+          <option *ngFor="let item of options('profession')" [value]="item">{{ item }}</option>
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-position">{{ 'reportes.column.position' | translate }}</label>
+        <select class="ui-select" id="rp-position" [(ngModel)]="draftFilters.position">
+          <option value="">{{ 'reportes.filters.allM' | translate }}</option>
+          <option *ngFor="let item of options('position')" [value]="item">{{ item }}</option>
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-coincidence">{{ 'reportes.filters.coincidence' | translate }}</label>
+        <select class="ui-select" id="rp-coincidence" [(ngModel)]="draftFilters.coincidence">
+          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
+          <option value="aplica">{{ 'reportes.state.aplica' | translate }}</option>
+          <option value="no_aplica">{{ 'reportes.state.no_aplica' | translate }}</option>
+          <option value="parcial">{{ 'reportes.state.parcial' | translate }}</option>
+        </select>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="rp-classification">{{ 'reportes.filters.classification' | translate }}</label>
+        <select class="ui-select" id="rp-classification" [(ngModel)]="draftFilters.classification">
+          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
+          <option *ngFor="let item of classifications" [value]="item">{{ 'reportes.classification.' + item | translate }}</option>
+        </select>
+      </div>
+    </div>
+    <footer class="ui-modal-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" (click)="clearFilters()">{{ 'reportes.filters.clear' | translate }}</button>
+      <button type="button" class="ui-btn ui-btn-primary" (click)="applyFilters()">{{ 'reportes.filters.apply' | translate }}</button>
+    </footer>
+  </section>
+</div>
+
+<app-reporte-estadisticas *ngIf="statsOpen" [records]="filtered" (closed)="statsOpen = false"></app-reporte-estadisticas>
+<app-reporte-detalle *ngIf="detail as record" [record]="record" [focusCriterion]="focusCriterion" (closed)="detail = null; focusCriterion = null"></app-reporte-detalle>

@@ -1,0 +1,1188 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* El host (app-settings) recibe `display:flex; flex-direction:column;
+   flex:1; min-height:0` desde app.component.css (es quien fija el alto del
+   modal). Este wrapper hereda esa columna: header queda fijo (flex-shrink:0)
+   y .settings-layout es el único que crece y reparte scroll. Las pestañas
+   viven dentro de .settings-layout (en .settings-left), no aquí. */
+.settings-wrapper {
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-header {
+  flex-shrink: 0;
+  padding: 4px 48px 6px 2px; /* deja libre el espacio del botón X del modal */
+}
+
+.settings-tagline {
+  margin: 0 0 6px;
+  color: var(--accent-color);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  letter-spacing: 0.1em;
+}
+
+.settings-disclaimer {
+  margin: 2px 0 0;
+  color: #8F8F8F;
+  font-size: var(--fs-body);
+}
+
+:host-context(.shell.dark-mode) .settings-disclaimer {
+  color: #D4D4D4;
+}
+
+.settings-header h1 {
+  font-size: var(--fs-title);
+  line-height: 1.15;
+  margin: 0 0 6px;
+  letter-spacing: -0.7px;
+  color: #001631;
+  font-weight: var(--fw-semibold);
+}
+
+:host-context(.shell.dark-mode) .settings-header h1 {
+  color: #F1F1F1;
+}
+
+/* Sin barra de desplazamiento: con tamaños de texto grandes las pestañas
+   pasan a una segunda línea en vez de desbordarse sobre el preview. */
+.settings-tabs {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  border-bottom: 1px solid #D4D4D4;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+:host-context(.shell.dark-mode) .settings-tabs {
+  border-bottom-color: #525252;
+}
+
+/* Pestañas como la referencia (codigo-configuracion): ícono de línea + texto en Semibold,
+   línea azul marino de 2px bajo la seleccionada y un resplandor difuminado detrás. */
+.settings-tabs button {
+  position: relative;
+  /* Crea su propio contexto de apilamiento: el resplandor (z-index -1) queda detrás del
+     ícono y el texto, pero dentro de la pestaña. */
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--neutral-700);
+  padding: 12px 2px;
+  font-weight: var(--fw-semibold);
+  font-size: var(--fs-body);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.settings-tabs button:hover {
+  color: #001631;
+}
+
+.settings-tabs button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.settings-tabs button.active {
+  color: #001631;
+  border-bottom-color: var(--primary-color);
+}
+
+.settings-tabs button.active .tab-icon {
+  color: var(--primary-color);
+}
+
+.settings-tabs button:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: -3px;
+}
+
+/* Resplandor: el color principal al 20 %, desenfocado, más grande que la pestaña y un poco
+   más abajo (bg-primary/20 blur-md rounded-full scale-[1.3] translate-y-1 en la referencia). */
+.tab-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary-color) 20%, transparent);
+  filter: blur(12px);
+  transform: translateY(4px) scale(1.3);
+  pointer-events: none;
+}
+
+/* Ícono de línea, del tamaño del texto. */
+.tab-icon {
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: color 0.2s ease;
+}
+
+:host-context(.shell.dark-mode) .settings-tabs button {
+  color: #B6BDC8;
+}
+
+:host-context(.shell.dark-mode) .settings-tabs button:hover,
+:host-context(.shell.dark-mode) .settings-tabs button.active {
+  color: #FFFFFF;
+}
+
+:host-context(.shell.dark-mode) .settings-tabs button.active {
+  border-bottom-color: var(--primary-on-dark);
+}
+
+:host-context(.shell.dark-mode) .settings-tabs button.active .tab-icon {
+  color: var(--primary-on-dark);
+}
+
+:host-context(.shell.dark-mode) .tab-glow {
+  background: color-mix(in srgb, var(--primary-on-dark) 22%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings-tabs button,
+  .tab-icon {
+    transition: none;
+  }
+}
+
+/* Layout de 2 columnas: pestaña activa a la izquierda + preview fijo a la
+   derecha. El preview vive aquí (no dentro de cada pestaña) para que no se
+   desmonte al cambiar de pestaña. `.settings-layout` ocupa el resto del alto
+   fijo (flex:1; min-height:0) y reparte ese alto entre ambas columnas por
+   igual (align-items:stretch). `.settings-body` tiene overflow-y:auto y es
+   quien scrollea en la práctica. `.preview-column` nunca hace scroll: se adapta
+   al alto disponible reduciendo espacios con @container; ningún texto
+   se oculta y el mini gráfico nunca se encoge ni desaparece. */
+.settings-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+@media (max-width: 880px) {
+  /* Una sola columna apilada no tiene sentido con un panel "sin scroll":
+     aquí el layout completo vuelve a fluir con la página como en cualquier
+     modal apilado en móvil. */
+  .settings-layout {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+
+  .settings-body,
+  .preview-column {
+    overflow: visible;
+  }
+}
+
+/* Contenedor del área izquierda: pestañas fijas arriba (flex-shrink:0,
+   definido en .settings-tabs) + contenido de la pestaña activa, que es
+   quien scrollea. Es uno de los 2 ítems de `.settings-layout` (el otro es
+   `.preview-column`), así que las pestañas ya no ocupan la franja completa
+   de arriba: quedan dentro de esta columna, junto al contenido que editan. */
+.settings-left {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.settings-body::-webkit-scrollbar {
+  width: 7px;
+}
+
+.settings-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-body::-webkit-scrollbar-thumb {
+  background: #D4D4D4;
+  border-radius: 999px;
+}
+
+.settings-body::-webkit-scrollbar-thumb:hover {
+  background: #8F8F8F;
+}
+
+:host-context(.shell.dark-mode) .settings-body::-webkit-scrollbar-thumb {
+  background: #525252;
+}
+
+/* Sin scroll: el alto se reparte entre la tarjeta de preview (que puede
+   encogerse) y el resumen (tamaño fijo, siempre visible completo). */
+.preview-column {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.preview-column > * {
+  flex-shrink: 0;
+}
+
+/* En escritorio la columna tiene alto fijo (el del modal): se declara como
+   contenedor para que el preview se compacte según el alto REAL disponible
+   (ver @container preview-col más abajo), no solo según el alto de la ventana.
+   En móvil (≤880px) la columna crece con su contenido, así que no aplica. */
+/* Escala de texto AMORTIGUADA para la miniatura: crece a la mitad de ritmo
+   que la del sistema (Normal 1 → Muy grande 1.125 en vez de 1.25). El cambio
+   de tamaño se sigue notando, pero el preview cabe completo en su alto fijo. */
+.preview-column {
+  --pv-scale: calc(1 + (var(--type-scale) - 1) * 0.5);
+}
+
+@media (min-width: 881px) {
+  .preview-column {
+    container: preview-col / size;
+  }
+}
+
+/* Variables de densidad del preview: reflejan `draft().density` (atributo
+   data-density en la tarjeta) para que el cambio se vea aquí antes de
+   guardar, igual que el tema o el color. Las reglas globales
+   `:root[data-density]` de styles.css no alcanzan estos widgets. */
+.preview-sticky-card {
+  /* La tarjeta recibe las variables del BORRADOR (colores y --type-scale) en su
+     atributo style: la escala en miniatura se recalcula aquí con ese valor. */
+  --pv-scale: calc(1 + (var(--type-scale) - 1) * 0.5);
+  --pv-gap: 8px;
+  --pv-pad: 8px 10px;
+  --pv-card-pad: 13px 15px;
+  --pv-row: 8px;
+  --pv-bars: 40px;
+  /* Tipografía en miniatura: sigue el tamaño de texto elegido (--type-scale)
+     pero parte de una base menor, para que con "Muy grande" siga cabiendo. */
+  --pv-fs-label: calc(12px * var(--pv-scale));
+  --pv-fs-value: calc(16px * var(--pv-scale));
+  --pv-fs-title: calc(17px * var(--pv-scale));
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--pv-gap);
+  background: linear-gradient(165deg, var(--accent-color-soft) 0%, #F1F1F1 55%);
+  border: 1px solid var(--accent-color-soft);
+  border-radius: var(--border-radius);
+  padding: var(--pv-card-pad);
+  transition: padding 0.2s ease, gap 0.2s ease;
+}
+
+/* Último recurso: si aun compactada no cabe, la tarjeta se recorta abajo
+   en vez de generar scroll. Ningún widget se encoge (el gráfico nunca
+   desaparece): el espacio se gana con la regla @container de abajo. */
+.preview-column > .preview-sticky-card {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.preview-sticky-card > * {
+  flex-shrink: 0;
+}
+
+.preview-sticky-card[data-density='compacta'] {
+  --pv-gap: 5px;
+  --pv-pad: 5px 8px;
+  --pv-card-pad: 10px 12px;
+  --pv-row: 5px;
+  --pv-bars: 30px;
+}
+
+.preview-sticky-card[data-density='amplia'] {
+  --pv-gap: 11px;
+  --pv-pad: 11px 13px;
+  --pv-card-pad: 16px 18px;
+  --pv-row: 11px;
+  --pv-bars: 50px;
+}
+
+.preview-sticky-card.preview-dark {
+  /* Los tonos del modo oscuro solo existen dentro de `.shell.dark-mode` (styles.css).
+     La vista previa puede estar en oscuro con el sistema en claro, así que los define ella. */
+  --dark-surface: #142941;
+  --dark-surface-hover: #1c3550;
+  --dark-recessed: #001631;
+  background: linear-gradient(165deg, var(--accent-color-soft) 0%, var(--dark-surface) 55%);
+  border-color: #525252;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Alto contraste del borrador: bordes marcados y texto de marca, solo en la vista previa. */
+.preview-sticky-card.preview-contrast,
+.preview-contrast .mini-card,
+.preview-contrast .mini-chart,
+.preview-contrast .mini-table {
+  border: 2px solid #001631;
+}
+
+.preview-contrast .preview-note,
+.preview-contrast .lab {
+  color: #001631;
+}
+
+.preview-contrast.preview-dark,
+.preview-contrast.preview-dark .mini-card,
+.preview-contrast.preview-dark .mini-chart,
+.preview-contrast.preview-dark .mini-table {
+  border-color: #F1F1F1;
+}
+
+.preview-contrast.preview-dark .preview-note,
+.preview-contrast.preview-dark .lab {
+  color: #F1F1F1;
+}
+
+.preview-eyebrow {
+  margin: 0;
+  color: var(--accent-color);
+  font-weight: var(--fw-regular);
+  font-size: var(--pv-fs-label);
+  letter-spacing: 0.08em;
+}
+
+.preview-sticky-card h3 {
+  margin: 0;
+  font-size: var(--pv-fs-title);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  color: #001631;
+}
+
+.preview-sticky-card.preview-dark h3 {
+  color: #F1F1F1;
+}
+
+.preview-note {
+  margin: 0;
+  color: #525252;
+  font-size: var(--pv-fs-label);
+  line-height: 1.35;
+}
+
+.preview-dark .preview-note {
+  color: #D4D4D4;
+}
+
+/* Mini widgets (stats / gráfico / tabla) del panel de preview */
+.mini-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pv-gap);
+}
+
+.mini-widgets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pv-gap);
+  align-items: stretch;
+}
+
+.mini-card,
+.mini-chart,
+.mini-table {
+  /* Sin min-width:0 un ítem de grid no baja de su ancho de contenido
+     (aquí, la palabra "CRECIMIENTO") y se sale de su columna de 1fr. */
+  min-width: 0;
+  background: #ffffff;
+  border: 1px solid var(--accent-color-soft);
+  border-radius: var(--border-radius);
+  padding: var(--pv-pad);
+  transition: padding 0.2s ease;
+}
+
+.preview-dark .mini-card,
+.preview-dark .mini-chart,
+.preview-dark .mini-table {
+  background: var(--dark-surface);
+  border-color: #525252;
+}
+
+.mini-card .lab,
+.mini-chart .lab,
+.mini-table .lab {
+  display: block;
+  flex-shrink: 0;
+  font-size: var(--pv-fs-label);
+  letter-spacing: 0.01em;
+  color: #525252;
+  font-weight: var(--fw-regular);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Gráfico y tabla van en media columna: su etiqueta puede partirse en 2
+   líneas por palabras en lugar de cortarse con "…". */
+.mini-chart .lab,
+.mini-table .lab {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.preview-dark .mini-card .lab,
+.preview-dark .mini-chart .lab,
+.preview-dark .mini-table .lab {
+  color: #D4D4D4;
+}
+
+.mini-card .val {
+  display: block;
+  font-size: var(--pv-fs-value);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  color: #001631;
+}
+
+.preview-dark .mini-card .val {
+  color: #F1F1F1;
+}
+
+.mini-card .val.up {
+  color: var(--accent-color-hover);
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: var(--pv-bars);
+  transition: height 0.2s ease;
+}
+
+/* Compactación según el alto real de la columna de preview (tamaño de
+   letra y densidad incluidos). NUNCA se oculta texto (rótulo, título, nota
+   descriptiva) ni widgets: solo se reducen espacios y el alto de las barras,
+   conservando la diferencia visible entre densidades. */
+@container preview-col (max-height: 600px) {
+  .preview-sticky-card {
+    gap: calc(var(--pv-gap) * 0.6);
+    padding: calc(var(--pv-gap) + 4px) 14px;
+  }
+
+  .mini-card,
+  .mini-chart,
+  .mini-table {
+    padding: 5px 9px;
+  }
+
+  .bars {
+    height: calc(var(--pv-bars) * 0.7);
+  }
+
+  .summary-card {
+    padding: 7px 14px;
+  }
+
+  .summary-row {
+    padding: 1px 0;
+  }
+}
+
+.bars span {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+}
+
+.mini-table .mtable-bar {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.mini-table .mtable-track {
+  height: 2px;
+  border-radius: 2px;
+  background: #F1F1F1;
+  margin: 3px 0 var(--pv-row);
+  transition: margin 0.2s ease;
+}
+
+.mini-table .mtable-track:last-child {
+  margin-bottom: 0;
+}
+
+.preview-dark .mini-table .mtable-track {
+  background: var(--dark-recessed);
+}
+
+.summary-card {
+  background: #ffffff;
+  border: 1px solid var(--accent-color-soft);
+  border-radius: var(--border-radius);
+  padding: 10px 14px;
+}
+
+:host-context(.shell.dark-mode) .summary-card {
+  background: var(--dark-surface);
+  border-color: #525252;
+}
+
+.summary-heading {
+  color: var(--accent-color);
+  font-weight: var(--fw-regular);
+  /* Misma escala en miniatura que el preview: acompaña el tamaño de texto
+     sin quitarle alto a la tarjeta de preview. */
+  font-size: calc(12px * var(--pv-scale));
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.summary-list {
+  margin: 0;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: calc(13px * var(--pv-scale));
+  padding: 2px 0;
+}
+
+.summary-row dt {
+  color: #525252;
+}
+
+:host-context(.shell.dark-mode) .summary-row dt {
+  color: #D4D4D4;
+}
+
+.summary-row dd {
+  margin: 0;
+  font-weight: var(--fw-regular);
+  color: #001631;
+  text-transform: capitalize;
+}
+
+:host-context(.shell.dark-mode) .summary-row dd {
+  color: #F1F1F1;
+}
+
+.settings-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  padding: 8px 4px 10px;
+  border-top: 1px solid #D4D4D4;
+  background: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .settings-footer {
+  border-top-color: #525252;
+  background: var(--dark-recessed);
+}
+
+.status-text {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: var(--fs-body);
+  color: #525252;
+  font-weight: var(--fw-regular);
+}
+
+:host-context(.shell.dark-mode) .status-text {
+  color: #D4D4D4;
+}
+
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #8F8F8F;
+  flex-shrink: 0;
+}
+
+.status-dot.dirty {
+  background: #FDC300;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #D4D4D4;
+  background: #ffffff;
+  color: #001631;
+  padding: 9px 16px;
+  border-radius: var(--border-radius);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: #F1F1F1;
+  border-color: #D4D4D4;
+  color: #001631;
+}
+
+.secondary-btn:disabled,
+.save-primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:host-context(.shell.dark-mode) .secondary-btn {
+  background: var(--dark-surface);
+  border-color: #525252;
+  color: #D4D4D4;
+}
+
+:host-context(.shell.dark-mode) .secondary-btn:hover:not(:disabled) {
+  background: var(--dark-surface-hover);
+  border-color: #525252;
+  color: #ffffff;
+}
+
+.secondary-btn svg,
+.save-primary-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.save-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: var(--accent-color);
+  color: #ffffff;
+  padding: 10px 20px;
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(73, 176, 9, 0.25);
+  transition: all 0.18s ease;
+}
+
+.save-primary-btn:hover:not(:disabled) {
+  background: var(--accent-color-hover, var(--accent-color-hover));
+  box-shadow: 0 4px 8px rgba(46, 139, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.secondary-btn:focus-visible,
+.save-primary-btn:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+@media (max-width: 576px) {
+  .settings-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .footer-actions {
+    flex-direction: column;
+  }
+
+  .footer-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Diálogos de confirmación de Guardar/Restablecer — mismo patrón visual que
+   "Eliminar"/"Cambio de estado" en Usuarios (dialog-backdrop + confirm-dialog). */
+/* Si el diálogo no cabe se desplaza el fondo, no el diálogo (sus esquinas redondeadas quedan enteras). */
+.dialog-backdrop {
+  align-items: flex-start;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+  background: rgba(18, 28, 41, 0.52);
+  backdrop-filter: blur(4px);
+  display: flex;
+  inset: 0;
+  justify-content: flex-start;
+  padding: 20px;
+  position: fixed;
+  z-index: 210;
+  animation: settingsBackdropFade 0.2s ease-out;
+}
+
+@keyframes settingsBackdropFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes settingsModalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.confirm-dialog {
+  margin: auto;
+  background: #ffffff;
+  border: 1px solid #D4D4D4;
+  border-radius: var(--modal-radius);
+  box-shadow: 0 20px 45px rgba(22, 34, 51, 0.18), 0 4px 12px rgba(22, 34, 51, 0.08);
+  outline: 0;
+  animation: settingsModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+:host-context(.shell.dark-mode) .confirm-dialog {
+  background: var(--dark-surface);
+  border-color: #525252;
+}
+
+.alert-dialog {
+  max-width: 480px;
+  width: 100%;
+  padding: 26px 28px 22px;
+}
+
+.alert-dialog-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.dialog-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--border-radius);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.dialog-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dialog-icon.activate-icon {
+  background: #EBF6E6;
+  color: var(--accent-color-hover);
+}
+
+.dialog-icon.reset-icon {
+  background: rgba(31, 172, 227, 0.14);
+  color: #1FACE3;
+}
+
+:host-context(.shell.dark-mode) .dialog-icon.activate-icon {
+  background: var(--accent-color-soft);
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .dialog-icon.reset-icon {
+  background: var(--primary-color-soft);
+  color: var(--primary-color);
+}
+
+.alert-dialog-titles {
+  flex: 1;
+}
+
+.alert-dialog-titles h2 {
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+  color: #001631;
+  margin: 0 0 6px;
+  letter-spacing: -0.2px;
+}
+
+:host-context(.shell.dark-mode) .alert-dialog-titles h2 {
+  color: #F1F1F1;
+}
+
+.alert-dialog-titles p {
+  color: #525252;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  margin: 0;
+}
+
+:host-context(.shell.dark-mode) .alert-dialog-titles p {
+  color: #D4D4D4;
+}
+
+.alert-dialog-titles strong {
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .alert-dialog-titles strong {
+  color: #F1F1F1;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.secondary-button {
+  background: #F1F1F1;
+  border: 0;
+  border-radius: var(--border-radius);
+  color: #001631;
+  cursor: pointer;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  padding: 10px 18px;
+  transition: background-color 0.18s ease;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .secondary-button {
+  background: var(--dark-recessed);
+  border: 1px solid #525252;
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .secondary-button:hover:not(:disabled) {
+  background: var(--dark-surface-hover);
+}
+
+.status-confirm-btn,
+.reset-confirm-btn {
+  border: 0;
+  border-radius: var(--border-radius);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  color: #ffffff;
+}
+
+.status-confirm-btn.activate {
+  background: var(--accent-color);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.status-confirm-btn.activate:hover:not(:disabled) {
+  background: var(--accent-color-hover, var(--accent-color-hover));
+  transform: translateY(-1px);
+}
+
+.reset-confirm-btn {
+  background: #1FACE3;
+  box-shadow: 0 2px 0 #1FACE3;
+}
+
+.reset-confirm-btn:hover:not(:disabled) {
+  background: #1FACE3;
+  transform: translateY(-1px);
+}
+
+.status-confirm-btn:disabled,
+.reset-confirm-btn:disabled,
+.secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- Panel de vidrio: franjas a todo el ancho, columna de vista previa más ancha ---------- */
+.settings-wrapper {
+  max-width: none;
+}
+
+.settings-header {
+  padding: 24px 68px 8px 24px; /* a la derecha queda libre la X del modal */
+}
+
+.settings-header h1 {
+  margin-bottom: 4px;
+  font-size: var(--fs-subtitle) !important;
+  letter-spacing: 0;
+}
+
+.settings-tagline {
+  margin: 0 0 4px;
+  color: #525252;
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+:host-context(.shell.dark-mode) .settings-tagline {
+  color: #D4D4D4;
+}
+
+.settings-disclaimer {
+  color: #525252;
+  font-size: calc(14px * var(--type-scale));
+}
+
+.settings-tabs {
+  border-bottom-color: rgba(0, 22, 49, 0.12);
+}
+
+@media (min-width: 881px) {
+  /* Dos tercios para lo que se edita y un tercio para la vista previa (8 y 4 de 12), separados por una línea. */
+  .settings-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .settings-left {
+    padding: 0 12px 0 24px;
+  }
+
+  .settings-body {
+    padding-right: 10px;
+  }
+
+  /* Si el alto no alcanza, la columna se desplaza en vez de recortar la vista previa. */
+  .preview-column {
+    padding: 24px;
+    gap: 16px;
+    border-left: 1px solid rgba(0, 0, 0, 0.06);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .preview-column > .preview-sticky-card {
+    flex: none;
+    overflow: visible;
+  }
+
+  :host-context(.shell.dark-mode) .preview-column {
+    border-left-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@media (max-width: 880px) {
+  .settings-header {
+    padding: 20px 60px 10px 14px;
+  }
+
+  .settings-layout {
+    padding: 0 14px;
+  }
+}
+
+/* La tarjeta de vista previa es blanca y destaca sobre el vidrio. */
+.preview-sticky-card {
+  --pv-card-pad: 20px;
+  --pv-gap: 10px;
+  --pv-fs-title: calc(18px * var(--pv-scale));
+  --pv-fs-label: calc(12px * var(--pv-scale));
+  --pv-fs-value: calc(18px * var(--pv-scale));
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border-color: #e2e8f0;
+  border-radius: var(--border-radius);
+  box-shadow: none;
+}
+
+.preview-eyebrow {
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.preview-dark .preview-eyebrow {
+  color: #D4D4D4;
+}
+
+/* Pie: Restablecer a la izquierda y Guardar a la derecha, con el estado junto a Guardar. */
+.settings-footer {
+  margin-top: 0;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.4);
+  flex-wrap: wrap;
+}
+
+:host-context(.shell.dark-mode) .settings-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.footer-actions {
+  display: contents;
+}
+
+.settings-footer .secondary-btn {
+  order: 0;
+  padding: 10px 20px;
+  border-color: rgba(0, 22, 49, 0.16);
+  border-radius: var(--border-radius);
+  background: transparent;
+}
+
+.settings-footer .secondary-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+:host-context(.shell.dark-mode) .settings-footer .secondary-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.status-text {
+  order: 1;
+  margin-left: auto;
+}
+
+.settings-footer .save-primary-btn {
+  order: 2;
+  padding: 10px 24px;
+  border-radius: var(--border-radius);
+  font-weight: var(--fw-semibold);
+}
+
+@media (max-width: 576px) {
+  .settings-footer {
+    padding: 14px 16px;
+  }
+
+  .status-text {
+    order: -1;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .settings-footer .save-primary-btn {
+    margin-left: auto;
+  }
+}
+
+/* Alto contraste: el pie tampoco es translúcido. */
+:host-context([data-high-contrast='true']) .settings-footer {
+  background: #F1F1F1;
+  border-top: 2px solid var(--hc-border);
+}
+
+:host-context([data-high-contrast='true'] .shell.dark-mode) .settings-footer {
+  background: var(--dark-recessed);
+}
+
+/* Con alto de sobra, la vista previa respira: barras y tarjetas un poco más altas. */
+@container preview-col (min-height: 470px) {
+  .mini-card,
+  .mini-chart,
+  .mini-table {
+    padding: 10px 12px;
+  }
+
+  .bars {
+    height: 52px;
+  }
+}
+
+/* Pantallas angostas: todo el contenido (pestaña y vista previa) baja en una sola
+   columna que se desplaza, sin repartir el alto del panel ni recortar la vista previa. */
+@media (max-width: 880px) {
+  .settings-layout {
+    display: block;
+  }
+
+  .settings-left,
+  .preview-column {
+    min-height: auto;
+  }
+
+  .settings-body {
+    flex: none;
+    padding-right: 0;
+  }
+
+  .preview-column {
+    padding: 14px 0 16px;
+  }
+
+  .preview-column > .preview-sticky-card {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Estado arriba; Restablecer y Guardar comparten la fila. */
+  .settings-footer {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .settings-footer .secondary-btn,
+  .settings-footer .save-primary-btn {
+    flex: 1;
+    width: auto;
+    margin-left: 0;
+    padding: 12px 10px;
+    justify-content: center;
+  }
+}

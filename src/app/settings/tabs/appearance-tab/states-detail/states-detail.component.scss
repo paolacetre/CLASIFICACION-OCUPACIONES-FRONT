@@ -1,0 +1,318 @@
+/* Detalle de "Estados y mensajes": se despliega hacia abajo dentro de la card de
+   Apariencia como un panel propio: encabezado (ícono, título, descripción y X) y
+   una franja por estado a todo el ancho: ícono | título y mensaje | "Se usa para"
+   y "Aparece cuando" | etiqueta. Colores: los tres estados de styles.css. */
+@keyframes statesDetailSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.states-detail {
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid #e6e9ef;
+  border-radius: var(--border-radius);
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(22, 34, 51, 0.08);
+  animation: statesDetailSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top;
+}
+
+:host-context(.shell.dark-mode) .states-detail {
+  border-color: #23405f;
+  background: var(--dark-surface);
+  box-shadow: none;
+}
+
+/* ---------- Encabezado ---------- */
+.states-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 16px 16px 18px;
+  border-bottom: 1px solid #e6e9ef;
+}
+
+:host-context(.shell.dark-mode) .states-detail-header {
+  border-bottom-color: #23405f;
+}
+
+.states-detail-info {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(31, 172, 227, 0.14);
+  color: var(--brand-blue);
+}
+
+.states-detail-info svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.states-detail-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.states-detail-title {
+  margin: 0 0 2px;
+  color: #001631;
+  font-size: var(--fs-body) !important;
+  font-weight: var(--fw-semibold);
+}
+
+.states-detail-desc {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1.45;
+}
+
+:host-context(.shell.dark-mode) .states-detail-title {
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .states-detail-desc {
+  color: #d4d4d4;
+}
+
+.states-detail-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--neutral-700);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.states-detail-close svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.states-detail-close:hover {
+  background: var(--neutral-50);
+  color: var(--primary-color);
+}
+
+.states-detail-close:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+:host-context(.shell.dark-mode) .states-detail-close {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .states-detail-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+/* ---------- Franjas de estado ---------- */
+.states-detail-body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cada franja usa su color de estado en --fg (texto) y --bg (fondo). */
+.state-detail-row {
+  --fg: var(--state-ok-fg);
+  --bg: var(--state-ok-bg);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.15fr) auto;
+  grid-template-areas: 'icon main meta badge';
+  align-items: start;
+  column-gap: 14px;
+  padding: 20px 18px;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.state-detail-row + .state-detail-row {
+  border-top: 1px solid rgba(0, 22, 49, 0.06);
+}
+
+.state-detail-row.error {
+  --fg: var(--state-error-fg);
+  --bg: var(--state-error-bg);
+}
+
+.state-detail-row.warn {
+  --fg: var(--state-warn-fg);
+  --bg: var(--state-warn-bg);
+}
+
+:host-context(.shell.dark-mode) .state-detail-row {
+  --fg: #8fd86a;
+  --bg: rgba(52, 154, 0, 0.14);
+}
+
+:host-context(.shell.dark-mode) .state-detail-row.error {
+  --fg: #ff9b9b;
+  --bg: rgba(232, 28, 28, 0.14);
+}
+
+:host-context(.shell.dark-mode) .state-detail-row.warn {
+  --fg: #fcd34d;
+  --bg: rgba(253, 195, 0, 0.12);
+}
+
+:host-context(.shell.dark-mode) .state-detail-row + .state-detail-row {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Ícono: círculo verde lleno, círculo rojo de contorno y círculo amarillo lleno (como el Figma). */
+.state-detail-icon {
+  grid-area: icon;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--state-ok-fg);
+  color: #fff;
+}
+
+.state-detail-row.error .state-detail-icon {
+  border: 2px solid var(--fg);
+  background: transparent;
+  color: var(--fg);
+}
+
+.state-detail-row.warn .state-detail-icon {
+  background: var(--state-warn-accent);
+}
+
+.state-detail-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.state-detail-row.warn .state-detail-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.4;
+}
+
+.state-detail-main {
+  grid-area: main;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.state-detail-main h3 {
+  margin: 0 0 6px;
+  color: var(--fg);
+  font-size: var(--fs-body) !important;
+  font-weight: var(--fw-semibold);
+}
+
+.state-detail-main p {
+  margin: 0;
+  color: var(--fg);
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1.45;
+}
+
+/* "Se usa para" y "Aparece cuando", uno debajo del otro. */
+.state-detail-meta {
+  grid-area: meta;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.state-detail-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.state-detail-meta-item strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.state-detail-meta-item strong svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.state-detail-meta-item span {
+  color: var(--fg);
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1.45;
+}
+
+.state-detail-badge {
+  grid-area: badge;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 20%, var(--bg));
+  color: color-mix(in srgb, var(--fg) 80%, #000);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.state-detail-row.warn .state-detail-badge {
+  background: color-mix(in srgb, var(--state-warn-accent) 45%, var(--bg));
+}
+
+:host-context(.shell.dark-mode) .state-detail-badge {
+  background: color-mix(in srgb, var(--fg) 22%, transparent);
+  color: var(--fg);
+}
+
+@media (max-width: 720px) {
+  .state-detail-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon main badge'
+      'icon meta meta';
+    row-gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .states-detail {
+    animation: none;
+  }
+}

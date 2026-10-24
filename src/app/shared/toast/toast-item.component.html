@@ -1,0 +1,19 @@
+<!-- Un aviso: ícono del estado, mensaje, botón para cerrarlo y barra del tiempo que le queda. Los errores se anuncian como alerta. -->
+<div class="toast-item" [class]="'toast-' + toast.type" [class.closing]="closing" [attr.role]="toast.type === 'error' ? 'alert' : null">
+  <div class="toast-icon" aria-hidden="true">
+    <svg *ngIf="toast.type === 'success'" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+    <svg *ngIf="toast.type === 'error'" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <svg *ngIf="toast.type === 'warning'" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  </div>
+
+  <p class="toast-message">{{ toast.message }}</p>
+
+  <button type="button" class="toast-close" (click)="close()" [attr.aria-label]="'toast.close' | translate">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+
+  <!-- Barra de progreso: dura lo mismo que el aviso y se detiene al cerrarlo. -->
+  <div class="toast-progress-track" aria-hidden="true">
+    <div class="toast-progress-bar" [style.animation-duration.ms]="toast.duration" [class.paused]="closing"></div>
+  </div>
+</div>

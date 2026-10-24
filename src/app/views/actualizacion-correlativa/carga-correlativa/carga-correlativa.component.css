@@ -1,0 +1,378 @@
+/* «Cargar Excel» de la correlativa: solo lo específico; modal, botones y avisos son de ui.css. */
+/* Le gana al máximo de 460px de .ui-modal: las tres tarjetas de tipo necesitan el ancho.
+   Tres franjas como la referencia: encabezado (título a la izquierda, X a la derecha) y pie,
+   separados del cuerpo por una línea. */
+.ccr-modal {
+  max-width: 940px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ccr-header {
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.ccr-header > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.ccr-header h2 {
+  margin: 0 0 4px;
+}
+
+.ccr-header .ui-icon-btn {
+  flex: none;
+  margin: -4px -6px 0 0;
+}
+
+.ccr-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 22px 28px;
+}
+
+.ccr-modal .ui-modal-actions {
+  margin: 0;
+  padding: 16px 28px;
+  border-top: 1px solid var(--neutral-100);
+  background: var(--neutral-50);
+}
+
+/* Tres tarjetas de tipo */
+.ccr-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ccr-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.ccr-option:hover,
+.ccr-option.active {
+  border-color: var(--accent-color);
+  box-shadow: 0 6px 18px rgba(22, 34, 51, 0.08);
+}
+
+.ccr-option:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.ccr-option strong {
+  font-weight: var(--fw-semibold);
+}
+
+.ccr-option small {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+  line-height: 1.4;
+}
+
+.ccr-option-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--border-radius);
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+}
+
+/* Plantilla oficial: caja punteada con una descarga por tipo */
+.ccr-templates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  padding: 14px 16px;
+  border: 1.5px dashed var(--accent-color);
+  border-radius: var(--border-radius);
+  background: color-mix(in srgb, var(--accent-color) 6%, #fff);
+}
+
+.ccr-templates-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 240px;
+  flex: 1 1 320px;
+}
+
+.ccr-templates-text strong {
+  font-weight: var(--fw-semibold);
+}
+
+.ccr-templates-text span {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.ccr-templates-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Archivo elegido */
+.ccr-file {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.ccr-file-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ccr-file-text strong {
+  overflow: hidden;
+  font-weight: var(--fw-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ccr-file-label {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.ccr-file-meta {
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.ccr-file-meta strong {
+  color: var(--ui-text);
+}
+
+.ccr-body .ui-alert {
+  margin: 0;
+}
+
+.ccr-body .ui-alert strong {
+  display: block;
+  margin-bottom: 2px;
+  font-weight: var(--fw-semibold);
+}
+
+.ccr-body .ui-alert p {
+  margin: 0;
+}
+
+.ccr-reading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+  color: var(--neutral-700);
+}
+
+/* Vista previa: mismo estilo de tabla de la app, con alto limitado */
+.ccr-subtitle {
+  margin: 4px 0 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale)) !important;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.ccr-preview {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.ccr-preview th {
+  white-space: nowrap;
+}
+
+.ccr-preview td {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Recordatorio de que la carga reemplaza la tabla del tipo (compacto, junto a los botones) */
+.ccr-replace-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: var(--state-warn-fg);
+  font-size: calc(13px * var(--type-scale));
+  line-height: 1.45;
+}
+
+.ccr-replace-note .ui-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+.ccr-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ccr-progress-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--neutral-100);
+}
+
+.ccr-progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-color);
+  transition: width 0.25s ease;
+}
+
+.ccr-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.ccr-figures div {
+  padding: 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+  text-align: center;
+}
+
+.ccr-figures dt {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.ccr-figures dd {
+  margin: 4px 0 0;
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+}
+
+.ccr-detail {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 12px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.ccr-detail h3 {
+  margin: 8px 0 4px;
+  font-size: var(--fs-body) !important;
+}
+
+.ccr-detail ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.ccr-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ccr-spin 0.7s linear infinite;
+}
+
+@keyframes ccr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .ccr-options,
+  .ccr-figures {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ccr-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .ccr-option,
+:host-context(.shell.dark-mode) .ccr-file,
+:host-context(.shell.dark-mode) .ccr-figures div,
+:host-context(.shell.dark-mode) .ccr-detail {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .ccr-header,
+:host-context(.shell.dark-mode) .ccr-modal .ui-modal-actions {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .ccr-modal .ui-modal-actions {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .ccr-templates {
+  background: rgba(125, 183, 40, 0.08);
+}
+
+:host-context(.shell.dark-mode) .ccr-option small,
+:host-context(.shell.dark-mode) .ccr-templates-text span,
+:host-context(.shell.dark-mode) .ccr-file-label,
+:host-context(.shell.dark-mode) .ccr-figures dt {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .ccr-option-icon {
+  color: var(--accent-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ccr-option,
+  .ccr-progress-bar span {
+    transition: none;
+  }
+
+  .ccr-spinner {
+    animation-duration: 2s;
+  }
+}

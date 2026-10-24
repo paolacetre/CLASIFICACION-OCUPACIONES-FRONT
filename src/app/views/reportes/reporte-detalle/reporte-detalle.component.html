@@ -1,0 +1,77 @@
+<!-- Detalle de un envío del Resumen (modal): pestañas por ocupación y una tabla de una fila con una columna por criterio calificado. -->
+<div class="ui-modal-backdrop" (click)="closed.emit()">
+  <section class="ui-modal ui-modal-fixed rd-modal" role="dialog" aria-modal="true" aria-labelledby="rd-title" tabindex="-1" appDialog (dialogEscape)="closed.emit()"
+           (click)="$event.stopPropagation()">
+    <header class="rd-header">
+      <div class="rd-header-text">
+        <p class="rd-eyebrow">{{ 'reportes.kind.' + record.kind | translate }} · {{ 'reportes.column.group' | translate }} {{ record.group }}</p>
+        <h2 id="rd-title">
+          {{ record.occupations.length > 1 ? ('reportes.detail.together' | translate: { count: record.occupations.length }) : (occupation?.name || '—') }}
+        </h2>
+        <p class="rd-sub">{{ record.fullName || '—' }} · {{ record.company || '—' }} · {{ dateTime(record.date) || '—' }}</p>
+      </div>
+      <span class="rp-result" [ngClass]="'rp-result-' + record.evaluation"><span class="rp-dot" aria-hidden="true"></span>{{ 'reportes.evaluation.' + record.evaluation | translate }}</span>
+      <button type="button" class="ui-icon-btn rd-close" [attr.aria-label]="'common.close' | translate" (click)="closed.emit()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="rd-body">
+      <!-- Una pestaña por ocupación del envío, con su resultado. -->
+      <div class="rd-occupations" role="tablist" [attr.aria-label]="'reportes.detail.occupationsAria' | translate">
+        <button *ngFor="let item of record.occupations; let i = index" type="button" role="tab" class="rd-occupation" [class.active]="i === occupationIndex"
+                [attr.aria-selected]="i === occupationIndex" (click)="occupationIndex = i">
+          <strong>{{ item.code }}</strong>
+          <span>{{ item.name }}</span>
+        </button>
+      </div>
+
+      <!-- Ocupación elegida: encabezado y tabla de criterios (la columna del criterio pedido desde Fichas queda resaltada). -->
+      <ng-container *ngIf="occupation as current">
+        <div class="rd-occupation-head">
+          <div>
+            <h3>{{ current.name }}</h3>
+            <p>{{ current.catalog }} {{ current.code }}<ng-container *ngIf="current.level"> · {{ current.level }}</ng-container> · {{ 'reportes.cards.criteria' | translate: { count: current.criteria.length } }}</p>
+          </div>
+          <span class="rp-result" [ngClass]="'rp-result-' + current.evaluation"><span class="rp-dot" aria-hidden="true"></span>{{ 'reportes.evaluation.' + current.evaluation | translate }}</span>
+        </div>
+
+        <div class="rd-table-wrap" tabindex="0" [attr.aria-label]="'reportes.scrollAria' | translate">
+          <table class="rd-table">
+            <thead>
+              <tr>
+                <th scope="col" class="rd-fixed">{{ 'reportes.column.group' | translate }}</th>
+                <th *ngFor="let cell of fixedCells" scope="col">{{ 'reportes.column.' + cell.key | translate }}</th>
+                <th scope="col">{{ 'reportes.column.occupationName' | translate }}</th>
+                <th scope="col">{{ 'reportes.column.cnoCode' | translate }}</th>
+                <th scope="col">{{ 'reportes.column.cuocCode' | translate }}</th>
+                <th scope="col">{{ 'reportes.column.level' | translate }}</th>
+                <th *ngFor="let criterion of current.criteria; trackBy: trackCriterion" scope="col" class="rd-criterion-col" [class.rd-focus]="isFocused(criterion)" [attr.data-criterion]="criterion.id">{{ title(criterion) }}</th>
+                <th scope="col">{{ 'reportes.column.evaluation' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="rd-fixed">{{ record.group }}</td>
+                <td *ngFor="let cell of fixedCells">{{ cell.value || '—' }}</td>
+                <td>{{ current.name || '—' }}</td>
+                <td>{{ current.catalog === 'CNO' ? current.code : '—' }}</td>
+                <td>{{ current.catalog === 'CUOC' ? current.code : '—' }}</td>
+                <td>{{ current.level || '—' }}</td>
+                <td *ngFor="let criterion of current.criteria; trackBy: trackCriterion" class="rd-criterion-col" [class.rd-focus]="isFocused(criterion)">
+                  <span class="rp-tag" [ngClass]="'rp-tag-' + criterion.state">{{ 'reportes.state.' + criterion.state | translate }}</span>
+                  <span class="rd-value">{{ criterion.value || '—' }}</span>
+                  <em *ngIf="criterion.comment" class="rp-comment">{{ criterion.comment }}</em>
+                </td>
+                <td><span class="rp-result" [ngClass]="'rp-result-' + current.evaluation"><span class="rp-dot" aria-hidden="true"></span>{{ 'reportes.evaluation.' + current.evaluation | translate }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+
+      <!-- Observaciones generales del experto. -->
+      <p *ngIf="record.observations" class="rd-observations"><strong>{{ 'reportes.cards.observations' | translate }}:</strong> {{ record.observations }}</p>
+    </div>
+  </section>
+</div>

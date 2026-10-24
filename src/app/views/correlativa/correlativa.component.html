@@ -1,0 +1,120 @@
+<section class="ui-page ui-stack">
+  <header class="ui-card ui-card-header correlativa-header">
+    <div class="ui-card-icon" aria-hidden="true">
+      <svg class="ui-icon" viewBox="0 0 24 24"><path d="M6 3a2 2 0 1 0 0 4a2 2 0 1 0 0-4z"/><path d="M18 17a2 2 0 1 0 0 4a2 2 0 1 0 0-4z"/><path d="M6 7v8a4 4 0 0 0 4 4h2"/><path d="m10 17 2 2-2 2"/><path d="M18 17V9a4 4 0 0 0-4-4h-2"/><path d="m14 7-2-2 2-2"/></svg>
+    </div>
+    <div class="ui-card-header-main">
+      <h1 class="ui-page-title">{{ 'correlativa.title' | translate }}</h1>
+      <p class="ui-page-subtitle">{{ 'correlativa.subtitle' | translate }}</p>
+    </div>
+  </header>
+
+  <!-- Qué se correlaciona: cada pestaña tiene su propia tabla -->
+  <div class="ui-tabs correlativa-tabs" role="tablist" [attr.aria-label]="'correlativa.tabsAria' | translate">
+    <button *ngFor="let item of tabs" type="button" class="ui-tab correlativa-tab" role="tab" [id]="'correlativa-tab-' + item.id" [class.active]="kind === item.id"
+            [attr.aria-selected]="kind === item.id" aria-controls="correlativa-panel" (click)="selectKind(item.id)">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path *ngFor="let d of item.icon" [attr.d]="d"/></svg>
+      {{ item.labelKey | translate }}
+    </button>
+  </div>
+
+  <div id="correlativa-panel" class="ui-stack" role="tabpanel" [attr.aria-labelledby]="'correlativa-tab-' + kind">
+    <!-- Búsqueda y filtros -->
+    <form class="ui-card correlativa-search" role="search" (submit)="$event.preventDefault(); applyFilters()">
+      <div class="correlativa-search-row">
+        <div class="ui-input-icon correlativa-search-field">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input class="ui-input" type="text" name="text" autocomplete="off" [placeholder]="tab.placeholderKey | translate"
+                 [attr.aria-label]="tab.placeholderKey | translate" [(ngModel)]="query.text" (ngModelChange)="onTextChange()">
+        </div>
+        <button *ngIf="hasFilterOptions" type="button" class="ui-btn ui-btn-outline" [attr.aria-expanded]="filtersOpen" aria-controls="correlativa-filters"
+                (click)="filtersOpen = !filtersOpen">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4v6M6 14v6M12 4v2M12 10v10M18 4v10M18 18v2M4 12h4M10 8h4M16 16h4"/></svg>
+          {{ 'correlativa.filters' | translate }}
+        </button>
+      </div>
+
+      <div *ngIf="filtersOpen && hasFilterOptions" id="correlativa-filters" class="correlativa-filters">
+        <ng-container *ngIf="kind === 'denominacion'">
+          <div *ngFor="let field of codeFilters" class="ui-field">
+            <label class="ui-label" [for]="'correlativa-' + field.key">{{ field.labelKey | translate }}</label>
+            <input class="ui-input" type="text" autocomplete="off" [id]="'correlativa-' + field.key" [name]="field.key" [(ngModel)]="draft[field.key]">
+          </div>
+          <div class="ui-field">
+            <label class="ui-label" for="correlativa-status">{{ 'correlativa.filterStatus' | translate }}</label>
+            <select class="ui-select" id="correlativa-status" name="status" [(ngModel)]="draft.status">
+              <option value="">{{ 'correlativa.allStatuses' | translate }}</option>
+              <option value="Activo">{{ 'correlativa.statusActive' | translate }}</option>
+              <option value="Inactivo">{{ 'correlativa.statusInactive' | translate }}</option>
+            </select>
+          </div>
+        </ng-container>
+        <div *ngIf="kind === 'conocimiento'" class="ui-field">
+          <label class="ui-label" for="correlativa-applied">{{ 'correlativa.colApplied' | translate }}</label>
+          <select class="ui-select" id="correlativa-applied" name="applied" [(ngModel)]="draft.applied">
+            <option value="">{{ 'common.all' | translate }}</option>
+            <option value="si">{{ 'correlativa.applied' | translate }}</option>
+            <option value="no">{{ 'correlativa.notApplied' | translate }}</option>
+          </select>
+        </div>
+        <div class="correlativa-filter-actions">
+          <button type="button" class="ui-btn ui-btn-secondary" [disabled]="!hasFilters" (click)="clearFilters()">{{ 'correlativa.clearFilters' | translate }}</button>
+          <button type="submit" class="ui-btn ui-btn-primary">{{ 'correlativa.applyFilters' | translate }}</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Resultados -->
+    <div class="ui-card correlativa-results" aria-live="polite">
+      <div class="correlativa-toolbar">
+        <span class="ui-badge ui-badge-info">{{ result.total | number }} {{ (result.total === 1 ? 'correlativa.recordFound' : 'correlativa.recordsFound') | translate }}</span>
+        <div class="ui-page-actions">
+          <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" [disabled]="downloading || !result.total" (click)="downloadResults()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+            {{ 'correlativa.downloadResults' | translate }} ({{ result.total | number }})
+          </button>
+          <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" [disabled]="downloading" (click)="downloadAll()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+            {{ 'correlativa.downloadAll' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="!result.total && !loading" class="ui-empty">
+        <strong>{{ 'correlativa.noResultsTitle' | translate }}</strong>
+        <p>{{ 'correlativa.noResultsText' | translate }}</p>
+      </div>
+
+      <ng-container *ngIf="result.total">
+        <div class="ui-table-wrap ui-table-responsive">
+          <table class="ui-table correlativa-table" [attr.data-kind]="kind">
+            <thead>
+              <tr>
+                <th *ngFor="let column of columns" scope="col">{{ column.labelKey | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of result.items">
+                <td *ngFor="let column of columns" [ngSwitch]="column.type" [attr.data-label]="column.labelKey | translate">
+                  <span *ngSwitchCase="'cnoCode'" class="ui-badge ui-badge-info">{{ cell(row, column.field) }}</span>
+                  <span *ngSwitchCase="'cuocCode'" class="ui-badge ui-badge-info">{{ cell(row, column.field) }}</span>
+                  <span *ngSwitchCase="'code'" class="ui-badge ui-badge-neutral">{{ cell(row, column.field) }}</span>
+                  <span *ngSwitchCase="'status'" class="ui-badge" [ngClass]="cell(row, column.field) === 'Activo' ? 'ui-badge-ok' : 'ui-badge-neutral'">
+                    {{ (cell(row, column.field) === 'Activo' ? 'correlativa.statusActive' : 'correlativa.statusInactive') | translate }}
+                  </span>
+                  <span *ngSwitchCase="'applied'" class="ui-badge" [ngClass]="cell(row, column.field) ? 'ui-badge-ok' : 'ui-badge-neutral'">
+                    {{ (cell(row, column.field) ? 'correlativa.applied' : 'correlativa.notApplied') | translate }}
+                  </span>
+                  <ng-container *ngSwitchDefault>{{ cell(row, column.field) || '—' }}</ng-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <nav app-pagination [page]="query.page" [pageSize]="query.pageSize" [total]="result.total" summaryKey="correlativa.showing" sizeLabelKey="correlativa.pageSizeAria"
+             (pageChange)="goToPage($event)" (pageSizeChange)="query.pageSize = $event; onFiltersChange()"></nav>
+      </ng-container>
+    </div>
+  </div>
+</section>

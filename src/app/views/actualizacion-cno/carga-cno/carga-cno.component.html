@@ -1,0 +1,309 @@
+<div class="ui-modal-backdrop" (click)="close()">
+  <section class="ui-modal ui-modal-fixed cc-modal" role="dialog" aria-modal="true" aria-labelledby="cc-title" aria-describedby="cc-subtitle" tabindex="-1"
+           appDialog (dialogEscape)="close()" (click)="$event.stopPropagation()">
+    <!-- Encabezado -->
+    <header class="cc-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      </div>
+      <div class="cc-header-text">
+        <h2 id="cc-title">{{ 'cargaCno.title' | ctranslate }}</h2>
+        <p id="cc-subtitle" class="ui-hint">{{ 'cargaCno.subtitle' | ctranslate }}</p>
+      </div>
+      <button type="button" class="ui-icon-btn" [disabled]="screen === 'loading'" [attr.aria-label]="'common.close' | ctranslate" (click)="close()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <!-- ============ Formulario: dos columnas ============ -->
+    <div *ngIf="screen === 'form'" class="cc-body">
+      <div class="cc-columns">
+        <!-- Izquierda: qué cargar y el archivo -->
+        <div class="cc-left">
+          <h3 class="cc-step"><span class="cc-step-num">1</span>{{ 'cargaCno.step1' | ctranslate }}</h3>
+          <div class="cc-options" role="radiogroup" [attr.aria-label]="'cargaCno.step1' | ctranslate">
+            <button type="button" class="cc-option cc-option-whole" role="radio" [attr.aria-checked]="wholeFile" [class.active]="wholeFile" (click)="chooseWhole()">
+              <span class="cc-option-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></span>
+              <span class="cc-option-text"><strong>{{ 'cargaCno.whole' | ctranslate }}</strong><small>{{ 'cargaCno.wholeHint' | ctranslate }}</small></span>
+              <span class="cc-radio" aria-hidden="true"></span>
+            </button>
+            <p class="cc-divider"><span>{{ 'cargaCno.orSpecific' | ctranslate }}</span></p>
+            <button *ngFor="let item of types" type="button" class="cc-option" role="radio" [attr.aria-checked]="type === item" [class.active]="type === item" (click)="chooseType(item)">
+              <span class="cc-option-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path [attr.d]="icons[item]"/></svg></span>
+              <span class="cc-option-text"><strong>{{ typeLabel(item) }}</strong><small>{{ 'cargaCno.typeHint.' + item | ctranslate }}</small></span>
+              <span class="cc-radio" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <h3 class="cc-step"><span class="cc-step-num">2</span>{{ 'cargaCno.step2' | ctranslate }}</h3>
+          <div class="cc-template">
+            <div class="cc-template-text">
+              <span class="cc-option-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5ZM14 3v5h5M9 13h6M9 17h6"/></svg></span>
+              <div>
+                <strong>{{ 'cargaCno.templateTitle' | ctranslate }}</strong>
+                <p *ngIf="!chosen" class="ui-hint">{{ 'cargaCno.templateChoose' | ctranslate }}</p>
+                <p *ngIf="wholeFile" class="ui-hint">{{ 'cargaCno.templateWhole' | ctranslate }}</p>
+                <p *ngIf="type" class="ui-hint"><strong>{{ 'cargaCno.requiredLabel' | ctranslate }}</strong> {{ requiredColumns }}</p>
+                <p *ngIf="chosen" class="ui-hint">{{ 'cargaCno.templateRule' | ctranslate }}</p>
+              </div>
+            </div>
+            <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" [disabled]="!chosen || downloadingTemplate" (click)="downloadTemplate()">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg>
+              {{ templateLabel }}
+            </button>
+            <p *ngIf="templateError" class="cc-error" role="alert">{{ templateError }}</p>
+          </div>
+
+          <input #fileInput type="file" class="cc-file-input" [accept]="extensions" tabindex="-1" aria-hidden="true" (change)="onFileSelected($event)">
+          <div *ngIf="!file; else chosenFile" class="cc-drop" [class.dragging]="dragging" role="button" tabindex="0" [attr.aria-label]="'cargaCno.drop' | ctranslate"
+               (click)="openPicker()" (keydown.enter)="openPicker()" (keydown.space)="$event.preventDefault(); openPicker()"
+               (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+            <strong>{{ 'cargaCno.drop' | ctranslate }}</strong>
+            <small>{{ 'cargaCno.formats' | ctranslate: { extensions: extensions, max: maxMb } }}</small>
+          </div>
+          <ng-template #chosenFile>
+            <div class="cc-file" [class.invalid]="!!fileError" (dragover)="onDragOver($event)" (drop)="onDrop($event)">
+              <span class="cc-option-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5ZM14 3v5h5"/></svg></span>
+              <span class="cc-file-text"><strong>{{ file?.name }}</strong><small>{{ fileSizeLabel }}</small></span>
+              <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="openPicker()">{{ 'cargaCno.change' | ctranslate }}</button>
+              <button type="button" class="ui-icon-btn" [attr.aria-label]="'cargaCno.removeFile' | ctranslate" (click)="removeFile()">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
+          </ng-template>
+          <p *ngIf="fileError" class="cc-error" role="alert">{{ fileError }}</p>
+          <p *ngIf="!fileError && pendingHint" class="ui-hint">{{ pendingHint }}</p>
+        </div>
+
+        <!-- Derecha: lo que se va a cargar -->
+        <div class="cc-right" aria-live="polite" [attr.aria-busy]="reviewing">
+          <!-- Todo el archivo -->
+          <div *ngIf="wholeFile" class="cc-whole">
+            <strong>{{ 'cargaCno.wholeTitle' | ctranslate }}</strong>
+            <p>{{ 'cargaCno.wholeText' | ctranslate }}</p>
+            <span class="ui-overline">{{ 'cargaCno.inThisOrder' | ctranslate }}</span>
+            <ol class="cc-order">
+              <li *ngFor="let item of types">{{ typeLabel(item) }}</li>
+            </ol>
+            <p class="ui-hint">{{ 'cargaCno.wholeNote' | ctranslate }}</p>
+          </div>
+
+          <!-- Revisando -->
+          <div *ngIf="!wholeFile && reviewing" class="cc-placeholder">
+            <span class="cc-spinner" aria-hidden="true"></span>
+            <div><strong>{{ 'cargaCno.reviewing' | ctranslate }}</strong><p>{{ 'cargaCno.reviewingText' | ctranslate }}</p></div>
+          </div>
+
+          <!-- Sin revisión todavía -->
+          <div *ngIf="!wholeFile && !reviewing && !review" class="cc-placeholder cc-empty">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <p>{{ 'cargaCno.emptyReview' | ctranslate }}</p>
+          </div>
+
+          <!-- Revisión del servidor -->
+          <ng-container *ngIf="!wholeFile && !reviewing && review as current">
+            <div class="ui-alert" [ngClass]="reviewState === 'ok' ? 'ui-alert-success' : reviewState === 'warning' ? 'ui-alert-warn' : 'ui-alert-error'">
+              <span>{{ reviewMessage }}</span>
+            </div>
+            <p *ngIf="current.sheet" class="ui-hint">{{ 'cargaCno.sheet' | ctranslate }} <strong>{{ current.sheet }}</strong></p>
+
+            <section class="cc-block" aria-labelledby="cc-summary-title">
+              <h4 id="cc-summary-title">{{ 'cargaCno.summary' | ctranslate }}</h4>
+              <dl class="cc-figures">
+                <div><dt>{{ 'cargaCno.records' | ctranslate }}</dt><dd>{{ formatNumber(current.totalRecords) }}</dd></div>
+                <div><dt>{{ 'cargaCno.columns' | ctranslate }}</dt><dd>{{ formatNumber(current.totalColumns) }}</dd></div>
+                <div class="ok"><dt>{{ 'cargaCno.valid' | ctranslate }}</dt><dd>{{ formatNumber(current.validRecords) }}</dd></div>
+                <div class="error"><dt>{{ 'cargaCno.withError' | ctranslate }}</dt><dd>{{ formatNumber(current.invalidRecords) }}</dd></div>
+              </dl>
+            </section>
+
+            <section class="cc-block" aria-labelledby="cc-columns-title">
+              <h4 id="cc-columns-title">{{ 'cargaCno.columnCheck' | ctranslate }}</h4>
+              <ul class="cc-checks">
+                <li *ngFor="let column of current.columns" [class.missing]="!column.found">
+                  <span class="cc-check-icon" aria-hidden="true">{{ column.found ? '✓' : '✕' }}</span>
+                  <span class="cc-grow">{{ column.name }}<small *ngIf="column.found && column.header"> ↳ {{ column.header }}</small></span>
+                  <span class="ui-badge" [ngClass]="column.required ? 'ui-badge-info' : 'ui-badge-neutral'">{{ (column.required ? 'cargaCno.requiredBadge' : 'cargaCno.optional') | ctranslate }}</span>
+                </li>
+              </ul>
+
+              <button type="button" class="cc-toggle" [attr.aria-expanded]="showColumns" (click)="showColumns = !showColumns">
+                {{ 'cargaCno.detectedColumns' | ctranslate: { count: current.allColumns.length, mapped: mappedCount } }}
+                <svg class="ui-icon" [class.open]="showColumns" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <ul *ngIf="showColumns" class="cc-detected">
+                <li *ngFor="let column of current.allColumns">
+                  <div class="cc-detected-row">
+                    <span class="cc-grow"><strong>{{ column.header }}</strong>
+                      <small *ngIf="column.mapped"> → {{ column.mappedLabel }}</small>
+                      <small *ngIf="!column.mapped" class="cc-unmapped"> {{ 'cargaCno.notApplicable' | ctranslate }}</small>
+                    </span>
+                    <button *ngIf="!column.mapped && assignableFields.length" type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="toggleConfigure(column.header)">{{ 'cargaCno.configure' | ctranslate }}</button>
+                    <button *ngIf="column.mapped && isManual(column)" type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="unassign(column.header)">{{ 'cargaCno.unassign' | ctranslate }}</button>
+                  </div>
+                  <div *ngIf="configuring === column.header" class="cc-configure">
+                    <select class="ui-select" [name]="'cc-field-' + column.header" [attr.aria-label]="'cargaCno.assignAria' | ctranslate: { header: column.header }" [(ngModel)]="configuringField">
+                      <option value="">{{ 'cargaCno.chooseField' | ctranslate }}</option>
+                      <option *ngFor="let field of assignableFields" [value]="field.key">{{ field.name }}</option>
+                    </select>
+                    <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="toggleConfigure(column.header)">{{ 'common.cancel' | ctranslate }}</button>
+                    <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" [disabled]="!configuringField" (click)="assign(column.header)">{{ 'cargaCno.assign' | ctranslate: { header: column.header } }}</button>
+                  </div>
+                </li>
+              </ul>
+              <p *ngIf="unmappedColumns.length" class="ui-hint">
+                {{ (unmappedColumns.length === 1 ? 'cargaCno.unmappedOne' : 'cargaCno.unmappedMany') | ctranslate: { count: unmappedColumns.length, type: type ? typeLabel(type) : '' } }}
+              </p>
+            </section>
+
+            <section *ngIf="current.preview.rows.length" class="cc-block">
+              <button type="button" class="cc-toggle" [attr.aria-expanded]="showPreview" (click)="showPreview = !showPreview">
+                {{ 'cargaCno.preview' | ctranslate: { count: current.preview.rows.length } }}
+                <svg class="ui-icon" [class.open]="showPreview" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div *ngIf="showPreview" class="ui-table-wrap cc-table-wrap">
+                <table class="ui-table cc-table">
+                  <thead><tr><th *ngFor="let header of current.preview.headers" scope="col">{{ header }}</th></tr></thead>
+                  <tbody><tr *ngFor="let row of current.preview.rows"><td *ngFor="let value of row">{{ value || '—' }}</td></tr></tbody>
+                </table>
+              </div>
+            </section>
+
+            <section *ngIf="current.errors.length" class="cc-block">
+              <button type="button" class="cc-toggle" [attr.aria-expanded]="showErrors" (click)="showErrors = !showErrors">
+                {{ 'cargaCno.rowErrors' | ctranslate: { count: current.errors.length } }}
+                <svg class="ui-icon" [class.open]="showErrors" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <ng-container *ngIf="showErrors">
+                <p *ngIf="current.errors.length > maxErrorRows" class="ui-hint">{{ 'cargaCno.firstErrors' | ctranslate: { count: maxErrorRows } }}</p>
+                <div class="ui-table-wrap cc-table-wrap">
+                  <table class="ui-table cc-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">{{ 'cargaCno.colRow' | ctranslate }}</th><th scope="col">{{ 'cargaCno.colField' | ctranslate }}</th><th scope="col">{{ 'cargaCno.colValue' | ctranslate }}</th>
+                        <th scope="col">{{ 'cargaCno.colError' | ctranslate }}</th><th scope="col">{{ 'cargaCno.colSuggestion' | ctranslate }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of shownErrors"><td>{{ item.row }}</td><td>{{ item.field }}</td><td>{{ item.value || '—' }}</td><td>{{ item.message }}</td><td>{{ item.suggestion }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </ng-container>
+            </section>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ Cargando ============ -->
+    <div *ngIf="screen === 'loading'" class="cc-body cc-status" aria-live="polite">
+      <span class="cc-spinner" aria-hidden="true"></span>
+      <strong>{{ 'cargaCno.loading' | ctranslate }}</strong>
+      <p>
+        <ng-container *ngIf="currentType && wholeFile">{{ typeLabel(currentType) }} · </ng-container>{{ progressKey | ctranslate }}
+      </p>
+      <div class="cc-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progress"><span [style.width.%]="progress"></span></div>
+      <p class="ui-hint">{{ 'cargaCno.dontClose' | ctranslate }}</p>
+      <ul *ngIf="statuses.length" class="cc-type-status">
+        <li *ngFor="let status of statuses" [ngClass]="status.state">{{ typeLabel(status.type) }} <small>{{ 'cargaCno.state.' + status.state | ctranslate }}</small></li>
+      </ul>
+    </div>
+
+    <!-- ============ Resultado ============ -->
+    <div *ngIf="screen === 'done'" class="cc-body cc-result">
+      <ng-container *ngIf="verdict as current">
+        <div class="ui-alert" [ngClass]="current.state === 'ok' ? 'ui-alert-success' : current.state === 'failed' || current.state === 'empty' ? 'ui-alert-error' : 'ui-alert-warn'" role="status">
+          <div>
+            <strong>{{ current.titleKey | ctranslate: current.titleParams }}</strong>
+            <p><ng-container *ngFor="let part of current.parts">{{ part.key | ctranslate: part.params }} </ng-container></p>
+          </div>
+        </div>
+      </ng-container>
+      <dl *ngIf="result as total" class="cc-figures cc-figures-6">
+        <div class="ok"><dt>{{ 'cargaCno.created' | ctranslate }}</dt><dd>{{ formatNumber(total.inserted) }}</dd></div>
+        <div class="ok"><dt>{{ 'cargaCno.updated' | ctranslate }}</dt><dd>{{ formatNumber(total.updated) }}</dd></div>
+        <div><dt>{{ 'cargaCno.skipped' | ctranslate }}</dt><dd>{{ formatNumber(total.skipped) }}</dd></div>
+        <div class="error"><dt>{{ 'cargaCno.withError' | ctranslate }}</dt><dd>{{ formatNumber(total.errors) }}</dd></div>
+        <div *ngIf="total.unreadable" class="error"><dt>{{ 'cargaCno.unreadable' | ctranslate }}</dt><dd>{{ formatNumber(total.unreadable) }}</dd></div>
+        <div *ngIf="total.warnings" class="warn"><dt>{{ 'cargaCno.warnings' | ctranslate }}</dt><dd>{{ formatNumber(total.warnings) }}</dd></div>
+      </dl>
+
+      <section *ngIf="statuses.length" class="cc-block">
+        <h4>{{ 'cargaCno.byType' | ctranslate }}</h4>
+        <ul class="cc-type-status">
+          <li *ngFor="let status of statuses" [ngClass]="status.state">
+            {{ typeLabel(status.type) }}
+            <small *ngIf="status.state === 'ok' && status.result">{{ 'cargaCno.typeCounts' | ctranslate: { inserted: formatNumber(status.result.inserted), updated: formatNumber(status.result.updated) } }}</small>
+            <small *ngIf="status.state === 'error'" class="cc-unmapped">{{ status.error }}</small>
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="sheets.length" class="cc-block">
+        <h4>{{ 'cargaCno.bySheet' | ctranslate }}</h4>
+        <ul class="cc-sheets">
+          <li *ngFor="let sheet of sheets; let index = index" [class.open]="openSheet === index">
+            <button type="button" class="cc-toggle" [attr.aria-expanded]="openSheet === index" (click)="toggleSheet(index)">
+              <span class="cc-grow">{{ sheet.sheet }}</span>
+              <span *ngIf="sheet.errors.length" class="ui-badge ui-badge-error">{{ 'cargaCno.chipErrors' | ctranslate: { count: sheet.errors.length } }}</span>
+              <span *ngIf="sheet.unreadable" class="ui-badge ui-badge-error">{{ 'cargaCno.chipUnreadable' | ctranslate: { count: sheet.unreadable } }}</span>
+              <span *ngIf="sheet.warnings.length" class="ui-badge ui-badge-warn">{{ 'cargaCno.chipWarnings' | ctranslate: { count: sheet.warnings.length } }}</span>
+              <span *ngIf="sheet.skippedDetails.length" class="ui-badge ui-badge-neutral">{{ 'cargaCno.chipSkipped' | ctranslate: { count: sheet.skippedDetails.length } }}</span>
+              <svg class="ui-icon" [class.open]="openSheet === index" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div *ngIf="openSheet === index" class="cc-sheet-body">
+              <ng-container *ngIf="sheet.errors.length">
+                <h5>{{ 'cargaCno.notLoaded' | ctranslate }}</h5>
+                <ul><li *ngFor="let line of sheet.errors.slice(0, maxResultLines)">{{ line }}</li></ul>
+                <p *ngIf="sheet.errors.length > maxResultLines" class="ui-hint">{{ 'cargaCno.andMore' | ctranslate: { count: sheet.errors.length - maxResultLines } }}</p>
+              </ng-container>
+              <ng-container *ngIf="sheet.warnings.length">
+                <h5>{{ 'cargaCno.warningsTitle' | ctranslate }}</h5>
+                <ul><li *ngFor="let line of sheet.warnings.slice(0, maxResultLines)">{{ line }}</li></ul>
+                <p *ngIf="sheet.warnings.length > maxResultLines" class="ui-hint">{{ 'cargaCno.andMore' | ctranslate: { count: sheet.warnings.length - maxResultLines } }}</p>
+              </ng-container>
+              <ng-container *ngIf="sheet.skippedDetails.length">
+                <h5>{{ 'cargaCno.skippedTitle' | ctranslate }}</h5>
+                <ul><li *ngFor="let line of sheet.skippedDetails.slice(0, maxResultLines)">{{ line }}</li></ul>
+                <p *ngIf="sheet.skippedDetails.length > maxResultLines" class="ui-hint">{{ 'cargaCno.andMore' | ctranslate: { count: sheet.skippedDetails.length - maxResultLines } }}</p>
+              </ng-container>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- ============ Error ============ -->
+    <div *ngIf="screen === 'error'" class="cc-body cc-status">
+      <div class="ui-alert ui-alert-error" role="alert">
+        <div><strong>{{ 'cargaCno.failedTitle' | ctranslate }}</strong><p>{{ loadError }}</p></div>
+      </div>
+    </div>
+
+    <!-- Pie -->
+    <footer class="cc-footer">
+      <ng-container [ngSwitch]="screen">
+        <ng-container *ngSwitchCase="'form'">
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="close()">{{ 'common.cancel' | ctranslate }}</button>
+          <button type="button" class="ui-btn ui-btn-primary" [disabled]="!canLoad" (click)="load()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V8M8 12l4-4 4 4M7 19h10a4 4 0 0 0 .7-7.9A6 6 0 0 0 6 11a4 4 0 0 0 1 8Z"/></svg>
+            {{ (wholeFile ? 'cargaCno.loadWhole' : 'cargaCno.load') | ctranslate }}
+          </button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'loading'">
+          <button type="button" class="ui-btn ui-btn-secondary" disabled>{{ 'common.cancel' | ctranslate }}</button>
+          <button type="button" class="ui-btn ui-btn-primary" disabled>{{ 'cargaCno.loading' | ctranslate }}</button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'done'">
+          <button type="button" class="ui-btn ui-btn-primary" (click)="close()">{{ 'cargaCno.finish' | ctranslate }}</button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'error'">
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="close()">{{ 'common.cancel' | ctranslate }}</button>
+          <button type="button" class="ui-btn ui-btn-primary" (click)="retry()">{{ 'cargaCno.retry' | ctranslate }}</button>
+        </ng-container>
+      </ng-container>
+    </footer>
+  </section>
+</div>

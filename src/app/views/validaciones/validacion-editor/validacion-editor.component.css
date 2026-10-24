@@ -1,0 +1,729 @@
+/* Editor de la validación experta (modal grande en tres franjas): solo lo específico de esta vista. */
+.vx-modal {
+  max-width: 1500px;
+  width: 100%;
+  height: calc(100dvh - 40px);
+  padding: 0;
+}
+
+/* ---------- Encabezado ---------- */
+.vx-header {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.vx-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.vx-header-text h2 {
+  margin: 4px 0 2px;
+}
+
+.vx-header-text p {
+  margin: 0;
+  color: var(--neutral-700);
+}
+
+.vx-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-color-hover);
+  font: inherit;
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.vx-back .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.vx-close {
+  flex: none;
+  border: 1px solid var(--neutral-100);
+}
+
+.ve-state {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.ve-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ve-state-received {
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+}
+
+.ve-state-filled {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.ve-state-edited {
+  background: #fff1e8;
+  color: #c2410c;
+}
+
+.ve-state-sent {
+  background: #e6f6f3;
+  color: #0f766e;
+}
+
+.vx-status {
+  margin: 24px;
+}
+
+/* ---------- Cuerpo: navegación | contenido ---------- */
+.vx-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+
+.vx-nav {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 16px;
+  border-right: 1px solid var(--neutral-100);
+  scrollbar-width: thin;
+}
+
+.vx-nav-title {
+  margin: 0 0 10px;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale)) !important;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.vx-nav-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22px;
+}
+
+.vx-occupations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vx-occupation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vx-occupation.active {
+  border-color: var(--accent-color);
+  background: var(--accent-color-soft);
+}
+
+.vx-occupation-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vx-occupation-top strong {
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.vx-occupation-name {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.vx-progress {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.vx-progress.done {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.vx-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vx-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.vx-section:hover {
+  background: var(--neutral-50);
+}
+
+.vx-section.active {
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+}
+
+.vx-section-num {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.vx-section.active .vx-section-num {
+  background: var(--accent-color);
+  color: #fff;
+}
+
+.vx-section.done:not(.active) .vx-section-num {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.vx-section-num svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vx-section-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vx-section-count {
+  color: var(--neutral-400);
+  font-size: calc(12px * var(--type-scale));
+}
+
+.vx-section:focus-visible,
+.vx-occupation:focus-visible,
+.vx-back:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.vx-content {
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 24px;
+  scrollbar-width: thin;
+}
+
+/* ---------- Datos generales ---------- */
+.vx-panel {
+  padding: 16px 18px 18px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.vx-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -4px -6px 6px;
+  padding: 10px 14px;
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.vx-panel-head h3 {
+  margin: 0;
+  font-size: var(--fs-body) !important;
+}
+
+.vx-panel-hint {
+  margin: 0 0 12px;
+}
+
+.vx-tag {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.vx-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.vx-content .ui-label {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.vx-observations .ui-label {
+  color: var(--ui-text);
+  font-size: calc(14px * var(--type-scale));
+}
+
+/* ---------- Encabezado de cada sección y datos de la ocupación ---------- */
+.vx-section-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vx-section-panel .vx-panel-head {
+  margin-bottom: 0;
+}
+
+.vx-panel-sub {
+  color: var(--neutral-700);
+  font-weight: var(--fw-regular);
+}
+
+.vx-tag-pending {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.vx-note {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+  font-style: italic;
+}
+
+.vx-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+
+.vx-info-full {
+  grid-column: 1 / -1;
+}
+
+.vx-info-grid .ui-textarea[readonly],
+.vx-info-grid .ui-input[readonly] {
+  background: var(--neutral-50);
+  color: var(--ui-text);
+}
+
+.vx-editable {
+  margin-left: 6px;
+  padding: 1px 8px;
+  border: 1px solid color-mix(in srgb, var(--brand-blue) 40%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-blue) 10%, #fff);
+  color: #0c6f96;
+  font-size: calc(11px * var(--type-scale));
+  letter-spacing: 0.6px;
+}
+
+/* ---------- Ítems: una fila por ítem (título y valor | Opción | Comentario) ---------- */
+.vx-item {
+  --grade-color: var(--accent-color);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px minmax(220px, 320px);
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  overflow: hidden;
+}
+
+/* Color de cada calificación: Aplica verde, No aplica rojo, Requiere ajuste naranja y Con propuesta de mejora azul. */
+.vx-item-aplica {
+  --grade-color: var(--state-ok-fg);
+  --grade-bg: var(--state-ok-bg);
+}
+
+.vx-item-no_aplica {
+  --grade-color: var(--state-error-fg);
+  --grade-bg: var(--state-error-bg);
+}
+
+.vx-item-requiere_ajuste {
+  --grade-color: var(--state-warn-fg);
+  --grade-bg: var(--state-warn-bg);
+}
+
+.vx-item-propuesta_mejora {
+  --grade-color: #0c7fb0;
+  --grade-bg: color-mix(in srgb, var(--brand-blue) 12%, #fff);
+}
+
+.vx-item-main {
+  min-width: 0;
+  padding: 12px 16px 14px;
+}
+
+/* Título numerado en verde con una franja a la izquierda que toma el color de la calificación */
+.vx-item-title {
+  margin: 0 0 8px -16px;
+  padding: 6px 12px 6px 13px;
+  border-left: 3px solid var(--grade-color);
+  background: color-mix(in srgb, var(--accent-color) 8%, #fff);
+  color: var(--accent-color-hover);
+  font-size: calc(13px * var(--type-scale)) !important;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.vx-item-value {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.vx-item-option,
+.vx-item-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-left: 1px solid var(--neutral-100);
+  background: color-mix(in srgb, var(--accent-color) 5%, #fff);
+}
+
+.vx-item-head {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* El desplegable toma el color de la calificación elegida (fondo suave, texto y borde del color). */
+.vx-item-option .ui-select {
+  border-color: var(--grade-color);
+  background-color: var(--grade-bg, #fff);
+  color: var(--grade-color);
+  font-weight: var(--fw-semibold);
+}
+
+.vx-item-none .vx-item-option .ui-select {
+  border-color: var(--neutral-100);
+  background-color: #fff;
+  color: var(--ui-text);
+  font-weight: var(--fw-regular);
+}
+
+/* Las opciones de la lista llevan su color (los navegadores que lo permiten lo muestran). */
+.vx-item-option option {
+  background: #fff;
+  color: var(--ui-text);
+  font-weight: var(--fw-regular);
+}
+
+.vx-item-option .vx-option-aplica {
+  color: var(--state-ok-fg);
+  font-weight: var(--fw-semibold);
+}
+
+.vx-item-option .vx-option-no_aplica {
+  color: var(--state-error-fg);
+  font-weight: var(--fw-semibold);
+}
+
+.vx-item-option .vx-option-requiere_ajuste {
+  color: var(--state-warn-fg);
+  font-weight: var(--fw-semibold);
+}
+
+.vx-item-option .vx-option-propuesta_mejora {
+  color: #0c7fb0;
+  font-weight: var(--fw-semibold);
+}
+
+.vx-item-comment .ui-textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.vx-item-comment .ui-form-error {
+  margin: 0;
+}
+
+.vx-required {
+  color: var(--state-error-fg);
+}
+
+.vx-item-comment .ui-textarea.invalid {
+  border-color: var(--state-error-fg);
+}
+
+.vx-observations {
+  margin-top: 4px;
+}
+
+/* ---------- Pie ---------- */
+.vx-footer {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--neutral-100);
+  background: var(--neutral-50);
+}
+
+.vx-footer-nav,
+.vx-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.vx-feedback {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+  text-align: center;
+}
+
+.vx-pending {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.vx-readonly {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .vx-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vx-item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .vx-item-main {
+    grid-column: 1 / -1;
+  }
+
+  .vx-item-option {
+    border-left: 0;
+  }
+
+  .vx-item-option,
+  .vx-item-comment {
+    border-top: 1px solid var(--neutral-100);
+  }
+}
+
+@media (max-width: 820px) {
+  .vx-modal {
+    height: auto;
+  }
+
+  .vx-body {
+    grid-template-columns: 1fr;
+  }
+
+  .vx-nav {
+    max-height: 260px;
+    border-right: 0;
+    border-bottom: 1px solid var(--neutral-100);
+  }
+
+  .vx-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .vx-footer-nav,
+  .vx-footer-actions {
+    width: 100%;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .vx-header,
+:host-context(.shell.dark-mode) .vx-nav,
+:host-context(.shell.dark-mode) .vx-footer,
+:host-context(.shell.dark-mode) .vx-panel,
+:host-context(.shell.dark-mode) .vx-close,
+:host-context(.shell.dark-mode) .vx-nav {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .vx-footer,
+:host-context(.shell.dark-mode) .vx-panel-head {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .vx-occupation,
+:host-context(.shell.dark-mode) .vx-item {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .vx-item-option,
+:host-context(.shell.dark-mode) .vx-item-comment,
+:host-context(.shell.dark-mode) .vx-item-title {
+  border-color: #3d5470;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+:host-context(.shell.dark-mode) .vx-item-title {
+  border-left-color: var(--grade-color);
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .vx-item-aplica {
+  --grade-color: #8fd86a;
+  --grade: #8fd86a;
+  --grade-bg: rgba(52, 154, 0, 0.18);
+}
+
+:host-context(.shell.dark-mode) .vx-item-no_aplica {
+  --grade-color: #ff9b9b;
+  --grade: #ff9b9b;
+  --grade-bg: rgba(232, 28, 28, 0.18);
+}
+
+:host-context(.shell.dark-mode) .vx-item-requiere_ajuste {
+  --grade-color: #fcd34d;
+  --grade: #fcd34d;
+  --grade-bg: rgba(253, 195, 0, 0.16);
+}
+
+:host-context(.shell.dark-mode) .vx-item-propuesta_mejora {
+  --grade-color: #7dd3fc;
+  --grade-bg: rgba(31, 172, 227, 0.18);
+}
+
+:host-context(.shell.dark-mode) .vx-item-none .vx-item-option .ui-select,
+:host-context(.shell.dark-mode) .vx-item-option option {
+  background-color: var(--dark-recessed);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .vx-occupation-name,
+:host-context(.shell.dark-mode) .vx-header-text p,
+:host-context(.shell.dark-mode) .vx-item-label,
+:host-context(.shell.dark-mode) .vx-content .ui-label,
+:host-context(.shell.dark-mode) .vx-nav-title,
+:host-context(.shell.dark-mode) .vx-feedback {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .vx-item-value,
+:host-context(.shell.dark-mode) .vx-section {
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .vx-section:hover,
+:host-context(.shell.dark-mode) .vx-section-num {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:host-context(.shell.dark-mode) .vx-section.active,
+:host-context(.shell.dark-mode) .vx-back {
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .ve-state {
+  background: rgba(255, 255, 255, 0.08);
+}
+

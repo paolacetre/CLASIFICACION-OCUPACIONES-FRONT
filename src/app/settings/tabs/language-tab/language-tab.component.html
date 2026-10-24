@@ -1,0 +1,37 @@
+<!-- Pestaña "Idioma": elegir español o inglés. Es un grupo de opciones (radiogroup) que también se maneja con las flechas. -->
+<section class="config-card" aria-labelledby="section-language-title">
+  <div class="card-title-row">
+    <div class="card-icon" [style.background-color]="'var(--primary-color-light)'" [style.color]="'var(--primary-color)'" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20Z"/></svg>
+    </div>
+    <div>
+      <h2 id="section-language-title">{{ 'language.cardTitle' | translate }}</h2>
+      <p class="card-description">{{ 'language.cardDesc' | translate }}</p>
+    </div>
+  </div>
+
+  <div class="language-grid" role="radiogroup" [attr.aria-label]="'language.ariaLabel' | translate" (keydown)="onLanguageKeydown($event)">
+    <button
+      *ngFor="let lang of languageOptions"
+      type="button"
+      class="language-card"
+      role="radio"
+      [id]="'language-option-' + lang.id"
+      [class.selected]="form.controls.language.value === lang.id"
+      [attr.aria-checked]="form.controls.language.value === lang.id"
+      [attr.tabindex]="form.controls.language.value === lang.id ? 0 : -1"
+      (click)="selectLanguage(lang.id)">
+      <span class="language-code" aria-hidden="true">{{ lang.code }}</span>
+      <strong>{{ lang.name }}</strong>
+      <span class="language-native">{{ lang.native }}</span>
+      <span class="language-check" *ngIf="form.controls.language.value === lang.id" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+    </button>
+  </div>
+</section>
+
+<!-- El idioma elegido se aplica a toda la interfaz al pulsar "Guardar cambios". -->
+<section class="config-card compact-preview-note">
+  <p>{{ 'language.selected' | translate:{ name: selectedLanguageName() } }} {{ 'language.appliesOnSave' | translate }}</p>
+</section>

@@ -1,0 +1,238 @@
+<div class="ui-modal-backdrop" (click)="requestClose()">
+  <section class="ui-modal ui-modal-fixed vx-modal" role="dialog" aria-modal="true" aria-labelledby="vx-title" tabindex="-1" appDialog (dialogEscape)="requestClose()"
+           (click)="$event.stopPropagation()">
+    <!-- Encabezado -->
+    <header class="vx-header">
+      <div class="vx-header-text">
+        <button type="button" class="vx-back" (click)="requestClose()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          {{ 'validaciones.title' | translate }}
+        </button>
+        <h2 id="vx-title">{{ title }}</h2>
+        <p>{{ 'validaciones.kind.' + record.kind | translate }} · {{ record.analyst || '—' }}</p>
+      </div>
+      <span class="ve-state" [ngClass]="'ve-state-' + record.state"><span class="ve-dot" aria-hidden="true"></span>{{ 'validaciones.state.' + record.state | translate }}</span>
+      <button type="button" class="ui-icon-btn vx-close" [disabled]="saving" [attr.aria-label]="'common.close' | translate" (click)="requestClose()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <p *ngIf="loading" class="vx-status ui-hint" role="status">{{ 'validaciones.editor.loading' | translate }}</p>
+    <div *ngIf="!loading && loadError" class="vx-status ui-alert ui-alert-error" role="alert"><p>{{ loadError }}</p></div>
+
+    <div *ngIf="review && occupation as current" class="vx-body">
+      <!-- Navegación: ocupaciones y secciones -->
+      <nav class="vx-nav" [attr.aria-label]="'validaciones.editor.navAria' | translate">
+        <h3 class="vx-nav-title">{{ 'validaciones.editor.occupations' | translate }}</h3>
+        <div class="vx-occupations">
+          <button *ngFor="let item of review.occupations; let i = index" type="button" class="vx-occupation" [class.active]="i === occupationIndex"
+                  [attr.aria-current]="i === occupationIndex ? 'true' : null" (click)="selectOccupation(i)">
+            <span class="vx-occupation-top">
+              <strong>{{ item.code }}</strong>
+              <span class="vx-progress" [class.done]="doneOf(item) === item.items.length">{{ doneOf(item) }}/{{ item.items.length }}</span>
+            </span>
+            <span class="vx-occupation-name" [title]="item.name">{{ item.name || '—' }}</span>
+          </button>
+        </div>
+
+        <h3 class="vx-nav-title vx-nav-title-row">
+          {{ 'validaciones.editor.sections' | translate }}
+          <span class="vx-progress done">{{ sectionsDone }}/{{ sections.length }}</span>
+        </h3>
+        <ol class="vx-sections">
+          <li *ngFor="let item of sections; let i = index">
+            <button type="button" class="vx-section" [class.active]="item === section" [class.done]="sectionDone(item)" [attr.aria-current]="item === section ? 'step' : null"
+                    (click)="selectSection(item)">
+              <span class="vx-section-num" aria-hidden="true">
+                <svg *ngIf="sectionDone(item) && item !== section" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                <ng-container *ngIf="!sectionDone(item) || item === section">{{ i + 1 }}</ng-container>
+              </span>
+              <span class="vx-section-name">{{ 'validaciones.section.' + item | translate }}</span>
+              <span *ngIf="item !== 'general'" class="vx-section-count">{{ itemsOf(item).length }}</span>
+            </button>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Contenido de la sección -->
+      <div class="vx-content">
+        <!-- 1. Datos generales y observaciones -->
+        <ng-container *ngIf="section === 'general'">
+          <section class="vx-panel">
+            <header class="vx-panel-head">
+              <h3>{{ 'validaciones.section.general' | translate }}</h3>
+              <span class="vx-tag">{{ 'validaciones.state.received' | translate }}</span>
+            </header>
+            <p class="ui-hint vx-panel-hint">{{ 'validaciones.editor.generalHint' | translate }}</p>
+            <div class="vx-grid">
+              <div class="ui-field">
+                <label class="ui-label" for="vx-date">{{ 'validaciones.field.date' | translate }}</label>
+                <input class="ui-input" id="vx-date" [value]="today" readonly>
+              </div>
+              <div *ngFor="let field of textFields" class="ui-field">
+                <label class="ui-label" [for]="'vx-' + field">{{ 'validaciones.field.' + field | translate }}</label>
+                <input class="ui-input" [id]="'vx-' + field" [type]="field === 'email' ? 'email' : field === 'phone' ? 'tel' : 'text'" maxlength="200" [disabled]="!editable"
+                       [(ngModel)]="informant[field]" (ngModelChange)="markDirty()">
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="vx-department">{{ 'validaciones.field.department' | translate }}</label>
+                <select class="ui-select" id="vx-department" [disabled]="!editable" [(ngModel)]="informant.department" (ngModelChange)="onDepartmentChange()">
+                  <option value="">{{ 'validaciones.field.pickDepartment' | translate }}</option>
+                  <option *ngIf="informant.department && !departments.length" [value]="informant.department">{{ informant.department }}</option>
+                  <option *ngFor="let item of departments" [value]="item.label">{{ item.label }}</option>
+                </select>
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="vx-municipality">{{ 'validaciones.field.municipality' | translate }}</label>
+                <select class="ui-select" id="vx-municipality" [disabled]="!editable || !informant.department" [(ngModel)]="informant.municipality" (ngModelChange)="markDirty()">
+                  <option value="">{{ (informant.department ? 'validaciones.field.pickMunicipality' : 'validaciones.field.pickDepartmentFirst') | translate }}</option>
+                  <option *ngIf="informant.municipality && !municipalities.length" [value]="informant.municipality">{{ informant.municipality }}</option>
+                  <option *ngFor="let item of municipalities" [value]="item.label">{{ item.label }}</option>
+                </select>
+              </div>
+              <div *ngFor="let field of extraFields" class="ui-field">
+                <label class="ui-label" [for]="'vx-' + field">{{ 'validaciones.field.' + field | translate }}</label>
+                <input class="ui-input" [id]="'vx-' + field" type="text" maxlength="200" [disabled]="!editable" [(ngModel)]="informant[field]" (ngModelChange)="markDirty()">
+              </div>
+            </div>
+          </section>
+
+          <div class="ui-field vx-observations">
+            <label class="ui-label" for="vx-observations">{{ 'validaciones.field.observations' | translate }}</label>
+            <textarea class="ui-textarea" id="vx-observations" rows="4" [disabled]="!editable" [placeholder]="'validaciones.field.observationsHint' | translate"
+                      [(ngModel)]="observations" (ngModelChange)="markDirty()"></textarea>
+          </div>
+        </ng-container>
+
+        <!-- 2–7. Ítems a calificar: una fila por ítem (título y valor | Opción | Comentario), como la referencia -->
+        <ng-container *ngIf="section !== 'general'">
+          <section class="vx-panel vx-section-panel">
+            <header class="vx-panel-head">
+              <h3>{{ 'validaciones.section.' + section | translate }} <span class="vx-panel-sub">· {{ current.code }} {{ current.name }}</span></h3>
+              <span class="vx-tag" [class.vx-tag-pending]="sectionGraded < sectionItems.length">{{ 'validaciones.editor.gradedOf' | translate: { done: sectionGraded, total: sectionItems.length } }}</span>
+            </header>
+
+            <!-- Información de la ocupación: sus datos, con el área y la descripción corregibles en la principal -->
+            <ng-container *ngIf="section === 'info'">
+              <p class="vx-note">{{ (current.adjustable ? 'validaciones.editor.infoNoteEditable' : 'validaciones.editor.infoNote') | translate }}</p>
+              <div class="vx-info-grid">
+                <div class="ui-field">
+                  <label class="ui-label" for="vx-info-code">{{ 'validaciones.info.code' | translate }}</label>
+                  <input class="ui-input" id="vx-info-code" [value]="current.code" readonly>
+                </div>
+                <div class="ui-field">
+                  <label class="ui-label" for="vx-info-level">{{ 'validaciones.item.level' | translate }}</label>
+                  <input class="ui-input" id="vx-info-level" [value]="current.level || '—'" readonly>
+                </div>
+                <div class="ui-field vx-info-full">
+                  <label class="ui-label" for="vx-info-name">{{ 'validaciones.item.name' | translate }}</label>
+                  <textarea class="ui-textarea" id="vx-info-name" rows="2" readonly [value]="current.name"></textarea>
+                </div>
+                <div class="ui-field vx-info-full">
+                  <label class="ui-label" for="vx-info-area">
+                    {{ 'validaciones.item.area' | translate }}
+                    <span *ngIf="current.adjustable" class="vx-editable">{{ 'validaciones.editor.editable' | translate }}</span>
+                  </label>
+                  <textarea *ngIf="current.adjustable; else areaReadonly" class="ui-textarea" id="vx-info-area" rows="2" [disabled]="!editable"
+                            [(ngModel)]="adjustment.area" (ngModelChange)="markDirty()"></textarea>
+                  <ng-template #areaReadonly><textarea class="ui-textarea" id="vx-info-area" rows="2" readonly [value]="current.area"></textarea></ng-template>
+                </div>
+                <div class="ui-field vx-info-full">
+                  <label class="ui-label" for="vx-info-description">
+                    {{ 'validaciones.item.description' | translate }}
+                    <span *ngIf="current.adjustable" class="vx-editable">{{ 'validaciones.editor.editable' | translate }}</span>
+                  </label>
+                  <textarea *ngIf="current.adjustable; else descriptionReadonly" class="ui-textarea" id="vx-info-description" rows="4" [disabled]="!editable"
+                            [(ngModel)]="adjustment.description" (ngModelChange)="markDirty()"></textarea>
+                  <ng-template #descriptionReadonly><textarea class="ui-textarea" id="vx-info-description" rows="4" readonly [value]="current.description"></textarea></ng-template>
+                </div>
+              </div>
+            </ng-container>
+
+            <p class="vx-note">{{ 'validaciones.editor.gradeHint' | translate }}</p>
+
+          <div *ngIf="sectionItems.length === 0" class="ui-empty">
+            <strong>{{ 'validaciones.editor.emptySection' | translate }}</strong>
+            <p>{{ 'validaciones.editor.emptySectionHint' | translate }}</p>
+          </div>
+
+          <article *ngFor="let item of sectionItems; let i = index; trackBy: trackItem" class="vx-item" [ngClass]="'vx-item-' + (gradeOf(item).grade || 'none')" [attr.data-item]="item.id">
+            <div class="vx-item-main">
+              <h4 class="vx-item-title">{{ itemTitle(item) }} <span *ngIf="item.inactive" class="ui-badge ui-badge-warn">{{ 'validaciones.editor.inactive' | translate }}</span></h4>
+              <p class="vx-item-value">{{ item.value || '—' }}</p>
+            </div>
+
+            <div class="vx-item-option">
+              <label class="vx-item-head" [for]="'vx-grade-' + item.id">{{ 'validaciones.editor.option' | translate }}</label>
+              <select class="ui-select" [id]="'vx-grade-' + item.id" [disabled]="!editable" [ngModel]="gradeOf(item).grade" (ngModelChange)="setGrade(item, $event)">
+                <option value="">{{ 'validaciones.editor.pickOption' | translate }}</option>
+                <option *ngFor="let grade of grades" [value]="grade" [ngClass]="'vx-option-' + grade">{{ 'validaciones.grade.' + grade | translate }}</option>
+              </select>
+            </div>
+
+            <div class="vx-item-comment">
+              <label class="vx-item-head" [for]="'vx-detail-' + item.id">
+                {{ 'validaciones.editor.comment' | translate }}<span *ngIf="detailRequiredFor(item)" class="vx-required" aria-hidden="true"> *</span>
+              </label>
+              <textarea class="ui-textarea" [id]="'vx-detail-' + item.id" rows="2" [disabled]="!editable" [class.invalid]="showDetailError(item)"
+                        [placeholder]="(detailRequiredFor(item) ? 'validaciones.detail.' + gradeOf(item).grade : 'validaciones.editor.commentOptional') | translate"
+                        [attr.aria-invalid]="showDetailError(item)" [ngModel]="gradeOf(item).detail" (ngModelChange)="setDetail(item, $event)"></textarea>
+              <p *ngIf="showDetailError(item)" class="ui-form-error">{{ 'validaciones.editor.detailRequired' | translate }}</p>
+            </div>
+          </article>
+          </section>
+
+          <!-- Observaciones generales: un solo campo, visible al final de cada sección (como la referencia) -->
+          <div class="ui-field vx-observations">
+            <label class="ui-label" for="vx-observations-section">{{ 'validaciones.field.observations' | translate }}</label>
+            <textarea class="ui-textarea" id="vx-observations-section" rows="3" [disabled]="!editable" [placeholder]="'validaciones.field.observationsHint' | translate"
+                      [(ngModel)]="observations" (ngModelChange)="markDirty()"></textarea>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Pie -->
+    <footer class="vx-footer">
+      <div class="vx-footer-nav">
+        <button type="button" class="ui-btn ui-btn-secondary" [disabled]="saving" (click)="requestClose()">{{ 'common.close' | translate }}</button>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="!review || !canGoBack" (click)="previous()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>{{ 'common.previous' | translate }}
+        </button>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="!review || !canGoForward" (click)="next()">
+          {{ 'common.next' | translate }}<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+        </button>
+      </div>
+      <p *ngIf="feedback" class="vx-feedback" role="status">{{ feedback }}</p>
+      <div *ngIf="review && editable" class="vx-footer-actions">
+        <span *ngIf="pending > 0" class="vx-pending">{{ 'validaciones.editor.pendingBadge' | translate: { count: pending } }}</span>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="saving" (click)="saveProgress()">
+          {{ (saving ? 'validaciones.editor.saving' : 'validaciones.editor.saveProgress') | translate }}
+        </button>
+        <button type="button" class="ui-btn ui-btn-primary" [disabled]="saving" (click)="requestSend()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          {{ 'validaciones.editor.send' | translate }}
+        </button>
+      </div>
+      <p *ngIf="review && !editable" class="vx-readonly ui-hint">{{ 'validaciones.editor.readOnly' | translate }}</p>
+    </footer>
+  </section>
+</div>
+
+<app-confirm-dialog *ngIf="confirmSendOpen"
+  [title]="'validaciones.editor.confirmSendTitle' | translate"
+  [message]="('validaciones.editor.confirmSend.' + verdict) | translate"
+  [confirmLabel]="'validaciones.editor.send' | translate"
+  [cancelLabel]="'common.cancel' | translate"
+  [variant]="verdict === 'aprobada' ? 'primary' : 'warn'"
+  (confirm)="confirmSend()" (cancel)="confirmSendOpen = false">
+</app-confirm-dialog>
+
+<app-confirm-dialog *ngIf="confirmCloseOpen"
+  [title]="'validaciones.editor.confirmCloseTitle' | translate"
+  [message]="'validaciones.editor.confirmCloseText' | translate"
+  [confirmLabel]="'validaciones.editor.confirmCloseAction' | translate"
+  [cancelLabel]="'validaciones.editor.keepEditing' | translate"
+  variant="warn"
+  (confirm)="confirmClose()" (cancel)="confirmCloseOpen = false">
+</app-confirm-dialog>

@@ -1,0 +1,331 @@
+<div class="ui-modal-backdrop">
+  <section class="ui-modal ui-modal-wide ui-modal-fixed ow-modal" role="dialog" aria-modal="true" aria-labelledby="ow-title" aria-describedby="ow-subtitle" tabindex="-1"
+           appDialog (dialogEscape)="requestClose()">
+    <!-- Encabezado -->
+    <header class="ow-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8l-5-5ZM14 3v5h5M12 11v6M9 14h6"/></svg>
+      </div>
+      <div class="ow-header-text">
+        <h2 id="ow-title">{{ 'ocupacionWizard.title' | ctranslate }}</h2>
+        <p id="ow-subtitle" class="ui-hint">{{ 'ocupacionWizard.subtitle' | ctranslate }}</p>
+      </div>
+      <button type="button" class="ui-icon-btn" [disabled]="saving" [attr.aria-label]="'common.close' | ctranslate" (click)="requestClose()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <!-- Pasos -->
+    <nav class="ow-steps" [attr.aria-label]="'ocupacionWizard.stepsAria' | ctranslate">
+      <ol>
+        <li *ngFor="let item of steps; let index = index">
+          <button type="button" class="ow-step" [class.active]="item === step" [class.done]="isDone(item)" [disabled]="!canOpen(item)"
+                  [attr.aria-current]="item === step ? 'step' : null" (click)="goTo(item)">
+            <span class="ow-step-num" aria-hidden="true">
+              <svg *ngIf="isDone(item); else number" class="ui-icon" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>
+              <ng-template #number>{{ index + 1 }}</ng-template>
+            </span>
+            {{ 'ocupacionWizard.step.' + item | ctranslate }}
+          </button>
+        </li>
+      </ol>
+    </nav>
+
+    <div class="ui-modal-body ow-body">
+      <!-- Carga de catálogos -->
+      <div *ngIf="loadingCatalogs" class="ui-empty"><p>{{ 'ocupacionWizard.loadingCatalogs' | ctranslate }}</p></div>
+      <div *ngIf="catalogsError" class="ui-empty">
+        <p>{{ 'ocupacionWizard.catalogsError' | ctranslate }}</p>
+        <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="loadCatalogs()">{{ 'actualizacionCno.retry' | ctranslate }}</button>
+      </div>
+
+      <ng-container *ngIf="catalogs as catalog">
+        <!-- ============ 1. Información básica ============ -->
+        <section *ngIf="step === 'basic'" class="ow-section" aria-labelledby="ow-basic-title">
+          <h3 id="ow-basic-title" class="ui-overline ow-section-title">{{ 'ocupacionWizard.basicTitle' | ctranslate }}</h3>
+          <div class="ow-grid">
+            <div class="ui-field">
+              <label class="ui-label" for="ow-code">{{ 'ocupacionWizard.code' | ctranslate }} *</label>
+              <input id="ow-code" class="ui-input" name="code" inputmode="numeric" [maxlength]="limits.codeLength" autocomplete="off" [(ngModel)]="draft.code"
+                     [attr.aria-invalid]="basicSubmitted && !!fieldError('code')" aria-describedby="ow-code-hint">
+              <span id="ow-code-hint" class="ui-hint">{{ 'ocupacionWizard.codeHint' | ctranslate }}</span>
+              <span *ngIf="basicSubmitted && fieldError('code') as error" class="ow-error" role="alert">{{ error | ctranslate }}</span>
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="ow-name">{{ 'ocupacionWizard.name' | ctranslate }} *</label>
+              <input id="ow-name" class="ui-input" name="name" autocomplete="off" [maxlength]="limits.nameMax" [(ngModel)]="draft.name"
+                     [attr.aria-invalid]="basicSubmitted && !!fieldError('name')" aria-describedby="ow-name-hint">
+              <span id="ow-name-hint" class="ui-hint">{{ 'ocupacionWizard.nameHint' | ctranslate }}</span>
+              <span *ngIf="basicSubmitted && fieldError('name') as error" class="ow-error" role="alert">{{ error | ctranslate: { min: limits.nameMin, max: fieldMax('name') } }}</span>
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="ow-area">{{ 'ocupacionWizard.area' | ctranslate }} *</label>
+              <select id="ow-area" class="ui-select" name="area" [(ngModel)]="draft.areaCode" [attr.aria-invalid]="basicSubmitted && !!fieldError('area')">
+                <option value="">{{ 'ocupacionWizard.areaPlaceholder' | ctranslate }}</option>
+                <option *ngFor="let item of catalog.areas" [value]="item.code">{{ item.code }} · {{ item.name }}</option>
+              </select>
+              <span *ngIf="basicSubmitted && fieldError('area') as error" class="ow-error" role="alert">{{ error | ctranslate }}</span>
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="ow-level">{{ 'ocupacionWizard.level' | ctranslate }} *</label>
+              <select id="ow-level" class="ui-select" name="level" [(ngModel)]="draft.levelCode" [attr.aria-invalid]="basicSubmitted && !!fieldError('level')">
+                <option value="">{{ 'ocupacionWizard.levelPlaceholder' | ctranslate }}</option>
+                <option *ngFor="let item of catalog.levels" [value]="item.code">{{ item.code }} · {{ item.name }}</option>
+              </select>
+              <span *ngIf="basicSubmitted && fieldError('level') as error" class="ow-error" role="alert">{{ error | ctranslate }}</span>
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="ow-date">{{ 'ocupacionWizard.registeredOn' | ctranslate }}</label>
+              <input id="ow-date" class="ui-input" name="registeredOn" disabled [value]="registeredOnLabel" aria-describedby="ow-date-hint">
+              <span id="ow-date-hint" class="ui-hint">{{ 'ocupacionWizard.registeredOnHint' | ctranslate }}</span>
+            </div>
+            <div class="ui-field">
+              <span class="ui-label" id="ow-status-label">{{ 'ocupacionWizard.status' | ctranslate }}</span>
+              <div class="ow-status">
+                <button type="button" class="ui-switch" role="switch" [class.on]="draft.active" [attr.aria-checked]="draft.active" aria-labelledby="ow-status-label"
+                        (click)="draft.active = !draft.active"></button>
+                <strong>{{ (draft.active ? 'ocupacionWizard.active' : 'ocupacionWizard.inactive') | ctranslate }}</strong>
+              </div>
+              <span class="ui-hint">{{ (draft.active ? 'ocupacionWizard.activeHint' : 'ocupacionWizard.inactiveHint') | ctranslate }}</span>
+            </div>
+            <div class="ui-field ow-wide">
+              <label class="ui-label" for="ow-traceability">{{ 'ocupacionWizard.traceability' | ctranslate }} *</label>
+              <input id="ow-traceability" class="ui-input" name="traceability" autocomplete="off" [maxlength]="limits.traceabilityMax" [(ngModel)]="draft.traceability"
+                     [attr.aria-invalid]="basicSubmitted && !!fieldError('traceability')" aria-describedby="ow-traceability-hint">
+              <span id="ow-traceability-hint" class="ui-hint">{{ 'ocupacionWizard.traceabilityHint' | ctranslate }}</span>
+              <span *ngIf="basicSubmitted && fieldError('traceability') as error" class="ow-error" role="alert">{{ error | ctranslate: { max: fieldMax('traceability') } }}</span>
+            </div>
+            <div class="ui-field ow-wide">
+              <label class="ui-label" for="ow-description">{{ 'ocupacionWizard.description' | ctranslate }} *</label>
+              <textarea id="ow-description" class="ui-textarea" name="description" rows="4" [maxlength]="limits.descriptionMax" [(ngModel)]="draft.description"
+                        [attr.aria-invalid]="basicSubmitted && !!fieldError('description')" aria-describedby="ow-description-hint"></textarea>
+              <div class="ow-hint-row">
+                <span id="ow-description-hint" class="ui-hint">{{ 'ocupacionWizard.descriptionHint' | ctranslate }}</span>
+                <span class="ui-hint">{{ draft.description.length }} / {{ limits.descriptionMax }}</span>
+              </div>
+              <span *ngIf="basicSubmitted && fieldError('description') as error" class="ow-error" role="alert">{{ error | ctranslate: { max: fieldMax('description') } }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 2. Denominaciones ============ -->
+        <section *ngIf="step === 'denominations'" class="ow-section" aria-labelledby="ow-den-title">
+          <h3 id="ow-den-title" class="ui-overline ow-section-title">
+            {{ 'ocupacionWizard.denominationsTitle' | ctranslate }}
+            <span class="ui-badge ui-badge-error">{{ 'ocupacionWizard.min1' | ctranslate }}</span>
+          </h3>
+          <p class="ui-hint">{{ 'ocupacionWizard.denominationsHint' | ctranslate }}</p>
+          <form class="ow-add-row" (ngSubmit)="addDenomination()">
+            <div class="ui-field ow-grow">
+              <label class="ui-label" for="ow-new-den">{{ 'ocupacionWizard.newDenomination' | ctranslate }} *</label>
+              <input id="ow-new-den" class="ui-input" name="newDenomination" autocomplete="off" [maxlength]="limits.denominationMax" [(ngModel)]="newDenomination">
+            </div>
+            <button type="submit" class="ui-btn ui-btn-primary">+ {{ 'ocupacionWizard.add' | ctranslate }}</button>
+          </form>
+          <span *ngIf="denominationError && editingDenomination === null" class="ow-error" role="alert">{{ denominationError | ctranslate: { max: limits.denominationMax } }}</span>
+
+          <h4 class="ow-list-title">{{ 'ocupacionWizard.denominationsAdded' | ctranslate }} <span class="ui-badge ui-badge-info">{{ draft.denominations.length }}</span></h4>
+          <p *ngIf="!draft.denominations.length" class="ow-empty">{{ 'ocupacionWizard.noDenominations' | ctranslate }}</p>
+          <ul *ngIf="draft.denominations.length" class="ow-list">
+            <li *ngFor="let item of draft.denominations; let index = index; trackBy: trackByIndex" class="ow-item">
+              <span *ngIf="index === 0" class="ui-badge ui-badge-info">{{ 'ocupacionWizard.main' | ctranslate }}</span>
+              <ng-container *ngIf="editingDenomination === index; else showDenomination">
+                <input class="ui-input ow-grow" name="editDenomination" [attr.aria-label]="'ocupacionWizard.editDenominationAria' | ctranslate" [maxlength]="limits.denominationMax"
+                       [(ngModel)]="editingText" (keydown.enter)="$event.preventDefault(); saveDenomination()">
+                <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" (click)="saveDenomination()">{{ 'ocupacionWizard.save' | ctranslate }}</button>
+                <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="cancelEditDenomination()">{{ 'common.cancel' | ctranslate }}</button>
+              </ng-container>
+              <ng-template #showDenomination>
+                <span class="ow-grow">{{ item }}</span>
+                <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="startEditDenomination(index)">{{ 'actualizacionCno.edit' | ctranslate }}</button>
+                <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm ow-danger" (click)="removeDenomination(index)">{{ 'actualizacionCno.delete' | ctranslate }}</button>
+              </ng-template>
+            </li>
+          </ul>
+          <span *ngIf="denominationError && editingDenomination !== null" class="ow-error" role="alert">{{ denominationError | ctranslate: { max: limits.denominationMax } }}</span>
+        </section>
+
+        <!-- ============ 3. Funciones ============ -->
+        <section *ngIf="step === 'functions'" class="ow-section" aria-labelledby="ow-fun-title">
+          <h3 id="ow-fun-title" class="ui-overline ow-section-title">
+            {{ 'ocupacionWizard.functionsTitle' | ctranslate }}
+            <span class="ui-badge ui-badge-error">{{ 'ocupacionWizard.min1' | ctranslate }}</span>
+          </h3>
+          <p class="ui-hint">{{ 'ocupacionWizard.functionsHint' | ctranslate }}</p>
+          <app-option-picker [options]="catalog.functions" [selected]="functionCodes" [searchCode]="true" [showCode]="true"
+                             [placeholder]="'ocupacionWizard.searchFunction' | ctranslate" [emptyText]="'ocupacionWizard.noMatches' | ctranslate"
+                             [moreText]="'ocupacionWizard.typeMore' | ctranslate" (picked)="pickFunction($event)"></app-option-picker>
+          <form class="ow-add-row" (ngSubmit)="createFunction()">
+            <div class="ui-field ow-grow">
+              <label class="ui-label" for="ow-new-fun">{{ 'ocupacionWizard.newFunction' | ctranslate }}</label>
+              <input id="ow-new-fun" class="ui-input" name="newFunction" autocomplete="off" [(ngModel)]="newFunction">
+            </div>
+            <button type="submit" class="ui-btn ui-btn-primary">+ {{ 'ocupacionWizard.createFunction' | ctranslate }}</button>
+          </form>
+          <span *ngIf="functionError" class="ow-error" role="alert">{{ functionError | ctranslate }}</span>
+
+          <h4 class="ow-list-title">{{ 'ocupacionWizard.functionsSelected' | ctranslate }} <span class="ui-badge ui-badge-info">{{ draft.functions.length }}</span></h4>
+          <p *ngIf="!draft.functions.length" class="ow-empty">{{ 'ocupacionWizard.noFunctions' | ctranslate }}</p>
+          <ul *ngIf="draft.functions.length" class="ow-list">
+            <li *ngFor="let item of draft.functions" class="ow-item">
+              <span *ngIf="!item.code" class="ui-badge ui-badge-warn">{{ 'ocupacionWizard.new' | ctranslate }}</span>
+              <span *ngIf="item.code" class="ow-code">{{ item.code }}</span>
+              <span class="ow-grow">{{ item.text }}</span>
+              <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm ow-danger" (click)="removeFunction(item)">{{ 'ocupacionWizard.remove' | ctranslate }}</button>
+            </li>
+          </ul>
+        </section>
+
+        <!-- ============ 4. Competencias ============ -->
+        <ng-container *ngIf="step === 'competences'">
+          <section class="ow-section" aria-labelledby="ow-skill-title">
+            <h3 id="ow-skill-title" class="ui-overline ow-section-title">
+              {{ 'ocupacionWizard.skillsTitle' | ctranslate }}
+              <span class="ui-badge ui-badge-error">{{ 'ocupacionWizard.min1' | ctranslate }}</span>
+            </h3>
+            <app-option-picker [options]="catalog.skills" [selected]="codes(draft.skills)" [placeholder]="'ocupacionWizard.searchSkill' | ctranslate"
+                               [emptyText]="'ocupacionWizard.noMatches' | ctranslate" [moreText]="'ocupacionWizard.typeMore' | ctranslate" (picked)="add('skills', $event)"></app-option-picker>
+            <ul *ngIf="draft.skills.length" class="ow-chips">
+              <li *ngFor="let item of draft.skills" class="ow-chip">
+                {{ item.label }}
+                <button type="button" class="ow-chip-remove" [attr.aria-label]="'ocupacionWizard.removeAria' | ctranslate: { name: item.label }" (click)="remove('skills', item)">×</button>
+              </li>
+            </ul>
+          </section>
+
+          <section class="ow-section" aria-labelledby="ow-know-title">
+            <h3 id="ow-know-title" class="ui-overline ow-section-title">
+              {{ 'ocupacionWizard.knowledgeTitle' | ctranslate }}
+              <span class="ui-badge ui-badge-error">{{ 'ocupacionWizard.min1' | ctranslate }}</span>
+            </h3>
+            <app-option-picker [options]="catalog.knowledge" [selected]="codes(draft.knowledge)" [placeholder]="'ocupacionWizard.searchKnowledge' | ctranslate"
+                               [emptyText]="'ocupacionWizard.noMatches' | ctranslate" [moreText]="'ocupacionWizard.typeMore' | ctranslate" (picked)="add('knowledge', $event)"></app-option-picker>
+            <ul *ngIf="draft.knowledge.length" class="ow-chips">
+              <li *ngFor="let item of draft.knowledge" class="ow-chip">
+                {{ item.label }}
+                <button type="button" class="ow-chip-remove" [attr.aria-label]="'ocupacionWizard.removeAria' | ctranslate: { name: item.label }" (click)="remove('knowledge', item)">×</button>
+              </li>
+            </ul>
+          </section>
+
+          <section *ngIf="hasRelated" class="ow-section" aria-labelledby="ow-rel-title">
+            <h3 id="ow-rel-title" class="ui-overline ow-section-title">
+              {{ 'ocupacionWizard.relatedTitle' | ctranslate }}
+              <span class="ui-badge ui-badge-neutral">{{ 'ocupacionWizard.optional' | ctranslate }}</span>
+            </h3>
+            <app-option-picker [options]="catalog.occupations" [selected]="codes(draft.related)" [searchCode]="true" [showCode]="true"
+                               [placeholder]="'ocupacionWizard.searchOccupation' | ctranslate" [emptyText]="'ocupacionWizard.noMatches' | ctranslate"
+                               [moreText]="'ocupacionWizard.typeMore' | ctranslate" (picked)="add('related', $event)"></app-option-picker>
+            <ul *ngIf="draft.related.length" class="ow-chips">
+              <li *ngFor="let item of draft.related" class="ow-chip">
+                {{ item.code }} - {{ item.label }}
+                <button type="button" class="ow-chip-remove" [attr.aria-label]="'ocupacionWizard.removeAria' | ctranslate: { name: item.label }" (click)="remove('related', item)">×</button>
+              </li>
+            </ul>
+          </section>
+        </ng-container>
+
+        <!-- ============ 5. Resumen ============ -->
+        <section *ngIf="step === 'summary'" class="ow-section" aria-labelledby="ow-sum-title">
+          <h3 id="ow-sum-title" class="ui-overline ow-section-title">{{ 'ocupacionWizard.summaryTitle' | ctranslate }}</h3>
+          <p class="ui-hint">{{ 'ocupacionWizard.summaryHint' | ctranslate }}</p>
+
+          <div *ngIf="saveErrors.length" class="ui-alert ui-alert-error" role="alert">
+            <div>
+              <strong>{{ 'ocupacionWizard.saveErrorTitle' | ctranslate }}</strong>
+              <p *ngFor="let message of saveErrors">{{ message }}</p>
+            </div>
+          </div>
+
+          <article class="ow-summary-card">
+            <header><h4>{{ 'ocupacionWizard.basicData' | ctranslate }}</h4><button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="goTo('basic')">{{ 'actualizacionCno.edit' | ctranslate }}</button></header>
+            <dl class="ow-summary-grid">
+              <div><dt>{{ 'actualizacionCno.colCode' | ctranslate }}</dt><dd>{{ draft.code }}</dd></div>
+              <div><dt>{{ 'ocupacionWizard.summaryName' | ctranslate }}</dt><dd>{{ draft.name }}</dd></div>
+              <div><dt>{{ 'ocupacionWizard.area' | ctranslate }}</dt><dd>{{ areaName() }}</dd></div>
+              <div><dt>{{ 'ocupacionWizard.level' | ctranslate }}</dt><dd>{{ levelName() }}</dd></div>
+              <div><dt>{{ 'ocupacionWizard.registeredOn' | ctranslate }}</dt><dd>{{ registeredOnLabel }}</dd></div>
+              <div><dt>{{ 'ocupacionWizard.status' | ctranslate }}</dt><dd>{{ (draft.active ? 'ocupacionWizard.active' : 'ocupacionWizard.inactive') | ctranslate }}</dd></div>
+              <div class="ow-wide"><dt>{{ 'ocupacionWizard.traceability' | ctranslate }}</dt><dd>{{ draft.traceability }}</dd></div>
+              <div class="ow-wide"><dt>{{ 'ocupacionWizard.description' | ctranslate }}</dt><dd class="ow-pre">{{ draft.description }}</dd></div>
+            </dl>
+          </article>
+
+          <article class="ow-summary-card">
+            <header>
+              <h4>{{ 'ocupacionWizard.denominationsTitle' | ctranslate }} <span class="ui-badge ui-badge-info">{{ draft.denominations.length }}</span></h4>
+              <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="goTo('denominations')">{{ 'actualizacionCno.edit' | ctranslate }}</button>
+            </header>
+            <ul class="ow-summary-list">
+              <li *ngFor="let item of draft.denominations; let index = index">
+                {{ item }} <span *ngIf="index === 0" class="ui-badge ui-badge-info">{{ 'ocupacionWizard.main' | ctranslate }}</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="ow-summary-card">
+            <header>
+              <h4>{{ 'ocupacionWizard.functionsShort' | ctranslate }} <span class="ui-badge ui-badge-info">{{ draft.functions.length }}</span></h4>
+              <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="goTo('functions')">{{ 'actualizacionCno.edit' | ctranslate }}</button>
+            </header>
+            <ul class="ow-summary-list">
+              <li *ngFor="let item of draft.functions">
+                {{ item.text }} <span *ngIf="!item.code" class="ui-badge ui-badge-warn">{{ 'ocupacionWizard.new' | ctranslate }}</span>
+              </li>
+            </ul>
+          </article>
+
+          <article class="ow-summary-card">
+            <header>
+              <h4>{{ 'ocupacionWizard.competencesShort' | ctranslate }}</h4>
+              <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="goTo('competences')">{{ 'actualizacionCno.edit' | ctranslate }}</button>
+            </header>
+            <dl class="ow-summary-grid">
+              <div class="ow-wide">
+                <dt>{{ 'ocupacionWizard.skillsTitle' | ctranslate }} ({{ draft.skills.length }})</dt>
+                <dd><ul class="ow-chips"><li *ngFor="let item of draft.skills" class="ow-chip">{{ item.label }}</li></ul></dd>
+              </div>
+              <div class="ow-wide">
+                <dt>{{ 'ocupacionWizard.knowledgeTitle' | ctranslate }} ({{ draft.knowledge.length }})</dt>
+                <dd><ul class="ow-chips"><li *ngFor="let item of draft.knowledge" class="ow-chip">{{ item.label }}</li></ul></dd>
+              </div>
+              <div *ngIf="hasRelated" class="ow-wide">
+                <dt>{{ 'ocupacionWizard.relatedTitle' | ctranslate }} ({{ draft.related.length }})</dt>
+                <dd>
+                  <ul *ngIf="draft.related.length; else noRelated" class="ow-chips"><li *ngFor="let item of draft.related" class="ow-chip">{{ item.code }} - {{ item.label }}</li></ul>
+                  <ng-template #noRelated>—</ng-template>
+                </dd>
+              </div>
+            </dl>
+          </article>
+        </section>
+      </ng-container>
+    </div>
+
+    <!-- Pie -->
+    <footer class="ui-modal-actions ow-footer">
+      <button *ngIf="stepIndex === 0; else back" type="button" class="ui-btn ui-btn-secondary" [disabled]="saving" (click)="requestClose()">{{ 'common.cancel' | ctranslate }}</button>
+      <ng-template #back>
+        <button type="button" class="ui-btn ui-btn-secondary" [disabled]="saving" (click)="previous()">← {{ 'ocupacionWizard.previous' | ctranslate }}</button>
+      </ng-template>
+      <span class="ow-pending ui-hint" aria-live="polite">{{ pendingHint }}</span>
+      <button *ngIf="step !== 'summary'; else saveButton" type="button" class="ui-btn ui-btn-primary" [class.ow-dimmed]="!!pendingHint" [disabled]="!catalogs"
+              (click)="next()">{{ 'ocupacionWizard.next' | ctranslate }} →</button>
+      <ng-template #saveButton>
+        <button type="button" class="ui-btn ui-btn-primary" [disabled]="saving"
+                (click)="save()">{{ (saving ? 'ocupacionWizard.saving' : 'ocupacionWizard.saveOccupation') | ctranslate }}</button>
+      </ng-template>
+    </footer>
+  </section>
+</div>
+
+<app-confirm-dialog
+  *ngIf="discardOpen"
+  variant="warn"
+  [title]="'ocupacionWizard.discardTitle' | ctranslate"
+  [message]="'ocupacionWizard.discardText' | ctranslate"
+  [confirmLabel]="'ocupacionWizard.discardConfirm' | ctranslate"
+  [cancelLabel]="'ocupacionWizard.discardCancel' | ctranslate"
+  (confirm)="confirmDiscard()"
+  (cancel)="discardOpen = false">
+</app-confirm-dialog>

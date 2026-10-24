@@ -1,0 +1,641 @@
+/* Lo propio de "Cargar información CNO"; lo demás viene de las clases ui- (src/styles/ui.css). */
+
+.cc-modal {
+  max-width: 1080px;
+  padding: 0;
+}
+
+.cc-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px 14px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.cc-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-header-text h2 {
+  margin: 0 0 4px;
+}
+
+.cc-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 18px 24px;
+}
+
+.cc-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.cc-left,
+.cc-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cc-right {
+  padding-left: 24px;
+  border-left: 1px solid var(--neutral-100);
+}
+
+/* ---------- Pasos y opciones ---------- */
+
+.cc-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.cc-step-num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-100);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cc-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cc-option:hover {
+  background: var(--neutral-50);
+}
+
+.cc-option.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-color-light);
+}
+
+.cc-option:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.cc-option-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--neutral-50);
+  color: var(--primary-color);
+}
+
+.cc-option-whole .cc-option-icon,
+.cc-option.active .cc-option-icon {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.cc-option-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cc-option-text strong {
+  font-weight: 600;
+}
+
+.cc-option-text small {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cc-radio {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--neutral-400);
+  border-radius: 50%;
+}
+
+.cc-option.active .cc-radio {
+  border: 5px solid var(--primary-color);
+}
+
+.cc-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0;
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.cc-divider::before,
+.cc-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--neutral-100);
+}
+
+/* ---------- Plantilla y archivo ---------- */
+
+.cc-template {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px dashed var(--neutral-400);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.cc-template-text {
+  display: flex;
+  gap: 12px;
+}
+
+.cc-template-text p {
+  margin: 2px 0 0;
+}
+
+.cc-file-input {
+  display: none;
+}
+
+.cc-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 16px;
+  border: 1px dashed var(--neutral-400);
+  border-radius: var(--border-radius);
+  color: var(--neutral-500);
+  text-align: center;
+  cursor: pointer;
+}
+
+.cc-drop .ui-icon {
+  width: 28px;
+  height: 28px;
+  color: var(--primary-color);
+}
+
+.cc-drop strong {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
+.cc-drop small {
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cc-drop.dragging,
+.cc-drop:hover {
+  border-color: var(--primary-color);
+  background: var(--neutral-50);
+}
+
+.cc-drop:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.cc-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.cc-file.invalid {
+  border-color: var(--state-error-fg);
+}
+
+.cc-file-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cc-file-text strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cc-file-text small {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cc-error {
+  margin: 0;
+  color: var(--state-error-fg);
+  font-size: calc(13px * var(--type-scale));
+}
+
+/* ---------- Columna derecha ---------- */
+
+.cc-placeholder {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 240px;
+  color: var(--neutral-500);
+  font-size: calc(14px * var(--type-scale));
+  text-align: center;
+}
+
+.cc-placeholder p {
+  margin: 4px 0 0;
+}
+
+.cc-empty {
+  flex-direction: column;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.cc-empty .ui-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.cc-whole {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: calc(14px * var(--type-scale));
+}
+
+.cc-whole p {
+  margin: 0;
+}
+
+.cc-order {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.cc-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.cc-block h4,
+.cc-block h5 {
+  margin: 0;
+  font-size: calc(14px * var(--type-scale));
+  font-weight: 600;
+}
+
+.cc-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.cc-figures-6 {
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+}
+
+.cc-figures div {
+  padding: 10px;
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+  text-align: center;
+}
+
+.cc-figures dt {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cc-figures dd {
+  margin: 2px 0 0;
+  font-size: var(--fs-subtitle);
+  font-weight: 600;
+}
+
+.cc-figures .ok dd {
+  color: var(--accent-color-hover);
+}
+
+.cc-figures .error dd {
+  color: var(--state-error-fg);
+}
+
+.cc-figures .warn dd {
+  color: var(--state-warn-fg);
+}
+
+.cc-checks,
+.cc-detected,
+.cc-sheets,
+.cc-type-status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: calc(14px * var(--type-scale));
+}
+
+.cc-checks li,
+.cc-detected-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-checks small,
+.cc-detected small {
+  color: var(--neutral-500);
+}
+
+.cc-check-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--state-ok-bg);
+  color: var(--accent-color-hover);
+  font-size: 12px;
+}
+
+.cc-checks .missing .cc-check-icon {
+  background: var(--state-error-bg);
+  color: var(--state-error-fg);
+}
+
+.cc-grow {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cc-unmapped {
+  color: var(--state-warn-fg) !important;
+}
+
+.cc-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: calc(14px * var(--type-scale));
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cc-toggle .ui-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  transition: transform 0.15s ease;
+}
+
+.cc-toggle .ui-icon.open {
+  transform: rotate(180deg);
+}
+
+.cc-toggle:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.cc-configure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 4px 0;
+}
+
+.cc-configure .ui-select {
+  flex: 1 1 180px;
+}
+
+.cc-table-wrap {
+  max-height: 260px;
+  overflow: auto;
+}
+
+.cc-table {
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cc-table th,
+.cc-table td {
+  white-space: nowrap;
+}
+
+/* ---------- Cargando, resultado y error ---------- */
+
+.cc-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.cc-status p {
+  margin: 0;
+}
+
+.cc-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--neutral-100);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: cc-spin 0.8s linear infinite;
+}
+
+@keyframes cc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cc-progress {
+  width: min(480px, 100%);
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--neutral-100);
+}
+
+.cc-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-color);
+  transition: width 0.2s ease;
+}
+
+.cc-type-status {
+  width: min(480px, 100%);
+  text-align: left;
+}
+
+.cc-type-status li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.cc-type-status small {
+  color: var(--neutral-500);
+}
+
+.cc-type-status .ok small {
+  color: var(--accent-color-hover);
+}
+
+.cc-type-status .error small {
+  color: var(--state-error-fg);
+}
+
+.cc-result {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cc-result .cc-type-status {
+  width: 100%;
+}
+
+.cc-result .ui-alert p {
+  margin: 4px 0 0;
+}
+
+.cc-sheets li {
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.cc-sheet-body {
+  padding: 4px 0 10px;
+}
+
+.cc-sheet-body ul {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+}
+
+.cc-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+/* ---------- Pantallas angostas ---------- */
+
+@media (max-width: 820px) {
+  .cc-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-right {
+    padding-left: 0;
+    border-left: 0;
+    padding-top: 18px;
+    border-top: 1px solid var(--neutral-100);
+  }
+
+  .cc-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+
+:host-context(.shell.dark-mode) .cc-option,
+:host-context(.shell.dark-mode) .cc-template {
+  border-color: #525252;
+  background: var(--dark-surface);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .cc-option-icon,
+:host-context(.shell.dark-mode) .cc-figures div,
+:host-context(.shell.dark-mode) .cc-type-status li,
+:host-context(.shell.dark-mode) .cc-step-num {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.shell.dark-mode) .cc-header,
+:host-context(.shell.dark-mode) .cc-footer,
+:host-context(.shell.dark-mode) .cc-right,
+:host-context(.shell.dark-mode) .cc-block,
+:host-context(.shell.dark-mode) .cc-file,
+:host-context(.shell.dark-mode) .cc-drop,
+:host-context(.shell.dark-mode) .cc-sheets li {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .cc-toggle {
+  color: #f1f1f1;
+}

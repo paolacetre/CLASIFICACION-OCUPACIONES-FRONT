@@ -1,0 +1,338 @@
+<section class="users-view-wrapper">
+  <header class="page-heading">
+    <div>
+      <p class="eyebrow">{{ 'usuarios.eyebrow' | translate }}</p>
+      <h1>{{ 'usuarios.title' | translate }}</h1>
+      <p class="subtitle">{{ 'usuarios.subtitle' | translate }}</p>
+    </div>
+    <div class="heading-actions">
+      <span class="registered-count">{{ 'usuarios.registeredCount' | translate:{ count: users.length } }}</span>
+      <button type="button" class="secondary-button" [disabled]="isDownloadingTemplate" [title]="'usuarios.templateHint' | translate" (click)="downloadTemplate()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
+        <span>{{ (isDownloadingTemplate ? 'usuarios.downloadingTemplate' : 'usuarios.templateButton') | translate }}</span>
+      </button>
+      <label class="secondary-button import-button" [class.is-disabled]="isImporting" [title]="'usuarios.importHint' | translate">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+        <span>{{ (isImporting ? 'usuarios.importing' : 'usuarios.importButton') | translate }}</span>
+        <input type="file" class="sr-only" accept=".xlsx,.xls" [disabled]="isImporting" (change)="onImportFile($event)">
+      </label>
+      <button class="primary-button" type="button" (click)="startCreate()"><span class="add-icon">+</span> {{ 'usuarios.addButton' | translate }}</button>
+    </div>
+  </header>
+
+  <div class="overview-grid">
+    <section class="filter-card" [attr.aria-label]="'usuarios.filtersAriaLabel' | translate">
+      <form role="search" class="search-row" (submit)="$event.preventDefault()">
+        <label class="search-box" for="user-search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input id="user-search" [(ngModel)]="searchTerm" name="searchTerm" [placeholder]="'usuarios.searchPlaceholder' | translate" [attr.aria-label]="'usuarios.searchAriaLabel' | translate">
+        </label>
+        <button *ngIf="searchTerm.trim()" class="clear-search" type="button" (click)="searchTerm = ''" [attr.aria-label]="'usuarios.clearSearchAria' | translate">{{ 'usuarios.clear' | translate }}</button>
+      </form>
+
+      <div class="active-filters" *ngIf="hasActiveFilters" aria-live="polite">
+        <button type="button" class="filter-tag-btn" *ngIf="searchTerm.trim()" (click)="searchTerm = ''" [title]="'usuarios.removeSearchFilter' | translate" [attr.aria-label]="'usuarios.removeSearchFilter' | translate">{{ 'usuarios.searchFilterLabel' | translate:{ term: searchTerm.trim() } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
+        <button type="button" class="filter-tag-btn" *ngIf="selectedRole !== 'Todos'" (click)="setRole('Todos')" [title]="'usuarios.removeRoleFilter' | translate" [attr.aria-label]="'usuarios.removeRoleFilter' | translate">{{ 'usuarios.roleFilterLabel' | translate:{ role: selectedRole } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
+        <button type="button" class="filter-tag-btn" *ngIf="selectedOrigin !== 'Todos'" (click)="setOrigin('Todos')" [title]="'usuarios.removeOriginFilter' | translate" [attr.aria-label]="'usuarios.removeOriginFilter' | translate">{{ 'usuarios.originFilterLabel' | translate:{ origin: originLabel(selectedOrigin) } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
+        <button type="button" class="filter-tag-btn" *ngIf="selectedStatus !== 'Todos'" (click)="setStatus('Todos')" [title]="'usuarios.removeStatusFilter' | translate" [attr.aria-label]="'usuarios.removeStatusFilter' | translate">{{ 'usuarios.statusFilterLabel' | translate:{ status: statusLabel(selectedStatus) } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
+      </div>
+
+      <div class="filter-groups">
+        <div class="filter-group-container">
+          <span class="filter-section-title">{{ 'usuarios.roleSectionTitle' | translate }}</span>
+          <fieldset class="filter-group">
+            <legend class="sr-only">{{ 'usuarios.filterByRole' | translate }}</legend>
+            <div class="segmented segmented-roles">
+              <button *ngFor="let role of roles" type="button" [class.active]="selectedRole === role" [attr.aria-pressed]="selectedRole === role" (click)="setRole(role)">
+                <span>{{ roleFilterLabel(role) }}</span>
+                <span class="count-pill">{{ role === 'Todos' ? users.length : countBy('role', role) }}</span>
+              </button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="filter-group-container">
+          <span class="filter-section-title">{{ 'usuarios.originSectionTitle' | translate }}</span>
+          <fieldset class="filter-group">
+            <legend class="sr-only">{{ 'usuarios.filterByOrigin' | translate }}</legend>
+            <div class="segmented segmented-origins">
+              <button *ngFor="let origin of origins" type="button" [class.active]="selectedOrigin === origin" [attr.aria-pressed]="selectedOrigin === origin" (click)="setOrigin(origin)">
+                <span>{{ originLabel(origin) }}</span>
+                <span class="count-pill">{{ origin === 'Todos' ? users.length : countBy('origin', origin) }}</span>
+              </button>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="filter-group-container">
+          <span class="filter-section-title">{{ 'usuarios.statusSectionTitle' | translate }}</span>
+          <fieldset class="filter-group">
+            <legend class="sr-only">{{ 'usuarios.filterByStatus' | translate }}</legend>
+            <div class="segmented">
+              <button *ngFor="let status of statuses" type="button" [class.active]="selectedStatus === status" [attr.aria-pressed]="selectedStatus === status" (click)="setStatus(status)">
+                <span>{{ statusLabel(status) }}</span>
+                <span class="count-pill">{{ status === 'Todos' ? users.length : countBy('status', status) }}</span>
+              </button>
+            </div>
+          </fieldset>
+        </div>
+      </div>
+
+      <footer class="filter-footer" *ngIf="hasActiveFilters">
+        <span>{{ 'usuarios.activeFiltersCount' | translate:{ count: filtersCount, s: filtersCount > 1 ? 's' : '' } }}</span>
+        <button type="button" class="ghost-button" (click)="clearFilters()">{{ 'usuarios.resetFilters' | translate }}</button>
+      </footer>
+    </section>
+
+    <aside class="results-card">
+      <div class="results-top">
+        <div class="results-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <p class="eyebrow light">{{ 'usuarios.totalUsersEyebrow' | translate }}</p>
+          <p class="result-copy">
+            {{ hasActiveFilters ? ('usuarios.resultsFound' | translate:{ shown: filteredUsers.length, total: users.length }) : ('usuarios.allUsersRegistered' | translate) }}
+          </p>
+        </div>
+      </div>
+      <div class="results-main">
+        <strong class="results-count">{{ filteredUsers.length }}</strong>
+        <span class="results-badge" *ngIf="hasActiveFilters" [class.filtered]="filteredUsers.length !== users.length">
+          {{ filteredUsers.length === 0 ? ('usuarios.noMatches' | translate) : ('usuarios.filteredCount' | translate:{ count: filteredUsers.length, s: filteredUsers.length > 1 ? 's' : '' }) }}
+        </span>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Un bloque por rol, con sus contadores -->
+  <section class="users-table role-section" *ngFor="let section of roleSections; trackBy: trackSectionByRole" [attr.aria-label]="roleGroupLabel(section.role)">
+    <header class="role-head">
+      <h2 class="role-title">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 10 4.1-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+        {{ roleGroupLabel(section.role) }}
+      </h2>
+      <div class="role-stats">
+        <span class="stat-total">{{ 'usuarios.sectionUsers' | translate:{ count: section.users.length } }}</span>
+        <span class="ui-badge ui-badge-info">{{ 'usuarios.sectionActive' | translate:{ count: section.active } }}</span>
+        <span class="ui-badge ui-badge-error">{{ 'usuarios.sectionInactive' | translate:{ count: section.inactive } }}</span>
+      </div>
+    </header>
+    <table>
+      <caption class="sr-only">{{ roleGroupLabel(section.role) }}</caption>
+      <thead class="table-head"><tr><th scope="col">{{ 'usuarios.colUser' | translate }}</th><th scope="col">{{ 'usuarios.colRegistered' | translate }}</th><th scope="col">{{ 'usuarios.colPermissions' | translate }}</th><th scope="col">{{ 'usuarios.colActions' | translate }}</th></tr></thead>
+      <tbody>
+        <tr class="user-row" [class.is-inactive]="user.status === 'Inactivo'" *ngFor="let user of section.users; trackBy: trackUserById">
+          <td><div class="user-cell"><div class="avatar" aria-hidden="true">{{ user.initials }}</div><div class="user-name"><strong>{{ user.name }}</strong><small>{{ user.email }}</small></div></div></td>
+          <td class="cell-registered" [attr.data-label]="'usuarios.colRegistered' | translate">{{ user.date || '—' }}</td>
+          <td class="cell-permissions" [attr.data-label]="'usuarios.colPermissions' | translate">{{ permissionCount(user.role) }}</td>
+          <td>
+            <div class="actions-cell">
+              <div class="row-actions">
+                <button class="view-btn" type="button" [title]="'usuarios.viewDetailsTitle' | translate" [attr.aria-label]="'usuarios.viewDetailsAria' | translate:{ name: user.name }" (click)="openDetails(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="edit-btn" type="button" [title]="'usuarios.editTitle' | translate" [disabled]="isUserPending(user)" [attr.aria-label]="'usuarios.editAria' | translate:{ name: user.name }" (click)="startEdit(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.7 4.7L8 20l11-11-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></svg></button>
+                <button class="role-btn" type="button" [title]="(isOwnAccount(user) ? 'usuarios.ownRoleLocked' : 'usuarios.rolePermissionsTitle') | translate" [disabled]="isUserPending(user) || isOwnAccount(user)" [attr.aria-label]="(isOwnAccount(user) ? 'usuarios.ownRoleLocked' : 'usuarios.rolePermissionsAria') | translate:{ name: user.name }" (click)="openRoleDialog(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4"/><circle cx="18" cy="16" r="2.5"/><path d="M18 12v1.500M18 18.500V20M21.5 16H20M16 16h-1.5"/></svg></button>
+              </div>
+              <button class="ui-switch status-switch" type="button" role="switch" [class.on]="user.status === 'Activo'" [attr.aria-checked]="user.status === 'Activo'"
+                      [title]="(isOwnAccount(user) ? 'usuarios.ownAccountLocked' : 'usuarios.toggleStatusTitle') | translate"
+                      [disabled]="isUserPending(user) || isOwnAccount(user)"
+                      [attr.aria-label]="(isOwnAccount(user) ? 'usuarios.ownAccountLocked' : user.status === 'Activo' ? 'usuarios.deactivateAria' : 'usuarios.activateAria') | translate:{ name: user.name }"
+                      (click)="requestStatusChange(user)"></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="users-table" *ngIf="!filteredUsers.length" [attr.aria-label]="'usuarios.tableAriaLabel' | translate">
+    <table>
+      <tbody *ngIf="isCompletelyEmpty"><tr><td class="empty-state" colspan="4"><strong>{{ 'usuarios.emptyTitle' | translate }}</strong><p>{{ 'usuarios.emptyDesc' | translate }}</p><button class="ghost-button" type="button" (click)="startCreate()">{{ 'usuarios.addButton' | translate }}</button></td></tr></tbody>
+      <tbody *ngIf="isFilteredEmpty"><tr><td class="empty-state" colspan="4"><strong>{{ 'usuarios.filteredEmptyTitle' | translate }}</strong><p>{{ 'usuarios.filteredEmptyDesc' | translate }}</p><button class="ghost-button" type="button" (click)="clearFilters()">{{ 'usuarios.viewAll' | translate }}</button></td></tr></tbody>
+    </table>
+  </section>
+
+  <!-- Modal Formulario -->
+  <div class="dialog-backdrop" *ngIf="showForm" (click)="closeForm()">
+    <section class="confirm-dialog form-dialog" role="dialog" aria-modal="true" aria-labelledby="user-form-title" aria-describedby="user-form-description" tabindex="-1" appDialog (dialogEscape)="closeForm()" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2 id="user-form-title">{{ (editingUserId === null ? 'usuarios.newUserTitle' : 'usuarios.editTitle') | translate }}</h2>
+          <p id="user-form-description">{{ (editingUserId === null ? 'usuarios.newUserDesc' : 'usuarios.editUserDesc') | translate }}</p>
+        </div>
+        <button type="button" class="close-dialog-btn" (click)="closeForm()" [title]="'usuarios.closeModal' | translate" [attr.aria-label]="'usuarios.closeModal' | translate">&times;</button>
+      </header>
+      <form class="modal-form-body" (ngSubmit)="saveUser()" #userForm="ngForm">
+        <div class="form-grid">
+          <div class="field-item field-full">
+            <label for="form-name">{{ 'usuarios.fieldName' | translate }} <span class="required-star">*</span></label>
+            <input id="form-name" #userNameInput name="name" [(ngModel)]="formUser.name" required maxlength="200" autocomplete="off" [disabled]="isFormPending" [placeholder]="'usuarios.namePlaceholder' | translate">
+          </div>
+          <div class="field-item">
+            <label for="form-email">{{ 'usuarios.fieldEmail' | translate }} <span class="required-star">*</span></label>
+            <input id="form-email" name="email" type="email" [(ngModel)]="formUser.email" required email maxlength="255" autocomplete="off" [disabled]="isFormPending" [placeholder]="'usuarios.emailPlaceholder' | translate" aria-describedby="form-email-hint">
+            <span class="field-hint" id="form-email-hint" *ngIf="formUser.email.trim()">{{ (formEmailIsSena ? 'usuarios.emailHintSena' : 'usuarios.emailHintExternal') | translate }}</span>
+          </div>
+          <div class="field-item">
+            <label for="form-document">{{ 'usuarios.fieldDocument' | translate }} <span class="required-star" *ngIf="editingUserId === null || !formEmailIsSena">*</span></label>
+            <input id="form-document" name="document" inputmode="numeric" [(ngModel)]="formUser.document" [required]="editingUserId === null || !formEmailIsSena" maxlength="20" autocomplete="off" [disabled]="isFormPending" [placeholder]="'usuarios.documentPlaceholder' | translate" aria-describedby="form-document-hint">
+            <span class="field-hint" id="form-document-hint" *ngIf="editingUserId === null">{{ 'usuarios.documentHint' | translate }}</span>
+          </div>
+          <div class="field-item">
+            <label for="form-username">{{ 'usuarios.fieldUsername' | translate }}</label>
+            <input id="form-username" name="username" class="field-readonly" [value]="formAccessUsername" readonly tabindex="-1" [placeholder]="(formEmailIsSena ? 'usuarios.usernameFromEmail' : 'usuarios.usernameFromDocument') | translate" aria-describedby="form-username-hint">
+            <span class="field-hint" id="form-username-hint">{{ (formEmailIsSena ? 'usuarios.usernameHintSena' : 'usuarios.usernameHintExternal') | translate }}</span>
+          </div>
+          <div class="field-item">
+            <label for="form-phone">{{ 'usuarios.fieldPhone' | translate }} <span class="required-star" *ngIf="editingUserId === null">*</span></label>
+            <input id="form-phone" name="phone" type="tel" inputmode="tel" [(ngModel)]="formUser.phone" [required]="editingUserId === null" maxlength="15" autocomplete="off" [disabled]="isFormPending" [placeholder]="'usuarios.phonePlaceholder' | translate">
+          </div>
+          <div class="field-item" *ngIf="editingUserId === null">
+            <label for="form-role">{{ 'usuarios.fieldRole' | translate }}</label>
+            <select id="form-role" name="role" [(ngModel)]="formUser.role" [disabled]="isFormPending">
+              <option *ngFor="let role of assignableRoles" [value]="role">{{ role }}</option>
+            </select>
+            <span class="field-hint">{{ roleDescription(formUser.role) }}</span>
+          </div>
+        </div>
+        <p class="field-hint form-note">{{ (editingUserId === null ? 'usuarios.passwordInitialNote' : 'usuarios.passwordEditNote') | translate }}</p>
+        <p class="form-error" *ngIf="formError" role="alert">{{ formError }}</p>
+        <footer class="dialog-actions form-actions">
+          <button class="secondary-button" type="button" (click)="closeForm()" [disabled]="isFormPending">{{ 'usuarios.cancel' | translate }}</button>
+          <button class="save-button" type="submit" [disabled]="userForm.invalid || isFormPending">{{ (isFormPending ? 'usuarios.saving' : 'usuarios.save') | translate }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal Cambio de Estado -->
+  <div class="dialog-backdrop" *ngIf="statusConfirmation.user" (click)="cancelStatusChange()">
+    <section class="confirm-dialog alert-dialog" role="dialog" aria-modal="true" aria-labelledby="status-dialog-title" aria-describedby="status-dialog-description" tabindex="-1" appDialog (dialogEscape)="cancelStatusChange()" (click)="$event.stopPropagation()">
+      <header class="alert-dialog-header">
+        <div class="dialog-icon" [class.danger-icon]="statusConfirmation.user.status === 'Activo'" [class.activate-icon]="statusConfirmation.user.status === 'Inactivo'" aria-hidden="true">
+          <svg *ngIf="statusConfirmation.user.status === 'Activo'" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+          <svg *ngIf="statusConfirmation.user.status === 'Inactivo'" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        </div>
+        <div class="alert-dialog-titles">
+          <h2 id="status-dialog-title">{{ 'usuarios.statusChangeTitle' | translate }}</h2>
+          <p id="status-dialog-description">
+            {{ (statusConfirmation.user.status === 'Activo' ? 'usuarios.statusChangeDescDeactivate' : 'usuarios.statusChangeDescActivate') | translate:{ name: statusConfirmation.user.name } }}
+          </p>
+        </div>
+      </header>
+      <footer class="dialog-actions">
+        <button type="button" class="secondary-button" (click)="cancelStatusChange()" [disabled]="statusConfirmation.busy">{{ 'usuarios.cancel' | translate }}</button>
+        <button class="status-confirm-btn" [class.danger]="statusConfirmation.user.status === 'Activo'" [class.activate]="statusConfirmation.user.status === 'Inactivo'" type="button" (click)="confirmStatusChange()" [disabled]="statusConfirmation.busy">
+          {{ (statusConfirmation.busy ? 'usuarios.changingStatus' : (statusConfirmation.user.status === 'Activo' ? 'usuarios.deactivateUser' : 'usuarios.activateUser')) | translate }}
+        </button>
+      </footer>
+    </section>
+  </div>
+
+  <!-- Modal Detalle -->
+  <div class="dialog-backdrop" *ngIf="detailsUser as user" (click)="closeDetails()">
+    <section class="confirm-dialog form-dialog details-dialog" role="dialog" aria-modal="true" aria-labelledby="details-dialog-title" tabindex="-1" appDialog (dialogEscape)="closeDetails()" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div class="details-header">
+          <div class="avatar avatar-lg" aria-hidden="true">{{ user.initials }}</div>
+          <div class="details-identity">
+            <h2 id="details-dialog-title">{{ user.name }}</h2>
+            <p>{{ user.email }}</p>
+            <div class="details-badges">
+              <span class="role-pill" [class.analyst]="user.role !== 'Administrador'">{{ user.role }}</span>
+              <span class="status-pill" [class.inactive]="user.status === 'Inactivo'"><span class="status-dot" aria-hidden="true"></span>{{ statusLabel(user.status) }}</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="close-dialog-btn" (click)="closeDetails()" [title]="'usuarios.closeModal' | translate" [attr.aria-label]="'usuarios.closeModal' | translate">&times;</button>
+      </header>
+      <div class="modal-form-body">
+        <dl class="details-grid">
+          <div class="details-item"><dt>{{ 'usuarios.detailsId' | translate }}</dt><dd>{{ user.id }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsRegistered' | translate }}</dt><dd>{{ user.date || '—' }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsUsername' | translate }}</dt><dd>{{ user.username || '—' }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsDocument' | translate }}</dt><dd>{{ user.document || '—' }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsPhone' | translate }}</dt><dd>{{ user.phone || '—' }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsPassword' | translate }}</dt><dd>{{ (user.mustChangePassword ? 'usuarios.passwordTemporary' : 'usuarios.passwordOwn') | translate }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsPermissions' | translate }}</dt><dd>{{ permissionCount(user.role) }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsOrigin' | translate }}</dt><dd>{{ originLabel(user.origin) }}</dd></div>
+          <div class="details-item"><dt>{{ 'usuarios.detailsAccount' | translate }}</dt><dd>{{ (user.status === 'Activo' ? 'usuarios.accountEnabled' : 'usuarios.accountDisabled') | translate }}</dd></div>
+        </dl>
+        <h3 class="details-subtitle">{{ 'usuarios.enabledPermissions' | translate }}</h3>
+        <ul class="perm-chips">
+          <li class="perm-chip" *ngFor="let item of permissionsOf(user.role)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>{{ item.labelKey | translate }}</li>
+        </ul>
+        <p class="field-hint" *ngIf="!permissionsOf(user.role).length">{{ 'usuarios.noPermissions' | translate }}</p>
+        <footer class="dialog-actions form-actions">
+          <button class="secondary-button" type="button" [disabled]="isUserPending(user)" (click)="startEdit(user)">{{ 'usuarios.editShort' | translate }}</button>
+          <button class="secondary-button" type="button" *ngIf="!isOwnAccount(user)" [disabled]="isUserPending(user)" (click)="openRoleDialog(user)">{{ 'usuarios.rolePermissionsTitle' | translate }}</button>
+          <button class="save-button" type="button" (click)="closeDetails()">{{ 'usuarios.close' | translate }}</button>
+        </footer>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal Rol y permisos -->
+  <div class="dialog-backdrop" *ngIf="roleUser as user" (click)="closeRoleDialog()">
+    <section class="confirm-dialog form-dialog" role="dialog" aria-modal="true" aria-labelledby="role-dialog-title" aria-describedby="role-dialog-description" tabindex="-1" appDialog (dialogEscape)="closeRoleDialog()" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2 id="role-dialog-title">{{ 'usuarios.rolePermissionsTitle' | translate }}</h2>
+          <p id="role-dialog-description">{{ 'usuarios.rolePermissionsDesc' | translate:{ name: user.name } }}</p>
+        </div>
+        <button type="button" class="close-dialog-btn" (click)="closeRoleDialog()" [title]="'usuarios.closeModal' | translate" [attr.aria-label]="'usuarios.closeModal' | translate">&times;</button>
+      </header>
+      <form class="modal-form-body" (ngSubmit)="saveRole()">
+        <fieldset class="role-options" [disabled]="isRolePending">
+          <legend class="sr-only">{{ 'usuarios.fieldRole' | translate }}</legend>
+          <label class="role-option" *ngFor="let role of assignableRoles" [class.selected]="roleDraft === role">
+            <input type="radio" name="roleDraft" [value]="role" [(ngModel)]="roleDraft">
+            <span class="role-option-text"><strong>{{ role }}</strong><small>{{ roleDescription(role) }}</small></span>
+            <span class="role-option-count">{{ permissionCount(role) }}</span>
+          </label>
+        </fieldset>
+        <h3 class="details-subtitle">{{ 'usuarios.rolePermissionsOf' | translate:{ count: permissionCount(roleDraft) } }}</h3>
+        <ul class="perm-chips">
+          <li class="perm-chip" *ngFor="let item of permissionsOf(roleDraft)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>{{ item.labelKey | translate }}</li>
+        </ul>
+        <p class="form-error" *ngIf="roleError" role="alert">{{ roleError }}</p>
+        <footer class="dialog-actions form-actions">
+          <button class="secondary-button" type="button" (click)="closeRoleDialog()" [disabled]="isRolePending">{{ 'usuarios.cancel' | translate }}</button>
+          <button class="save-button" type="submit" [disabled]="isRolePending">{{ (isRolePending ? 'usuarios.saving' : 'usuarios.saveRole') | translate }}</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal Resultado de la importación -->
+  <div class="dialog-backdrop" *ngIf="importResult as result" (click)="closeImportResult()">
+    <section class="confirm-dialog form-dialog" role="dialog" aria-modal="true" aria-labelledby="import-dialog-title" aria-describedby="import-dialog-description" tabindex="-1" appDialog (dialogEscape)="closeImportResult()" (click)="$event.stopPropagation()">
+      <header class="dialog-header">
+        <div>
+          <h2 id="import-dialog-title">{{ 'usuarios.importResultTitle' | translate }}</h2>
+          <p id="import-dialog-description">{{ (result.total ? 'usuarios.importResultDesc' : 'usuarios.importEmpty') | translate:{ imported: result.imported, total: result.total } }}</p>
+        </div>
+        <button type="button" class="close-dialog-btn" (click)="closeImportResult()" [title]="'usuarios.closeModal' | translate" [attr.aria-label]="'usuarios.closeModal' | translate">&times;</button>
+      </header>
+      <div class="modal-form-body">
+        <p class="field-hint" *ngIf="result.imported">{{ 'usuarios.importRoleNote' | translate }}</p>
+        <p class="field-hint" *ngIf="result.temporaryPasswords">{{ 'usuarios.importTemporaryNote' | translate:{ count: result.temporaryPasswords } }}</p>
+        <ng-container *ngIf="result.warnings.length">
+          <h3 class="details-subtitle">{{ 'usuarios.importWarningsTitle' | translate:{ count: result.warnings.length } }}</h3>
+          <ul class="import-errors">
+            <li *ngFor="let warning of result.warnings"><strong>{{ 'usuarios.importRow' | translate:{ row: warning.row } }}</strong><span *ngIf="warning.user"> · {{ warning.user }}</span> — {{ warning.message }}</li>
+          </ul>
+        </ng-container>
+        <ng-container *ngIf="result.errors.length">
+          <h3 class="details-subtitle">{{ 'usuarios.importErrorsTitle' | translate:{ count: result.errors.length } }}</h3>
+          <ul class="import-errors">
+            <li *ngFor="let error of result.errors"><strong>{{ 'usuarios.importRow' | translate:{ row: error.row } }}</strong><span *ngIf="error.user"> · {{ error.user }}</span> — {{ error.message }}</li>
+          </ul>
+        </ng-container>
+        <footer class="dialog-actions form-actions">
+          <button class="save-button" type="button" (click)="closeImportResult()">{{ 'usuarios.close' | translate }}</button>
+        </footer>
+      </div>
+    </section>
+  </div>
+</section>

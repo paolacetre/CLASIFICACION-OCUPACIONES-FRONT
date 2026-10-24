@@ -1,0 +1,821 @@
+/* Instrumento 2: solo lo específico de la vista; tarjetas, botones, tablas y modales son los de ui.css. */
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.i2-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.i2-header {
+  margin-bottom: 0;
+  flex-wrap: wrap;
+}
+
+/* ---------- Indicadores (también son las pestañas) ---------- */
+.i2-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.i2-kpi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.i2-kpi:hover {
+  border-color: var(--neutral-400);
+}
+
+.i2-kpi.active {
+  border-color: var(--ui-text);
+  box-shadow: 0 0 0 2px var(--primary-color-soft);
+}
+
+.i2-kpi:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.i2-kpi-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+}
+
+.i2-kpi-pending .i2-kpi-icon { background: rgba(31, 172, 227, 0.14); color: #0f7fae; }
+.i2-kpi-validation .i2-kpi-icon { background: var(--state-warn-bg); color: var(--state-warn-fg); }
+.i2-kpi-adjustments .i2-kpi-icon { background: var(--state-error-bg); color: var(--state-error-fg); }
+.i2-kpi-sent .i2-kpi-icon { background: var(--state-ok-bg); color: var(--state-ok-fg); }
+.i2-kpi-all .i2-kpi-icon { background: var(--primary-color-soft); color: var(--primary-color); }
+
+.i2-kpi-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.i2-kpi-body strong {
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+  line-height: 1.1;
+}
+
+.i2-kpi-body small {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+/* ---------- Buscador ---------- */
+.i2-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.i2-search {
+  flex: 1 1 280px;
+  max-width: 520px;
+}
+
+.i2-send-selected {
+  margin-left: auto;
+}
+
+/* ---------- Pestañas ---------- */
+.i2-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.i2-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -1px;
+  padding: 10px 12px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--neutral-700);
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+
+.i2-tab:hover {
+  color: var(--ui-text);
+}
+
+.i2-tab.active {
+  color: var(--accent-color-hover);
+  border-bottom-color: var(--accent-color);
+  font-weight: var(--fw-semibold);
+}
+
+.i2-tab:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: -3px;
+  border-radius: 6px;
+}
+
+/* ---------- Tabla ---------- */
+.i2-row {
+  cursor: pointer;
+}
+
+/* La fila se despliega también con Enter o Espacio: se marca cuando tiene el foco del teclado. */
+.i2-row:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: -3px;
+}
+
+.i2-row.open td {
+  background: var(--accent-color-soft);
+}
+
+/* Como la versión desplegada, la bandeja usa todo el ancho de la pantalla (sin el máximo de .ui-page). */
+.i2-page {
+  max-width: none;
+}
+
+/*
+ * Columnas a la medida de su contenido (`width: 1%` + sin saltos de línea) y Ocupación con todo el resto
+ * (`width: 100%` + `max-width: 0`: recorta los nombres con "…"; el completo sale al pasar el ratón). Así ningún
+ * ancho depende de la fuente ni del tamaño de texto, y la tabla no se desborda; por debajo del umbral `-lg`
+ * (71.875em) pasa a fichas.
+ */
+.i2-table {
+  width: 100%;
+  font-size: calc(14px * var(--type-scale));
+}
+
+/* Solo en modo tabla: en fichas (por debajo de -lg) manda el apilado de ui.css. */
+@container (width > 71.875em) {
+  .i2-table th,
+  .i2-table td {
+    width: 1%;
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+
+  .i2-table .i2-col-names {
+    width: 100%;
+    max-width: 0;
+  }
+}
+
+/* Títulos de columna compactos (como la versión desplegada): «CLASIFICACIÓN» no ensancha su columna. */
+.i2-table th {
+  font-size: calc(12px * var(--type-scale));
+  letter-spacing: 0.3px;
+}
+
+/* Botones de la fila más compactos, como la versión desplegada. */
+.i2-table .i2-actions .ui-btn {
+  padding: 5px 9px;
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-col-check {
+  width: 44px;
+}
+
+.i2-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.i2-check:disabled {
+  cursor: not-allowed;
+}
+
+/* Clasificación, código y nombre apilan sus 2 o 3 valores con la misma altura de línea: quedan alineados entre columnas. */
+.i2-stack {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.i2-stack li {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  min-width: 0;
+}
+
+.i2-catalog {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(31, 172, 227, 0.14);
+  color: #0f7fae;
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.i2-catalog.cuoc {
+  background: rgba(125, 91, 214, 0.14);
+  color: #5b3fb5;
+}
+
+.i2-codes li {
+  white-space: nowrap;
+}
+
+.i2-names li {
+  display: block;
+  line-height: 26px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.i2-analyst {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(115px * var(--type-scale));
+  min-width: 0;
+}
+
+.i2-avatar {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(31, 172, 227, 0.2);
+  color: #0f7fae;
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.i2-analyst-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.i2-date {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+}
+
+.i2-date small {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Acciones de la fila: "Editar" y "Enviar a experto" uno al lado del otro, sin bajar de línea. */
+.i2-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.i2-actions .ui-btn {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* ---------- Detalle ---------- */
+.i2-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.i2-detail-close {
+  align-self: flex-start;
+}
+
+.i2-occupations {
+  display: grid;
+  gap: 8px;
+}
+
+.i2-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.i2-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 7px 12px;
+  border: 1.5px solid var(--neutral-100);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ui-text);
+  font-size: calc(14px * var(--type-scale));
+  cursor: pointer;
+}
+
+.i2-chip.active {
+  border-color: var(--accent-color);
+  background: var(--accent-color-soft);
+}
+
+.i2-chip:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.i2-chip-code {
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.i2-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.i2-detail-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.i2-detail-name {
+  margin: 0;
+  color: var(--ui-text);
+  overflow-wrap: anywhere;
+}
+
+.i2-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.i2-info > div {
+  padding: 10px 14px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+  min-width: 0;
+}
+
+.i2-info dt,
+.i2-rows dt {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-info dd {
+  margin: 4px 0 0;
+  color: var(--ui-text);
+  overflow-wrap: anywhere;
+}
+
+.i2-sections {
+  margin-top: 4px;
+}
+
+.i2-general {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.i2-box {
+  padding: 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  min-width: 0;
+}
+
+.i2-box-title {
+  margin-top: 0;
+}
+
+.i2-rows {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.i2-rows > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 38%) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.i2-rows dd {
+  margin: 0;
+  color: var(--ui-text);
+  overflow-wrap: anywhere;
+}
+
+.i2-summary-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  color: var(--ui-text);
+}
+
+.i2-summary-name strong {
+  font-weight: var(--fw-semibold);
+}
+
+.i2-text {
+  margin: 0;
+  color: var(--ui-text);
+  line-height: 1.55;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.i2-text.empty {
+  color: var(--neutral-400);
+}
+
+.i2-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 14px 0 0;
+  padding: 0;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+  list-style: none;
+}
+
+.i2-stats strong {
+  color: var(--ui-text);
+  font-weight: var(--fw-semibold);
+}
+
+.i2-observation {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--state-warn-accent);
+  border-radius: var(--border-radius);
+  background: var(--state-warn-bg);
+}
+
+.i2-item-code {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.i2-notice {
+  margin: 0;
+}
+
+/* ---------- Pantallas angostas (según el ancho que deja el menú) ---------- */
+@container (max-width: 71.875em) {
+  .i2-summary {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+}
+
+/* Mismo umbral que ui-table-responsive-lg: la tabla pasa a fichas y los nombres ya no necesitan recortarse. */
+@container (max-width: 71.875em) {
+
+  .i2-names li {
+    white-space: normal;
+    line-height: 1.35;
+    padding: 3px 0;
+  }
+
+  .i2-analyst {
+    max-width: 100%;
+  }
+}
+
+@container (max-width: 760px) {
+  .i2-general {
+    grid-template-columns: 1fr;
+  }
+
+  .i2-send-selected {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .i2-tab {
+    padding: 9px 8px;
+  }
+
+  .i2-rows > div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .i2-chip {
+    border-radius: 14px;
+  }
+
+  .i2-chip-name {
+    white-space: normal;
+    text-align: left;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .i2-kpi,
+:host-context(.shell.dark-mode) .i2-chip {
+  background: var(--dark-surface);
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .i2-kpi.active {
+  border-color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .i2-kpi-icon,
+:host-context(.shell.dark-mode) .i2-info > div {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .i2-kpi-body small,
+:host-context(.shell.dark-mode) .i2-tab,
+:host-context(.shell.dark-mode) .i2-date small,
+:host-context(.shell.dark-mode) .i2-info dt,
+:host-context(.shell.dark-mode) .i2-rows dt,
+:host-context(.shell.dark-mode) .i2-stats,
+:host-context(.shell.dark-mode) .i2-tab.active,
+:host-context(.shell.dark-mode) .i2-tab:hover {
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .i2-tabs,
+:host-context(.shell.dark-mode) .i2-box,
+:host-context(.shell.dark-mode) .i2-info > div {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .i2-catalog {
+  color: var(--primary-on-dark);
+}
+
+:host-context(.shell.dark-mode) .i2-catalog.cuoc {
+  color: #b9a4f2;
+}
+
+:host-context(.shell.dark-mode) .i2-chip.active {
+  border-color: var(--accent-color);
+  background: var(--accent-color-soft);
+}
+
+:host-context(.shell.dark-mode) .i2-observation {
+  background: var(--dark-recessed);
+}
+
+/* ---------- Alto contraste ---------- */
+:host-context([data-high-contrast='true']) .i2-kpi,
+:host-context([data-high-contrast='true']) .i2-chip,
+:host-context([data-high-contrast='true']) .i2-box,
+:host-context([data-high-contrast='true']) .i2-info > div {
+  border-color: var(--hc-border);
+}
+
+:host-context([data-high-contrast='true']) .i2-catalog,
+:host-context([data-high-contrast='true']) .i2-catalog.cuoc,
+:host-context([data-high-contrast='true']) .i2-kpi-icon {
+  color: var(--hc-fg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .i2-kpi {
+    transition: none;
+  }
+}
+
+/* ---------- Modal "Enviar a validación experta" ---------- */
+.i2-send-modal {
+  max-width: 640px;
+}
+
+.i2-send-header {
+  justify-content: center;
+  text-align: center;
+}
+
+.i2-send-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.i2-send-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.i2-send-step-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.i2-send-step-head h3 {
+  margin: 0;
+  font-size: var(--fs-body) !important;
+  font-weight: var(--fw-semibold);
+}
+
+/* Número del paso: círculo verde claro. */
+.i2-send-step-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+/* "0 de 2 seleccionada(s)": en rojo mientras no hay ninguna. */
+.i2-send-counter {
+  margin-left: auto;
+  color: var(--state-ok-fg);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-send-counter.empty {
+  color: var(--state-error-fg);
+}
+
+.i2-send-hint {
+  margin: 0 0 4px 36px;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.i2-send-notice {
+  margin: 0;
+}
+
+.i2-send-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.i2-send-group-title {
+  margin: 4px 0 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+/* Cada opción es una fila clicable con su casilla. */
+.i2-send-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.i2-send-option input {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent-color-hover);
+}
+
+.i2-send-occupation {
+  padding: 10px 14px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.i2-send-occupation.chosen {
+  border-color: var(--accent-color);
+  background: var(--state-ok-bg);
+}
+
+.i2-send-code {
+  flex: none;
+  font-weight: var(--fw-semibold);
+}
+
+.i2-send-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.i2-send-experts {
+  display: flex;
+  flex-direction: column;
+}
+
+.i2-send-all {
+  padding: 8px 4px 12px;
+  border-bottom: 1px solid var(--neutral-100);
+  font-weight: var(--fw-semibold);
+}
+
+.i2-send-expert {
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--neutral-50);
+}
+
+.i2-send-expert-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.i2-send-expert-text small {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-send-warning {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-send-error {
+  margin: 0;
+  color: var(--state-error-fg);
+  font-weight: var(--fw-semibold);
+}
+
+.i2-send-actions {
+  justify-content: center;
+}
+
+/* "Enviar" atenuado mientras falta algo (sigue activo para explicar qué falta). */
+.i2-send-incomplete {
+  opacity: 0.55;
+}
+
+:host-context(.shell.dark-mode) .i2-send-occupation,
+:host-context(.shell.dark-mode) .i2-send-all,
+:host-context(.shell.dark-mode) .i2-send-expert {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .i2-send-occupation.chosen {
+  background: rgba(125, 183, 40, 0.12);
+}
+
+:host-context(.shell.dark-mode) .i2-send-hint,
+:host-context(.shell.dark-mode) .i2-send-group-title,
+:host-context(.shell.dark-mode) .i2-send-expert-text small,
+:host-context(.shell.dark-mode) .i2-send-warning {
+  color: #d4d4d4;
+}

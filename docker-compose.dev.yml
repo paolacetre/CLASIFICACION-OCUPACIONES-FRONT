@@ -1,0 +1,72 @@
+# Override de desarrollo — hot-reload.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Atajo: bash scripts/deploy.sh
+
+services:
+  db:
+    ports:
+      - '${DB_PORT_HOST:-5433}:5432'
+
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: 'true'
+      WATCHPACK_POLLING: 'true'
+    volumes:
+      - ./back/src:/app/src
+      - ./back/tsconfig.json:/app/tsconfig.json:ro
+      - back_node_modules:/app/node_modules
+    command: npm run start:dev
+    develop:
+      watch:
+        - action: sync
+          path: ./back/src
+          target: /app/src
+        - action: rebuild
+          path: ./back/package.json
+        - action: rebuild
+          path: ./back/package-lock.json
+
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - '${FRONTEND_PORT:-4200}:4200'
+    volumes:
+      - ./front/src:/app/src
+      - ./front/public:/app/public
+      - ./front/angular.json:/app/angular.json:ro
+      - front_node_modules:/app/node_modules
+    command:
+      [
+        'npx',
+        'ng',
+        'serve',
+        '--host',
+        '0.0.0.0',
+        '--port',
+        '4200',
+        '--poll',
+        '2000',
+      ]
+    develop:
+      watch:
+        - action: sync
+          path: ./front/src
+          target: /app/src
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./front/package.json
+        - action: rebuild
+          path: ./front/package-lock.json
+
+volumes:
+  back_node_modules:
+  front_node_modules:

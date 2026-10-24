@@ -1,0 +1,361 @@
+/* Lo propio de "Ocupación (Editar)"; lo demás viene de las clases ui- (src/styles/ui.css). */
+
+.eo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.eo-header {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.eo-title-note {
+  color: var(--neutral-500);
+  font-size: calc(14px * var(--type-scale));
+  font-weight: 400;
+}
+
+/* Las seis pestañas en una sola fila, repartidas a lo ancho (como la versión desplegada); si no caben, la fila se desliza. */
+.eo-tabs {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 12px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.eo-tabs .ui-tab {
+  flex: 0 0 auto;
+  font-size: calc(14px * var(--type-scale));
+  letter-spacing: 0.6px;
+}
+
+.eo-tab-check {
+  width: 16px;
+  height: 16px;
+}
+
+.ui-tab.error {
+  color: var(--state-error-fg);
+}
+
+.eo-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.eo-panel,
+.eo-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.eo-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.eo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.eo-wide {
+  grid-column: 1 / -1;
+}
+
+.eo-hint-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.eo-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+}
+
+.eo-error {
+  margin: 0;
+  color: var(--state-error-fg);
+  font-size: calc(13px * var(--type-scale));
+}
+
+/* ---------- Listas ---------- */
+
+.eo-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.eo-empty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--neutral-100);
+  border-radius: var(--border-radius);
+  color: var(--neutral-500);
+  font-size: calc(14px * var(--type-scale));
+  text-align: center;
+}
+
+.eo-code {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+  white-space: nowrap;
+}
+
+.eo-table td {
+  vertical-align: middle;
+}
+
+.eo-row-input {
+  min-width: 220px;
+}
+
+.eo-table tr.inactive .eo-row-input,
+.eo-accordion li.inactive .eo-accordion-text {
+  color: var(--neutral-500);
+}
+
+.eo-remove:hover:not(:disabled) {
+  color: var(--state-error-fg);
+}
+
+.eo-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.eo-accordion,
+.eo-linked,
+.eo-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.eo-accordion li {
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.eo-accordion-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px 6px 12px;
+}
+
+.eo-accordion-toggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: calc(14px * var(--type-scale));
+  text-align: left;
+  cursor: pointer;
+}
+
+.eo-accordion-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eo-accordion li.open .eo-accordion-text {
+  white-space: normal;
+}
+
+.eo-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.15s ease;
+}
+
+.eo-accordion li.open .eo-chevron {
+  transform: rotate(180deg);
+}
+
+.eo-accordion-toggle:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.eo-function-text {
+  margin: 0 12px 12px;
+  width: calc(100% - 24px);
+}
+
+.eo-linked li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.eo-linked-name {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- Resumen ---------- */
+
+.eo-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+}
+
+.eo-summary-list dt {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: 600;
+}
+
+.eo-summary-list dd {
+  margin: 2px 0 0;
+  font-size: calc(14px * var(--type-scale));
+  overflow-wrap: anywhere;
+}
+
+.eo-summary-description {
+  padding-top: 10px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.eo-summary-description h3 {
+  margin: 0 0 4px;
+  font-size: calc(14px * var(--type-scale));
+  font-weight: 600;
+}
+
+.eo-summary-description p {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.eo-summary-description p.clamped {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+}
+
+.eo-counts button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: calc(13px * var(--type-scale));
+  cursor: pointer;
+}
+
+.eo-counts button:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ---------- Pie ---------- */
+
+.eo-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.eo-grow {
+  flex: 1;
+}
+
+/* ---------- Pantallas angostas ---------- */
+
+@media (max-width: 980px) {
+  .eo-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .eo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .eo-row-input {
+    min-width: 0;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+
+:host-context(.shell.dark-mode) .eo-panel,
+:host-context(.shell.dark-mode) .eo-summary,
+:host-context(.shell.dark-mode) .eo-accordion li,
+:host-context(.shell.dark-mode) .eo-linked li,
+:host-context(.shell.dark-mode) .eo-empty,
+:host-context(.shell.dark-mode) .eo-summary-description,
+:host-context(.shell.dark-mode) .eo-footer {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .eo-counts button {
+  border-color: #525252;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .eo-accordion-toggle {
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .eo-summary-description p {
+  color: #d4d4d4;
+}

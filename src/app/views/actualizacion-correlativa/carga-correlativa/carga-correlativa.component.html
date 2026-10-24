@@ -1,0 +1,206 @@
+<div class="ui-modal-backdrop" (click)="close()">
+  <section class="ui-modal ccr-modal" role="dialog" aria-modal="true" aria-labelledby="ccr-title" aria-describedby="ccr-subtitle" tabindex="-1"
+           appDialog (dialogEscape)="close()" (click)="$event.stopPropagation()">
+    <!-- Selector de archivos nativo, siempre presente para abrirlo desde cualquier paso -->
+    <input #fileInput type="file" class="sr-only" accept=".xlsx,.xls" tabindex="-1" aria-hidden="true" (change)="onFileSelected($event)">
+
+    <header class="ui-modal-header ccr-header">
+      <div>
+        <h2 id="ccr-title">{{ 'actualizacionCorrelativa.uploadTitle.' + step | translate: { type: type ? ('actualizacionCorrelativa.type.' + type | translate) : '' } }}</h2>
+        <p id="ccr-subtitle">{{ 'actualizacionCorrelativa.uploadSubtitle.' + step | translate: { type: type ? ('actualizacionCorrelativa.type.' + type | translate) : '' } }}</p>
+      </div>
+      <button type="button" class="ui-icon-btn" [disabled]="step === 'loading'" [attr.aria-label]="'common.close' | translate" (click)="close()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="ui-modal-body ccr-body">
+      <!-- Paso 1: tipo y plantillas -->
+      <ng-container *ngIf="step === 'type' || step === 'file'">
+        <div class="ccr-options" role="group" [attr.aria-label]="'actualizacionCorrelativa.typeGroupAria' | translate">
+          <button *ngFor="let option of types" type="button" class="ccr-option" [class.active]="type === option" (click)="chooseType(option)">
+            <span class="ccr-option-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path [attr.d]="icons[option]"/></svg></span>
+            <strong>{{ 'actualizacionCorrelativa.type.' + option | translate }}</strong>
+            <small>{{ 'actualizacionCorrelativa.typeHint.' + option | translate }}</small>
+          </button>
+        </div>
+        <p *ngIf="fileError" class="ui-form-error" role="alert">{{ fileError }}</p>
+
+        <div class="ccr-templates">
+          <div class="ccr-templates-text">
+            <strong>{{ 'actualizacionCorrelativa.templateTitle' | translate }}</strong>
+            <span>{{ 'actualizacionCorrelativa.templateHint' | translate }}</span>
+          </div>
+          <div class="ccr-templates-actions">
+            <button *ngFor="let option of types" type="button" class="ui-btn ui-btn-outline ui-btn-sm" [disabled]="downloadingTemplate !== null"
+                    [attr.aria-label]="'actualizacionCorrelativa.templateAria' | translate: { type: ('actualizacionCorrelativa.type.' + option | translate) }"
+                    (click)="downloadTemplate(option)">
+              <span *ngIf="downloadingTemplate === option" class="ccr-spinner" aria-hidden="true"></span>
+              <svg *ngIf="downloadingTemplate !== option" class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              {{ 'actualizacionCorrelativa.type.' + option | translate }}
+            </button>
+          </div>
+        </div>
+        <p *ngIf="templateError" class="ui-form-error" role="alert">{{ templateError }}</p>
+      </ng-container>
+
+      <!-- Leyendo el archivo -->
+      <p *ngIf="step === 'reading'" class="ccr-reading" role="status">
+        <span class="ccr-spinner" aria-hidden="true"></span>{{ 'actualizacionCorrelativa.reading' | translate }}
+      </p>
+
+      <!-- Archivo que no corresponde al tipo (o que no se pudo leer) -->
+      <ng-container *ngIf="step === 'invalid' && file">
+        <div class="ui-alert ui-alert-error" role="alert">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div>
+            <strong>{{ file.name }}</strong>
+            <p *ngIf="readError">{{ 'actualizacionCorrelativa.readError' | translate }}</p>
+            <ng-container *ngIf="!readError && analysis">
+              <p>{{ 'actualizacionCorrelativa.notThisType' | translate: { type: ('actualizacionCorrelativa.type.' + type | translate) } }}</p>
+              <p *ngIf="analysis.missing.length">{{ 'actualizacionCorrelativa.missingColumns' | translate }} {{ missingLabels() }}.</p>
+              <p *ngIf="analysis.looksLike">{{ 'actualizacionCorrelativa.looksLike' | translate: { type: ('actualizacionCorrelativa.type.' + analysis.looksLike | translate) } }}</p>
+            </ng-container>
+          </div>
+        </div>
+        <p class="ui-hint">{{ 'actualizacionCorrelativa.nothingImported' | translate }}</p>
+      </ng-container>
+
+      <!-- Vista previa del archivo -->
+      <ng-container *ngIf="(step === 'confirm' || step === 'loading') && file && analysis">
+        <div class="ccr-file">
+          <span class="ccr-option-icon" aria-hidden="true">
+            <svg class="ui-icon" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7ZM14 2v4a2 2 0 0 0 2 2h4M8 13h2M14 13h2M8 17h2M14 17h2"/></svg>
+          </span>
+          <div class="ccr-file-text">
+            <span class="ccr-file-label">{{ 'actualizacionCorrelativa.selectedFile' | translate }}</span>
+            <strong [title]="file.name">{{ file.name }}</strong>
+            <span class="ccr-file-meta">
+              <strong>{{ format(analysis.totalRows) }}</strong> {{ 'actualizacionCorrelativa.rowsFound' | translate: { sheet: analysis.sheet } }}
+            </span>
+          </div>
+        </div>
+
+        <div *ngIf="analysis.totalRows === 0" class="ui-alert ui-alert-error" role="alert">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <p>{{ 'actualizacionCorrelativa.noRows' | translate }}</p>
+        </div>
+
+        <div *ngIf="analysis.ignored.length" class="ui-alert ui-alert-warn" role="note">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <div>
+            <strong>{{ 'actualizacionCorrelativa.ignoredTitle' | translate: { count: analysis.ignored.length } }}</strong>
+            <p>{{ 'actualizacionCorrelativa.ignoredText' | translate: { type: ('actualizacionCorrelativa.type.' + type | translate) } }} {{ analysis.ignored.join(', ') }}.</p>
+          </div>
+        </div>
+
+        <div *ngIf="uploadError" class="ui-alert ui-alert-error" role="alert">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <p>{{ uploadError }}</p>
+        </div>
+
+        <h3 class="ccr-subtitle">{{ 'actualizacionCorrelativa.preview' | translate }}</h3>
+        <div class="ui-table-wrap ccr-preview">
+          <table class="ui-table">
+            <thead>
+              <tr><th *ngFor="let column of analysis.columns" scope="col">{{ column.labelKey | translate }}</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of analysis.sample">
+                <td *ngFor="let column of analysis.columns" [title]="row[column.key]">{{ row[column.key] || '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p *ngIf="analysis.totalRows > analysis.sample.length" class="ui-hint">
+          {{ 'actualizacionCorrelativa.sampleNote' | translate: { shown: analysis.sample.length, total: format(analysis.totalRows) } }}
+        </p>
+
+        <p *ngIf="canUpload" class="ccr-replace-note">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0ZM12 9v4M12 17h.01"/></svg>
+          {{ 'actualizacionCorrelativa.replaceWarning' | translate: { type: ('actualizacionCorrelativa.type.' + type | translate) } }}
+        </p>
+
+        <div *ngIf="step === 'loading'" class="ccr-progress" role="status" aria-live="polite">
+          <div class="ccr-progress-bar"><span [style.width.%]="progress"></span></div>
+          <span class="ui-hint">{{ progressKey | translate }} ({{ progress }} %)</span>
+        </div>
+      </ng-container>
+
+      <!-- Paso 3: resultado -->
+      <ng-container *ngIf="step === 'result' && result">
+        <div class="ui-alert ui-alert-success" role="status">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3"/></svg>
+          <p><strong>{{ 'actualizacionCorrelativa.uploadDone' | translate }}</strong> {{ result.message }}</p>
+        </div>
+
+        <dl class="ccr-figures">
+          <div><dt>{{ 'actualizacionCorrelativa.figureInserted' | translate }}</dt><dd>{{ format(result.inserted) }}</dd></div>
+          <div><dt>{{ 'actualizacionCorrelativa.figureSkipped' | translate }}</dt><dd>{{ format(result.skipped) }}</dd></div>
+          <div><dt>{{ 'actualizacionCorrelativa.figureErrors' | translate }}</dt><dd>{{ format(result.errors.length) }}</dd></div>
+          <div><dt>{{ 'actualizacionCorrelativa.figureWarnings' | translate }}</dt><dd>{{ format(result.warnings.length) }}</dd></div>
+        </dl>
+
+        <ng-container *ngIf="hasDetail">
+          <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" [attr.aria-expanded]="showDetail" (click)="showDetail = !showDetail">
+            {{ (showDetail ? 'actualizacionCorrelativa.hideDetail' : 'actualizacionCorrelativa.showDetail') | translate }}
+          </button>
+          <div *ngIf="showDetail" class="ccr-detail">
+            <ng-container *ngIf="result.errors.length">
+              <h3>{{ 'actualizacionCorrelativa.figureErrors' | translate }}</h3>
+              <ul><li *ngFor="let line of result.errors.slice(0, 200)">{{ line }}</li></ul>
+            </ng-container>
+            <ng-container *ngIf="result.skippedDetails.length">
+              <h3>{{ 'actualizacionCorrelativa.figureSkipped' | translate }}</h3>
+              <ul><li *ngFor="let line of result.skippedDetails.slice(0, 200)">{{ line }}</li></ul>
+            </ng-container>
+            <ng-container *ngIf="result.warnings.length">
+              <h3>{{ 'actualizacionCorrelativa.figureWarnings' | translate }}</h3>
+              <ul><li *ngFor="let line of result.warnings.slice(0, 200)">{{ line }}</li></ul>
+            </ng-container>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <footer class="ui-modal-actions">
+      <ng-container [ngSwitch]="step">
+        <ng-container *ngSwitchCase="'type'">
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="close()">{{ 'common.cancel' | translate }}</button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'file'">
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="changeType()">{{ 'actualizacionCorrelativa.changeType' | translate }}</button>
+          <button type="button" class="ui-btn ui-btn-primary" (click)="changeFile()">{{ 'actualizacionCorrelativa.chooseFile' | translate }}</button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'reading'">
+          <button type="button" class="ui-btn ui-btn-primary" disabled>
+            <span class="ccr-spinner" aria-hidden="true"></span>{{ 'actualizacionCorrelativa.reading' | translate }}
+          </button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'invalid'">
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="changeType()">{{ 'actualizacionCorrelativa.changeType' | translate }}</button>
+          <button *ngIf="analysis?.looksLike as suggested" type="button" class="ui-btn ui-btn-outline" (click)="useSuggestedType()">
+            {{ 'actualizacionCorrelativa.loadAs' | translate: { type: ('actualizacionCorrelativa.type.' + suggested | translate) } }}
+          </button>
+          <button type="button" class="ui-btn ui-btn-primary" (click)="changeFile()">{{ 'actualizacionCorrelativa.chooseOtherFile' | translate }}</button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'confirm'">
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="close()">{{ 'common.cancel' | translate }}</button>
+          <button type="button" class="ui-btn ui-btn-outline" (click)="changeFile()">{{ 'actualizacionCorrelativa.changeFile' | translate }}</button>
+          <button type="button" class="ui-btn ui-btn-primary" [disabled]="!canUpload" (click)="start()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            {{ 'actualizacionCorrelativa.loadData' | translate }}
+          </button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'loading'">
+          <button type="button" class="ui-btn ui-btn-primary" disabled>
+            <span class="ccr-spinner" aria-hidden="true"></span>{{ 'actualizacionCorrelativa.loading' | translate }}
+          </button>
+        </ng-container>
+        <ng-container *ngSwitchCase="'result'">
+          <button type="button" class="ui-btn ui-btn-primary" (click)="close()">{{ 'common.close' | translate }}</button>
+        </ng-container>
+      </ng-container>
+    </footer>
+  </section>
+</div>

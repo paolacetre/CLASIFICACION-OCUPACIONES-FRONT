@@ -1,0 +1,262 @@
+<!-- ============ Editar una ocupación (reemplaza la lista, como en la versión desplegada) ============ -->
+<app-editar-ocupacion *ngIf="editingCode" [code]="editingCode" (saved)="onOccupationSaved($event)" (closed)="editingCode = null"></app-editar-ocupacion>
+
+<section *ngIf="!editingCode" class="ui-page ui-stack">
+  <div class="ui-card acno-card">
+    <header class="ui-card-header acno-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg *ngIf="classification === 'cuoc'; else cnoIcon" class="ui-icon" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M8 8v12"/><path d="M12 6v14"/><path d="m16 6 4 14"/></svg>
+        <ng-template #cnoIcon><svg class="ui-icon" viewBox="0 0 24 24"><path d="M8 8h12v12H8z"/><path d="M16 4H4v12"/></svg></ng-template>
+      </div>
+      <div class="ui-card-header-main">
+        <h1 class="ui-page-title">{{ 'actualizacionCno.title' | ctranslate }}</h1>
+        <p class="ui-page-subtitle">{{ 'actualizacionCno.subtitle' | ctranslate }}</p>
+      </div>
+      <div class="ui-page-actions">
+        <button type="button" class="ui-btn ui-btn-outline" (click)="uploadOpen = true">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+          {{ 'actualizacionCno.uploadExcel' | ctranslate }}
+        </button>
+        <button type="button" class="ui-btn ui-btn-primary" (click)="openWizard()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          {{ 'actualizacionCno.addOccupation' | ctranslate }}
+        </button>
+      </div>
+    </header>
+
+    <div class="ui-tabs acno-tabs" role="tablist" [attr.aria-label]="'actualizacionCno.tabsAria' | ctranslate">
+      <button *ngFor="let option of tabs" type="button" class="ui-tab" role="tab" [id]="'acno-tab-' + option" [class.active]="tab === option"
+              [attr.aria-selected]="tab === option" aria-controls="acno-panel" (click)="setTab(option)">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="tabIcons[option]"/></svg>
+        {{ 'actualizacionCno.tab.' + option | ctranslate }}
+      </button>
+    </div>
+
+    <div id="acno-panel" role="tabpanel" [attr.aria-labelledby]="'acno-tab-' + tab" [attr.aria-busy]="loading">
+      <!-- Búsqueda, filtros y botón de agregar -->
+      <div class="acno-toolbar">
+        <form class="acno-search" role="search" (submit)="$event.preventDefault()">
+          <div class="ui-input-icon">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input class="ui-input" type="text" name="search" autocomplete="off" [placeholder]="'actualizacionCno.searchPlaceholder.' + tab | ctranslate"
+                   [attr.aria-label]="'actualizacionCno.searchPlaceholder.' + tab | ctranslate" [(ngModel)]="search" (ngModelChange)="onSearchChange()">
+          </div>
+        </form>
+
+        <div class="acno-filters-anchor">
+          <button type="button" class="ui-btn ui-btn-outline acno-filters-btn" [class.active]="activeFilterCount > 0" aria-haspopup="true"
+                  [attr.aria-expanded]="filtersOpen" aria-controls="acno-filters" (click)="toggleFilters()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z"/></svg>
+            {{ 'actualizacionCno.filters' | ctranslate }}
+            <span *ngIf="activeFilterCount" class="ui-badge ui-badge-info">{{ activeFilterCount }}</span>
+          </button>
+          <div *ngIf="filtersOpen" id="acno-filters" class="acno-filters" role="group" [attr.aria-label]="'actualizacionCno.filters' | ctranslate">
+            <fieldset class="acno-filter-group">
+              <legend class="ui-label">{{ 'actualizacionCno.filterStatus' | ctranslate }}</legend>
+              <label *ngFor="let option of statusFilters" class="acno-filter-option">
+                <input type="radio" name="acno-status" [value]="option" [(ngModel)]="pendingStatus">
+                {{ 'actualizacionCno.status.' + option | ctranslate }}
+              </label>
+            </fieldset>
+            <fieldset class="acno-filter-group">
+              <legend class="ui-label">{{ 'actualizacionCno.filterDescription' | ctranslate }}</legend>
+              <label *ngFor="let option of descriptionFilters" class="acno-filter-option">
+                <input type="radio" name="acno-description" [value]="option" [(ngModel)]="pendingDescription">
+                {{ 'actualizacionCno.description.' + option | ctranslate }}
+              </label>
+            </fieldset>
+            <div class="acno-filters-actions">
+              <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="clearFilters()">{{ 'actualizacionCno.clear' | ctranslate }}</button>
+              <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" (click)="applyFilters()">{{ 'actualizacionCno.apply' | ctranslate }}</button>
+            </div>
+          </div>
+        </div>
+
+        <button *ngIf="catalogKind as kind" type="button" class="ui-btn ui-btn-primary acno-add" (click)="openCreate()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          {{ 'actualizacionCno.add.' + kind | ctranslate }}
+        </button>
+      </div>
+
+      <p class="acno-count" aria-live="polite">
+        <strong>{{ total }}</strong> {{ (total === 1 ? 'actualizacionCno.foundOne' : 'actualizacionCno.found') | ctranslate }},
+        <span class="acno-inactive" [class.alert]="inactiveCount > 0">{{ inactiveCount }} {{ (inactiveCount === 1 ? 'actualizacionCno.inactiveOne' : 'actualizacionCno.inactive') | ctranslate }}</span>
+      </p>
+
+      <!-- Error o vacío -->
+      <div *ngIf="loadError" class="ui-empty">
+        <strong>{{ 'actualizacionCno.loadErrorTitle' | ctranslate }}</strong>
+        <p>{{ 'actualizacionCno.loadErrorText' | ctranslate }}</p>
+        <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="retry()">{{ 'actualizacionCno.retry' | ctranslate }}</button>
+      </div>
+      <div *ngIf="!loadError && !total" class="ui-empty">
+        <p *ngIf="loading; else noResults">{{ (tab === 'occupation' ? 'actualizacionCno.loadingOccupations' : 'actualizacionCno.loading') | ctranslate }}</p>
+        <ng-template #noResults>
+          <p>{{ 'actualizacionCno.empty' | ctranslate }}</p>
+          <button *ngIf="search || activeFilterCount" type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="resetSearch()">{{ 'actualizacionCno.clear' | ctranslate }}</button>
+        </ng-template>
+      </div>
+
+      <ng-container *ngIf="!loadError && total">
+        <div class="ui-table-wrap ui-table-responsive ui-table-responsive-md">
+          <table class="ui-table acno-table" [attr.aria-label]="'actualizacionCno.tab.' + tab | ctranslate">
+            <thead>
+              <tr>
+                <th scope="col" class="acno-col-check">
+                  <input type="checkbox" class="acno-check" [checked]="pageSelected" (change)="togglePageSelection()" [attr.aria-label]="'actualizacionCno.selectPage' | ctranslate">
+                </th>
+                <th scope="col" class="acno-col-code" [attr.aria-sort]="ariaSort('code')">
+                  <button type="button" class="acno-sort" [class.active]="sort === 'code'" (click)="sortBy('code')">{{ (tab === 'level' ? 'actualizacionCno.colLevel' : 'actualizacionCno.colCode') | ctranslate }}<ng-container *ngTemplateOutlet="sortArrows; context: { $implicit: 'code' }"></ng-container></button>
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('name')">
+                  <button type="button" class="acno-sort" [class.active]="sort === 'name'" (click)="sortBy('name')">{{ 'actualizacionCno.colName.' + tab | ctranslate }}<ng-container *ngTemplateOutlet="sortArrows; context: { $implicit: 'name' }"></ng-container></button>
+                </th>
+                <th scope="col" [attr.aria-sort]="ariaSort('description')">
+                  <button type="button" class="acno-sort" [class.active]="sort === 'description'" (click)="sortBy('description')">{{ 'actualizacionCno.colDescription' | ctranslate }}<ng-container *ngTemplateOutlet="sortArrows; context: { $implicit: 'description' }"></ng-container></button>
+                </th>
+                <th *ngIf="showStatus" scope="col" [attr.aria-sort]="ariaSort('status')">
+                  <button type="button" class="acno-sort" [class.active]="sort === 'status'" (click)="sortBy('status')">{{ 'actualizacionCno.colStatus' | ctranslate }}<ng-container *ngTemplateOutlet="sortArrows; context: { $implicit: 'status' }"></ng-container></button>
+                </th>
+                <th scope="col" class="acno-col-date" [attr.aria-sort]="ariaSort('date')">
+                  <button type="button" class="acno-sort" [class.active]="sort === 'date'" (click)="sortBy('date')">{{ 'actualizacionCno.colDate' | ctranslate }}<ng-container *ngTemplateOutlet="sortArrows; context: { $implicit: 'date' }"></ng-container></button>
+                </th>
+                <th scope="col" class="acno-col-actions">{{ 'common.actions' | ctranslate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of pageItems; trackBy: trackByCode" [class.selected]="isSelected(item)" [class.inactive]="!item.active">
+                <td class="acno-col-check">
+                  <input type="checkbox" class="acno-check" [checked]="isSelected(item)" (change)="toggleSelection(item)"
+                         [attr.aria-label]="'actualizacionCno.selectRow' | ctranslate: { code: item.code }">
+                </td>
+                <td class="acno-code" [attr.data-label]="(tab === 'level' ? 'actualizacionCno.colLevel' : 'actualizacionCno.colCode') | ctranslate">{{ item.code }}</td>
+                <td class="acno-name" [attr.data-label]="'actualizacionCno.colName.' + tab | ctranslate">
+                  {{ item.name }}
+                  <span *ngIf="!item.active" class="ui-badge ui-badge-neutral">{{ 'actualizacionCno.inactiveState' | ctranslate }}</span>
+                </td>
+                <td [attr.data-label]="'actualizacionCno.colDescription' | ctranslate">
+                  <span class="acno-description" [class.empty]="!item.description" [title]="item.description">{{ item.description || '—' }}</span>
+                </td>
+                <td *ngIf="showStatus" [attr.data-label]="'actualizacionCno.colStatus' | ctranslate">
+                  <span class="ui-badge" [ngClass]="item.active ? 'ui-badge-ok' : 'ui-badge-neutral'">{{ (item.active ? 'actualizacionCno.activeState' : 'actualizacionCno.inactiveState') | ctranslate }}</span>
+                </td>
+                <td class="acno-date" [attr.data-label]="'actualizacionCno.colDate' | ctranslate">{{ item.registeredAt || '—' }}</td>
+                <td>
+                  <div class="acno-actions">
+                    <button type="button" class="ui-btn ui-btn-outline ui-btn-sm acno-edit"
+                            [attr.aria-label]="'actualizacionCno.editAria' | ctranslate: { code: item.code }" (click)="openEdit(item)">
+                      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4ZM14 6l4 4"/></svg>
+                      {{ 'actualizacionCno.edit' | ctranslate }}
+                    </button>
+                    <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm acno-delete"
+                            [attr.aria-label]="'actualizacionCno.deleteAria' | ctranslate: { code: item.code }" (click)="requestDelete(item)">
+                      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+                      {{ 'actualizacionCno.delete' | ctranslate }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <nav app-pagination [page]="page" [pageSize]="pageSize" [total]="total" summaryKey="actualizacionCno.showingRange" sizeLabelKey="actualizacionCno.perPageAria"
+             (pageChange)="goToPage($event)" (pageSizeChange)="pageSize = $event; onPageSizeChange()"></nav>
+      </ng-container>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Agregar o editar un registro de catálogo ============ -->
+<div class="ui-modal-backdrop" *ngIf="editor as current" (click)="closeEditor()">
+  <section class="ui-modal acno-modal" role="dialog" aria-modal="true" aria-labelledby="acno-editor-title" tabindex="-1" appDialog (dialogEscape)="closeEditor()"
+           (click)="$event.stopPropagation()">
+    <form novalidate (ngSubmit)="save()">
+      <header class="ui-modal-header acno-modal-header">
+        <div>
+          <h2 id="acno-editor-title">
+            {{ (current.item ? 'actualizacionCno.editTitle.' : 'actualizacionCno.addTitle.') + current.kind | ctranslate: { code: current.item?.code ?? '' } }}
+          </h2>
+          <p class="ui-hint">{{ 'actualizacionCno.requiredHint' | ctranslate }}</p>
+        </div>
+        <button type="button" class="ui-icon-btn" [disabled]="saving" [attr.aria-label]="'common.close' | ctranslate" (click)="closeEditor()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="ui-modal-body acno-modal-body">
+        <p class="ui-alert ui-alert-warn acno-official">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <span>{{ 'actualizacionCno.officialNotice' | ctranslate }}</span>
+        </p>
+        <p *ngIf="current.kind === 'skill'" class="ui-hint">{{ 'actualizacionCno.skillNote' | ctranslate }}</p>
+
+        <span class="ui-overline">{{ 'actualizacionCno.section.' + current.kind | ctranslate }}</span>
+
+        <div class="ui-field">
+          <label class="ui-label" for="acno-code">{{ 'actualizacionCno.colCode' | ctranslate }}{{ codeEditable(current) ? ' *' : '' }}</label>
+          <input *ngIf="codeEditable(current); else lockedCode" id="acno-code" class="ui-input" name="code" autocomplete="off" [maxlength]="limits.codeMax"
+                 [(ngModel)]="current.draft.code" [attr.aria-invalid]="current.submitted && !!codeError(current)" aria-describedby="acno-code-hint">
+          <ng-template #lockedCode>
+            <input id="acno-code" class="ui-input acno-locked" name="code" disabled [value]="current.item?.code ?? ''"
+                   [placeholder]="'actualizacionCno.codeAutoPlaceholder' | ctranslate" aria-describedby="acno-code-hint">
+          </ng-template>
+          <span id="acno-code-hint" class="ui-hint">
+            {{ (current.item ? 'actualizacionCno.codeHelpEdit.' + current.kind : codeEditable(current) ? 'actualizacionCno.codeHelpText' : 'actualizacionCno.codeHelpAuto') | ctranslate }}
+          </span>
+          <span *ngIf="current.submitted && codeError(current) as error" class="ui-form-error" role="alert">{{ error | ctranslate: { max: limits.codeMax } }}</span>
+        </div>
+
+        <div class="ui-field">
+          <label class="ui-label" for="acno-name">{{ 'actualizacionCno.nameLabel' | ctranslate }}</label>
+          <input id="acno-name" class="ui-input" name="name" autocomplete="off" [maxlength]="nameMax(current.kind)" [(ngModel)]="current.draft.name"
+                 [attr.aria-invalid]="current.submitted && !!nameError(current)" aria-describedby="acno-name-hint">
+          <span *ngIf="current.kind === 'level'" id="acno-name-hint" class="ui-hint">{{ (current.item ? 'actualizacionCno.nameHintEdit' : 'actualizacionCno.nameHintUnique') | ctranslate }}</span>
+          <span *ngIf="current.submitted && nameError(current) as error" class="ui-form-error" role="alert">{{ error | ctranslate: { min: limits.nameMin, max: nameMax(current.kind) } }}</span>
+        </div>
+
+        <div *ngIf="hasDescription(current.kind)" class="ui-field">
+          <label class="ui-label" for="acno-description">{{ 'actualizacionCno.descriptionLabel' | ctranslate }}</label>
+          <textarea id="acno-description" class="ui-textarea" name="description" rows="5" [maxlength]="descriptionMax(current.kind)"
+                    [placeholder]="'actualizacionCno.descriptionPlaceholder' | ctranslate" [(ngModel)]="current.draft.description" aria-describedby="acno-description-count"></textarea>
+          <span id="acno-description-count" class="ui-hint acno-counter">{{ current.draft.description.length }} / {{ descriptionMax(current.kind) }}</span>
+          <span *ngIf="current.submitted && descriptionError(current) as error" class="ui-form-error" role="alert">{{ error | ctranslate: { max: descriptionMax(current.kind) } }}</span>
+        </div>
+      </div>
+
+      <footer class="ui-modal-actions">
+        <button type="button" class="ui-btn ui-btn-secondary" [disabled]="saving" (click)="closeEditor()">{{ 'common.cancel' | ctranslate }}</button>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving">
+          {{ (saving ? 'actualizacionCno.saving' : current.item ? 'actualizacionCno.saveChanges' : 'actualizacionCno.save.' + current.kind) | ctranslate }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>
+
+<!-- Flechas de orden de una columna: resalta la del sentido aplicado (igual que en CNO). -->
+<ng-template #sortArrows let-column>
+  <svg class="acno-sort-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path [class.on]="sort === column && ascending" d="m8 10 4-4 4 4"/>
+    <path [class.on]="sort === column && !ascending" d="m8 14 4 4 4-4"/>
+  </svg>
+</ng-template>
+
+<!-- ============ Cargar información desde Excel ============ -->
+<app-carga-cno *ngIf="uploadOpen" (loaded)="onUploaded()" (closed)="uploadOpen = false"></app-carga-cno>
+
+<!-- ============ Registrar una ocupación ============ -->
+<app-ocupacion-wizard *ngIf="wizardOpen" (created)="onOccupationCreated($event)" (closed)="wizardOpen = false"></app-ocupacion-wizard>
+
+<!-- ============ Eliminar ============ -->
+<app-confirm-dialog
+  *ngIf="pendingDelete as pending"
+  variant="danger"
+  [title]="'actualizacionCno.deleteTitle.' + pending.kind | ctranslate"
+  [message]="(pending.kind === 'occupation' ? 'actualizacionCno.deleteTextOccupation' : 'actualizacionCno.deleteText') | ctranslate: { code: pending.item.code, name: pending.item.name }"
+  [confirmLabel]="(deleting ? 'actualizacionCno.deleting' : 'actualizacionCno.deleteConfirm') | ctranslate"
+  [cancelLabel]="'common.cancel' | ctranslate"
+  [busy]="deleting"
+  (confirm)="confirmDelete()"
+  (cancel)="cancelDelete()">
+</app-confirm-dialog>

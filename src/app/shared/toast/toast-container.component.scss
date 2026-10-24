@@ -1,0 +1,29 @@
+/* Pila de avisos (toasts): fija arriba a la derecha, por encima de todo; en pantallas angostas ocupa el ancho. */
+:host {
+  display: block;
+}
+
+.toast-stack {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  pointer-events: none;
+}
+
+/* La pila deja pasar los clics a lo que hay debajo; solo los avisos los reciben. */
+.toast-stack app-toast-item {
+  pointer-events: auto;
+}
+
+@media (max-width: 480px) {
+  .toast-stack {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+  }
+}

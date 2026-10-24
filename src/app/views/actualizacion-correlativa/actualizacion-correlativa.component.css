@@ -1,0 +1,478 @@
+/* Actualización > Correlativa: solo lo específico; tarjetas, botones, modales y avisos son de ui.css. */
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+/* ---------- Encabezado ---------- */
+.acr-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  overflow: hidden;
+  background: linear-gradient(100deg, #fff 55%, color-mix(in srgb, var(--accent-color) 12%, #fff));
+}
+
+.acr-hero-text {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.acr-hero-text .ui-page-title {
+  margin: 0;
+}
+
+.acr-hero-text .ui-page-subtitle {
+  max-width: 820px;
+  margin: 4px 0 0;
+}
+
+.acr-hero .ui-page-actions {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dibujo de nodos conectados a la derecha, como la referencia */
+.acr-hero-art {
+  position: absolute;
+  top: -10px;
+  right: -20px;
+  width: 220px;
+  height: 140px;
+  stroke: var(--accent-color);
+  stroke-width: 1.6;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ---------- Paneles ---------- */
+.acr-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.acr-mobile-tabs {
+  display: none;
+}
+
+/* ---------- Barra de selección ---------- */
+.acr-bar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  border-color: var(--accent-color);
+  box-shadow: 0 12px 30px rgba(22, 34, 51, 0.14);
+}
+
+.acr-bar-sides {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+  min-width: 0;
+}
+
+.acr-bar-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.acr-bar-ok {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: #fff;
+}
+
+.acr-bar-ok.off {
+  background: var(--neutral-100);
+  color: var(--neutral-400);
+}
+
+.acr-bar-ok svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.acr-bar-title {
+  margin: 0;
+  font-size: calc(14px * var(--type-scale));
+}
+
+.acr-bar-title strong {
+  font-weight: var(--fw-semibold);
+}
+
+.acr-bar-codes {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.acr-bar-link {
+  color: var(--neutral-400);
+  font-size: var(--fs-subtitle);
+}
+
+.acr-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Relaciones existentes ---------- */
+.acr-relations {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.acr-relations-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.acr-relations-titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.acr-relations-titles .ui-card-title {
+  margin: 0;
+}
+
+.acr-relations-titles .ui-card-desc {
+  margin: 2px 0 0;
+}
+
+.acr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.acr-rel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.acr-rel:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0 8px 20px rgba(22, 34, 51, 0.07);
+}
+
+.acr-rel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.acr-rel-id {
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+}
+
+.acr-rel-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+}
+
+.acr-rel-side {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.acr-rel-label {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.acr-rel-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.acr-code {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--accent-color);
+  border-radius: 8px;
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.acr-code-more {
+  border-color: var(--neutral-100);
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+}
+
+.acr-rel-names {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.acr-rel-arrow {
+  padding-top: 26px;
+  color: var(--neutral-400);
+}
+
+.acr-rel-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+}
+
+/* ---------- Modales (detalle y confirmación) ----------
+   Tres franjas como la referencia: encabezado con línea, cuerpo con una caja por lado (CNO | CUOC)
+   y pie gris con los botones. El ancho le gana al máximo de 460px de .ui-modal. */
+.acr-modal {
+  max-width: 840px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.acr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.acr-modal-header h2 {
+  margin: 0;
+}
+
+.acr-modal .ui-icon-btn {
+  border: 1px solid var(--neutral-100);
+}
+
+.acr-modal .ui-modal-body {
+  margin: 0;
+  padding: 20px 24px;
+}
+
+.acr-modal .ui-modal-body > p {
+  margin: 0;
+}
+
+.acr-modal-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.acr-modal-box {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.acr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.acr-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  color: var(--ui-text);
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1.45;
+}
+
+.acr-list .acr-code {
+  margin-top: 1px;
+}
+
+.acr-question {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+}
+
+.acr-modal .ui-modal-actions {
+  margin: 0;
+  padding: 16px 24px;
+  border-top: 1px solid var(--neutral-100);
+  background: var(--neutral-50);
+}
+
+/* ---------- Pantallas angostas: los paneles se vuelven pestañas ---------- */
+@container (max-width: 900px) {
+  .acr-panels {
+    grid-template-columns: 1fr;
+  }
+
+  .acr-mobile-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 4px;
+    border: 1px solid var(--neutral-100);
+    border-radius: var(--border-radius);
+    background: #fff;
+  }
+
+  .acr-mobile-tabs button {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: var(--border-radius);
+    background: transparent;
+    color: var(--neutral-700);
+    font: inherit;
+    font-weight: var(--fw-semibold);
+    cursor: pointer;
+  }
+
+  .acr-mobile-tabs button.active {
+    background: var(--accent-color);
+    color: #fff;
+  }
+
+  .acr-tab-count {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--accent-color-hover);
+    font-size: calc(12px * var(--type-scale));
+  }
+
+  .acr-slot.inactive {
+    display: none;
+  }
+
+  .acr-hero {
+    flex-wrap: wrap;
+  }
+
+  .acr-hero-art {
+    display: none;
+  }
+}
+
+@container (max-width: 560px) {
+  .acr-modal-cols {
+    grid-template-columns: 1fr;
+  }
+
+  .acr-bar-actions {
+    width: 100%;
+  }
+
+  .acr-bar-actions .ui-btn {
+    flex: 1;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .acr-hero {
+  background: linear-gradient(100deg, var(--dark-surface) 55%, rgba(125, 183, 40, 0.12));
+}
+
+:host-context(.shell.dark-mode) .acr-modal-header,
+:host-context(.shell.dark-mode) .acr-modal .ui-modal-actions,
+:host-context(.shell.dark-mode) .acr-modal .ui-icon-btn {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .acr-modal .ui-modal-actions {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .acr-rel,
+:host-context(.shell.dark-mode) .acr-modal-box,
+:host-context(.shell.dark-mode) .acr-mobile-tabs {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .acr-rel-names,
+:host-context(.shell.dark-mode) .acr-bar-codes,
+:host-context(.shell.dark-mode) .acr-rel-label,
+:host-context(.shell.dark-mode) .acr-mobile-tabs button {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .acr-rel-id,
+:host-context(.shell.dark-mode) .acr-code {
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .acr-code-more {
+  border-color: #3d5470;
+  background: var(--dark-surface);
+  color: #d4d4d4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .acr-rel {
+    transition: none;
+  }
+}

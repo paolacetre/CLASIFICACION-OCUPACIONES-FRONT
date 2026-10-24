@@ -1,0 +1,904 @@
+/* Pantalla de ingreso: pantalla dividida (panel de marca a la izquierda, formulario a la derecha)
+   con selector Claro/Oscuro; en pantallas angostas el panel de marca pasa a ser una franja superior. */
+:host {
+  display: block;
+  /* Verdes derivados del color de acento de Configuración, más oscuros para que el texto se lea bien. */
+  --login-green: color-mix(in srgb, var(--accent-color) 55%, #0a8f00);
+  --login-green-deep: color-mix(in srgb, var(--accent-color) 45%, #003d12);
+  /* Degradado del panel de marca: lo bastante oscuro para que el texto blanco se lea bien. */
+  --login-hero-a: color-mix(in srgb, var(--accent-color) 58%, #0b4d1e);
+  --login-hero-b: color-mix(in srgb, var(--accent-color) 18%, #00261a);
+  --login-border: #b9c0d0;
+  --login-field-bg: #f7f8fb;
+  --login-label: #1f2a3a;
+  --login-muted: #5b6474;
+  --login-field-focus: #fff;
+  /* Curva de las animaciones: equivalente CSS de power2.out (sale rápido y frena suave). */
+  --login-ease: cubic-bezier(0.5, 1, 0.89, 1);
+}
+
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
+  background: #fff;
+}
+
+/* ---------- Panel de marca ---------- */
+.login-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 104px 56px 64px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 0% 100%, color-mix(in srgb, var(--accent-color) 35%, transparent) 0, transparent 60%),
+    linear-gradient(155deg, var(--login-hero-a) 0%, var(--login-hero-b) 100%);
+  color: #fff;
+}
+
+/* Trama de puntos que se desvanece hacia abajo: da textura sin competir con el texto. */
+.login-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.6px);
+  background-size: 22px 22px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 75%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 75%);
+  pointer-events: none;
+}
+
+/* Formas del fondo: flotan con la animación de login.component.ts. */
+.login-bg-orb {
+  position: absolute;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.orb-a {
+  top: -140px;
+  right: -140px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0.03) 60%, transparent 72%);
+}
+
+.orb-b {
+  bottom: -160px;
+  left: -120px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent-color) 55%, transparent) 0, transparent 70%);
+}
+
+.orb-ring {
+  right: 12%;
+  bottom: 10%;
+  width: 150px;
+  height: 150px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+}
+
+/* El contenido va por encima de las formas. */
+.login-brand,
+.login-main,
+.login-footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Selector Claro / Oscuro ---------- */
+.theme-switch {
+  position: absolute;
+  z-index: 2;
+  top: 28px;
+  right: 28px;
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 999px;
+  background: #9ca3ad;
+  box-shadow: 0 6px 16px rgba(22, 34, 51, 0.16);
+}
+
+.theme-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #eef0f3;
+  font: inherit;
+  font-size: calc(12.5px * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.theme-switch button .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.theme-switch button.active {
+  background: #fff;
+  color: var(--primary-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.theme-switch button:not(.active):hover {
+  color: #fff;
+}
+
+.theme-switch button:focus-visible,
+.password-toggle:focus-visible,
+.login-submit:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ---------- Marca (dentro del panel de marca) ---------- */
+.login-brand {
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+}
+
+/* El logo va sobre una placa blanca para que conserve sus colores sobre el verde. */
+.login-logo-box {
+  display: grid;
+  place-items: center;
+  margin-bottom: 8px;
+  padding: 22px 30px;
+  border-radius: var(--border-radius);
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(0, 20, 10, 0.28), 0 0 0 8px rgba(255, 255, 255, 0.12);
+}
+
+.login-logo {
+  /* Alto fijo: el espacio queda reservado antes de que llegue la imagen, así nada salta. */
+  height: 140px;
+  max-width: 200px;
+  object-fit: contain;
+  opacity: 0;
+}
+
+/* Visible al cargar; la animación de entrada la hace ngAfterViewInit() en login.component.ts. */
+.login-logo.loaded {
+  opacity: 1;
+}
+
+.login-mark {
+  width: 96px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--border-radius);
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 2.4rem;
+  font-weight: var(--fw-semibold);
+}
+
+.login-app-name {
+  margin: 0;
+  color: #fff;
+  font-size: calc(44px * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  letter-spacing: -1px;
+  line-height: 1.1;
+  text-wrap: balance;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.18);
+}
+
+.login-brand-rule {
+  width: 56px;
+  height: 4px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent-color) 55%, #fff);
+}
+
+.login-app-desc {
+  max-width: 360px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: calc(17px * var(--type-scale, 1));
+  line-height: 1.55;
+}
+
+/* ---------- Panel del formulario ---------- */
+.login-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 96px 48px 28px;
+  /* Un brillo verde muy suave en la esquina, eco del panel de marca. */
+  background: radial-gradient(60% 50% at 100% 0%, color-mix(in srgb, var(--accent-color) 10%, transparent) 0, transparent 70%);
+}
+
+.login-main {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.login-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.login-eyebrow {
+  margin: 0;
+  color: var(--login-green);
+  font-size: calc(13px * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.login-heading h1 {
+  margin: 0;
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+.login-subtitle {
+  margin: 0;
+  color: var(--login-muted);
+  font-size: calc(15px * var(--type-scale, 1));
+}
+
+/* ---------- Tarjeta ---------- */
+.login-card {
+  position: relative;
+  width: 100%;
+  padding: 32px 34px 30px;
+  border: 1px solid #e6e9ef;
+  border-radius: var(--border-radius);
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(22, 34, 51, 0.08), 0 1px 3px rgba(22, 34, 51, 0.04);
+}
+
+/* Acento vertical a la izquierda, a media altura (como en la imagen de referencia). */
+.login-card::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 22%;
+  bottom: 22%;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--login-green-deep);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-field > label {
+  padding-left: 4px;
+  color: var(--login-label);
+  font-size: calc(13px * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-box > .ui-icon {
+  position: absolute;
+  left: 20px;
+  width: 20px;
+  height: 20px;
+  color: #4b5563;
+  pointer-events: none;
+}
+
+.input-box > input {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 18px 0 52px;
+  border: 1.5px solid var(--login-border);
+  border-radius: var(--border-radius);
+  background: var(--login-field-bg);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: calc(1.05rem * var(--type-scale, 1));
+  box-shadow: 0 2px 4px rgba(22, 34, 51, 0.05);
+  transition: border-color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-box > input::placeholder {
+  color: #6b7280;
+}
+
+.input-box > input:focus {
+  outline: 0;
+  border-color: var(--accent-color);
+  background-color: var(--login-field-focus);
+  box-shadow: 0 0 0 4px var(--accent-color-soft);
+}
+
+.input-box.has-error > input {
+  border-color: var(--state-error-fg);
+}
+
+.input-box.has-error > .ui-icon {
+  color: var(--state-error-fg);
+}
+
+.input-box > input[name='password'] {
+  padding-right: 60px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.password-toggle .ui-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.password-toggle:hover {
+  color: var(--login-green);
+}
+
+.field-error,
+.field-hint {
+  margin: -2px 0 0 4px;
+  font-size: calc(14px * var(--type-scale, 1));
+  line-height: 1.4;
+}
+
+.field-error {
+  color: var(--state-error-fg);
+}
+
+.field-hint {
+  color: var(--state-warn-fg);
+}
+
+/* ---------- Mantener la sesión iniciada ---------- */
+.remember {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  border: 1.5px solid #d5d9e2;
+  border-radius: var(--border-radius);
+  background: var(--login-field-bg);
+  box-shadow: 0 2px 4px rgba(22, 34, 51, 0.05);
+  cursor: pointer;
+}
+
+.remember:focus-within {
+  border-color: var(--accent-color);
+}
+
+.remember-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.remember-title {
+  color: var(--login-label);
+  font-size: calc(13px * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.remember-hint {
+  color: var(--login-muted);
+  font-size: calc(13px * var(--type-scale, 1));
+}
+
+.remember input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--login-green);
+  cursor: pointer;
+}
+
+/* ---------- Avisos ---------- */
+.login-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  font-size: calc(14px * var(--type-scale, 1));
+  line-height: 1.45;
+}
+
+.login-notice > .ui-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+
+.login-expired {
+  margin-bottom: 20px;
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+}
+
+.login-error {
+  margin-top: -4px;
+  background: var(--state-error-bg);
+  color: var(--state-error-fg);
+}
+
+/* ---------- Botón ---------- */
+.login-submit {
+  width: 100%;
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: var(--accent-color);
+  color: #fff;
+  font: inherit;
+  font-size: calc(1.05rem * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.3s var(--login-ease);
+}
+
+.login-submit .ui-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.login-submit:hover:not(:disabled) {
+  background: var(--accent-color-hover, var(--login-green));
+  transform: scale(1.01);
+}
+
+.login-submit:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.submit-arrow {
+  transition: transform 0.3s var(--login-ease);
+}
+
+.login-submit:hover:not(:disabled) .submit-arrow {
+  transform: translateX(4px);
+}
+
+/* Faltan datos: se ve atenuado, pero al pulsarlo explica qué falta. */
+.login-submit.incomplete {
+  opacity: 0.6;
+}
+
+.login-submit:disabled {
+  cursor: progress;
+}
+
+/* "Cerrar sesión" del cambio obligatorio de contraseña: secundario, debajo de Guardar. */
+.login-secondary {
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px solid var(--login-border, #d4d4d4);
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.login-secondary:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+:host-context(.shell.dark-mode) .login-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: login-spin 0.7s linear infinite;
+}
+
+@keyframes login-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Pie ---------- */
+
+.login-footer {
+  max-width: 460px;
+  color: #8a909a;
+  font-size: calc(11px * var(--type-scale, 1));
+  letter-spacing: 1.6px;
+  line-height: 1.6;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ---------- Animación de entrada ----------
+ * La hace LoginComponent.ngAfterViewInit() (misma secuencia que la referencia
+ * en GSAP): contenedor, cascada de .login-reveal, logo y orbes del fondo.
+ */
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) {
+  --login-border: #3d5470;
+  --login-field-bg: var(--dark-recessed);
+  --login-field-focus: #0b2240;
+  --login-label: #e5e7eb;
+  --login-muted: #b6bdc8;
+  --login-green: color-mix(in srgb, var(--accent-color) 85%, #fff);
+  --login-green-deep: var(--accent-color);
+  color-scheme: dark;
+}
+
+:host-context(.shell.dark-mode) .login-page {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .login-hero {
+  --login-hero-a: color-mix(in srgb, var(--accent-color) 38%, #001631);
+  --login-hero-b: #000d1f;
+}
+
+:host-context(.shell.dark-mode) .login-logo-box {
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 0 8px rgba(255, 255, 255, 0.08);
+}
+
+:host-context(.shell.dark-mode) .login-heading h1 {
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .login-panel {
+  background: radial-gradient(60% 50% at 100% 0%, color-mix(in srgb, var(--accent-color) 8%, transparent) 0, transparent 70%);
+}
+
+:host-context(.shell.dark-mode) .login-card {
+  border-color: #23405f;
+  background: var(--dark-surface);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+:host-context(.shell.dark-mode) .theme-switch {
+  background: #2b3f57;
+}
+
+:host-context(.shell.dark-mode) .theme-switch button.active {
+  background: var(--dark-surface-hover, #1d3550);
+  color: #fff;
+}
+
+:host-context(.shell.dark-mode) .theme-switch button:not(.active) {
+  color: #b6bdc8;
+}
+
+:host-context(.shell.dark-mode) .input-box > input {
+  color: #f1f1f1;
+  box-shadow: none;
+}
+
+:host-context(.shell.dark-mode) .input-box > input::placeholder {
+  color: #8d97a6;
+}
+
+:host-context(.shell.dark-mode) .input-box > .ui-icon,
+:host-context(.shell.dark-mode) .password-toggle {
+  color: #c3cad5;
+}
+
+:host-context(.shell.dark-mode) .remember {
+  border-color: var(--login-border);
+  box-shadow: none;
+}
+
+:host-context(.shell.dark-mode) .login-error {
+  background: rgba(232, 28, 28, 0.16);
+  color: #ff9b9b;
+}
+
+:host-context(.shell.dark-mode) .field-error {
+  color: #ff9b9b;
+}
+
+:host-context(.shell.dark-mode) .input-box.has-error > input {
+  border-color: #ff8a8a;
+}
+
+:host-context(.shell.dark-mode) .login-expired {
+  background: rgba(217, 119, 6, 0.16);
+  color: #fcd34d;
+}
+
+:host-context(.shell.dark-mode) .field-hint {
+  color: #fcd34d;
+}
+
+:host-context(.shell.dark-mode) .login-footer {
+  color: #8d97a6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-logo,
+  .input-box > input,
+  .theme-switch button,
+  .login-submit,
+  .submit-arrow {
+    transition: none;
+  }
+
+  .login-submit:hover:not(:disabled),
+  .login-submit:active:not(:disabled),
+  .login-submit:hover:not(:disabled) .submit-arrow {
+    transform: none;
+  }
+
+  .spinner {
+    animation-duration: 2s;
+  }
+}
+
+/* Pantallas bajas (portátiles con barra de favoritos, zoom alto): todo más compacto para no desplazar. */
+@media (max-height: 820px) and (min-width: 961px) {
+  .login-hero {
+    padding-top: 88px;
+    padding-bottom: 48px;
+  }
+
+  .login-brand {
+    gap: 16px;
+  }
+
+  .login-logo {
+    height: 110px;
+  }
+
+  .login-app-name {
+    font-size: calc(38px * var(--type-scale, 1));
+  }
+
+  .login-panel {
+    gap: 20px;
+    padding-top: 84px;
+    padding-bottom: 18px;
+  }
+
+  .login-main {
+    gap: 18px;
+  }
+
+  .login-card {
+    padding: 26px 30px 24px;
+  }
+
+  .login-form {
+    gap: 16px;
+  }
+
+  .input-box > input {
+    min-height: 48px;
+  }
+
+  .remember {
+    padding: 10px 18px;
+  }
+
+  .login-submit {
+    min-height: 46px;
+  }
+}
+
+/* Pantallas angostas: el panel de marca pasa a ser una franja superior y el formulario va debajo. */
+@media (max-width: 960px) {
+  .login-page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .login-hero {
+    padding: 92px 24px 40px;
+    border-radius: 0 0 var(--modal-radius) var(--modal-radius);
+  }
+
+  .login-brand {
+    gap: 12px;
+  }
+
+  .login-logo-box {
+    margin-bottom: 4px;
+    padding: 14px 20px;
+    border-radius: var(--border-radius);
+  }
+
+  .login-logo {
+    height: 90px;
+  }
+
+  .login-app-name {
+    font-size: calc(32px * var(--type-scale, 1));
+  }
+
+  .login-app-desc {
+    font-size: calc(15px * var(--type-scale, 1));
+  }
+
+  .login-panel {
+    justify-content: flex-start;
+    padding: 32px 20px 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .theme-switch {
+    top: 16px;
+    right: 16px;
+  }
+
+  .login-hero {
+    padding-top: 80px;
+  }
+
+  .login-app-name {
+    font-size: calc(28px * var(--type-scale, 1));
+  }
+
+  .orb-ring {
+    display: none;
+  }
+
+  .login-card {
+    padding: 26px 20px 24px;
+    border-radius: var(--border-radius);
+  }
+
+  .login-footer {
+    letter-spacing: 1.2px;
+  }
+}
+
+/* ---------- Enlaces a otras aplicaciones (misma píldora que el selector de tema, a la izquierda) ---------- */
+.login-links {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 16px rgba(0, 20, 10, 0.18);
+}
+
+.login-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: calc(12.5px * var(--type-scale, 1));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 1.2px;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.login-links a .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.login-links a:hover {
+  background: #fff;
+  color: var(--primary-color);
+}
+
+.login-links a:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+:host-context(.shell.dark-mode) .login-links a:hover {
+  background: var(--dark-surface-hover, #1d3550);
+  color: #fff;
+}
+
+/* Cuando no caben en el panel de marca (escritorio angosto) o junto al selector de tema, quedan solo
+   los íconos (el texto sigue en el título y para lectores de pantalla). */
+@media (max-width: 760px), (min-width: 961px) and (max-width: 1180px) {
+  .login-links a > span:not(.sr-only) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .login-links a {
+    padding: 8px 11px;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-links {
+    top: 16px;
+    left: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-links a {
+    transition: none;
+  }
+}

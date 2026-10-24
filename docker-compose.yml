@@ -1,0 +1,164 @@
+# ============================================================
+#  Docker Compose — Stack completo CUOC ISA
+#
+#  Servicios:
+#    db       → PostgreSQL 18 (base de datos)
+#    redis    → Redis 7 (caché del catálogo; sin persistencia)
+#    backend  → NestJS API (puerto 3000)
+#    frontend → Angular 21 + Nginx (puerto 4200 → 80)
+#
+#  Uso:
+#    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+#    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#    bash scripts/deploy.sh / bash scripts/deploy-prod.sh
+#    bash scripts/docker.sh logs dev
+# ============================================================
+
+services:
+
+  # ── Base de datos PostgreSQL ──────────────────────────────
+  db:
+    image: postgres:18-alpine
+    container_name: clasificacion_bd
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD en el archivo .env}
+      POSTGRES_DB: ${DB_DATABASE:-clasificacion}
+      # PGDATA apunta al subdirectorio donde están los datos reales del volumen existente
+      PGDATA: /var/lib/postgresql/18/docker
+    ports:
+      - '${DB_PORT_HOST:-5433}:5432'
+    entrypoint: ["/bin/sh", "/usr/local/bin/sync-env-password.sh"]
+    command: ["postgres"]
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./back/database/init:/docker-entrypoint-initdb.d:ro
+      - ./back/database/sync-env-password.sh:/usr/local/bin/sync-env-password.sh:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-clasificacion}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - cuoc_net
+
+  # ── Redis (caché) ─────────────────────────────────────────
+  # Solo caché: sin RDB ni AOF (si se reinicia, se reconstruye sola desde
+  # PostgreSQL) y con tope de memoria + LRU, para que nunca crezca sin límite.
+  # La contraseña va por variable de entorno y no en el comando visible.
+  redis:
+    image: redis:7.4-alpine
+    container_name: clasificacion_redis
+    restart: unless-stopped
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?Defina REDIS_PASSWORD en el archivo .env}
+    command:
+      - sh
+      - -c
+      - >-
+        exec redis-server
+        --requirepass "$$REDISCLI_AUTH"
+        --maxmemory ${REDIS_MAXMEMORY:-256mb}
+        --maxmemory-policy allkeys-lru
+        --save ""
+        --appendonly no
+    ports:
+      # Solo en 127.0.0.1: el backend en modo dev (fuera de Docker) lo alcanza,
+      # pero no queda expuesto a la red.
+      - '127.0.0.1:${REDIS_PORT_HOST:-6379}:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cuoc_net
+
+  # ── Backend NestJS ────────────────────────────────────────
+  backend:
+    build:
+      context: ./back
+      dockerfile: Dockerfile
+      target: production
+    container_name: clasificacion_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Defina REDIS_PASSWORD en el archivo .env}
+      CACHE_TTL_SECONDS: ${CACHE_TTL_SECONDS:-600}
+      APP_PORT: 3000
+      # Usar el nombre del servicio "db" como host (red interna Docker)
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD en el archivo .env}
+      DB_DATABASE: ${DB_DATABASE:-clasificacion}
+      DB_SYNCHRONIZE: ${DB_SYNCHRONIZE:-false}
+      DB_SSL: ${DB_SSL:-false}
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET en el archivo .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      BCRYPT_SALT: ${BCRYPT_SALT:-12}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      # En Docker el backend siempre está detrás de Nginx: la IP real del
+      # cliente llega en X-Forwarded-For (límites por IP y bloqueos).
+      TRUST_PROXY: 'true'
+      API_KEY_BUSCADOR: ${API_KEY_BUSCADOR:-}
+      API_KEY_APE: ${API_KEY_APE:-}
+      API_KEY_TENDENCIAS: ${API_KEY_TENDENCIAS:-}
+      API_KEY_LIMITE_POR_MINUTO: ${API_KEY_LIMITE_POR_MINUTO:-300}
+      # Siembra de cuentas de prueba al arrancar (SeedService).
+      # Ponlo en 'false' cuando el entorno ya no deba crear cuentas solo.
+      SEED_USUARIOS: ${SEED_USUARIOS:-true}
+      SEED_USUARIOS_PASSWORD: ${SEED_USUARIOS_PASSWORD:-Sena2026*}
+      # Aplica back/database/siembra/cno.xlsx al arrancar, una vez por versión
+      # del libro (SiembraCnoService). 'false' para desactivarlo.
+      SIEMBRA_CNO: ${SIEMBRA_CNO:-true}
+    ports:
+      - '${BACKEND_PORT:-3000}:3000'
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1:3000/ || exit 1" ]
+      interval: 20s
+      timeout: 10s
+      retries: 8
+      start_period: 60s
+    networks:
+      - cuoc_net
+
+  # ── Frontend Angular + Nginx ──────────────────────────────
+  frontend:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+      target: production
+    container_name: clasificacion_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      # Puerto 4200 en el host → 80 dentro del contenedor Nginx
+      - '${FRONTEND_PORT:-4200}:80'
+    networks:
+      - cuoc_net
+
+# ── Volúmenes ─────────────────────────────────────────────
+volumes:
+  pgdata:
+    external: true
+    name: api-clasificacion_pgdata
+
+# ── Red interna ───────────────────────────────────────────
+networks:
+  cuoc_net:
+    name: clasificacion_network
+    driver: bridge

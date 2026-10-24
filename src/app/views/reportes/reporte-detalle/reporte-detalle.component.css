@@ -1,0 +1,324 @@
+/* Detalle de un envío del Resumen: encabezado, pestañas por ocupación y tabla ancha de una fila. */
+.rd-modal {
+  max-width: 1400px;
+  padding: 0;
+}
+
+.rd-header {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.rd-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.rd-eyebrow {
+  margin: 0;
+  color: var(--accent-color-hover);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.rd-header h2 {
+  margin: 4px 0 2px;
+  font-size: var(--fs-subtitle) !important;
+}
+
+.rd-sub {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.rd-close {
+  flex: none;
+  border: 1px solid var(--neutral-100);
+}
+
+.rd-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px 24px 24px;
+}
+
+.rd-occupations {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 440px));
+  gap: 10px;
+}
+
+.rd-occupation {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rd-occupation strong {
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.rd-occupation.active {
+  border-color: var(--accent-color);
+  background: var(--accent-color-soft);
+}
+
+.rd-occupation:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.rd-occupation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rd-occupation-head h3 {
+  margin: 0;
+  font-size: var(--fs-body) !important;
+}
+
+.rd-occupation-head p {
+  margin: 2px 0 0;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.rd-table-wrap {
+  overflow: auto;
+  max-height: 60vh;
+  border: 1.5px solid var(--accent-color);
+  border-radius: var(--border-radius);
+  scrollbar-width: thin;
+}
+
+.rd-table-wrap:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.rd-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: calc(15px * var(--type-scale));
+}
+
+.rd-table th,
+.rd-table td {
+  min-width: 170px;
+  padding: 12px 14px;
+  border-right: 1px solid var(--neutral-100);
+  border-bottom: 1px solid var(--neutral-100);
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Encabezado fijo arriba y siempre por encima de las celdas (también de la columna fija). */
+.rd-table th {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.rd-table .rd-criterion-col {
+  min-width: 250px;
+  max-width: 250px;
+}
+
+.rd-fixed {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 120px !important;
+  background: #fff;
+}
+
+.rd-table th.rd-fixed {
+  z-index: 5;
+  background: var(--neutral-50);
+}
+
+/* Columna del criterio al que se llegó desde el mapa de Fichas: resaltada con el color de acento. */
+/* Fondo SÓLIDO: uno translúcido dejaba ver las celdas que pasan por debajo al desplazar. */
+.rd-table th.rd-focus {
+  background: color-mix(in srgb, var(--accent-color) 18%, #fff);
+  color: var(--accent-color-hover);
+  box-shadow: inset 0 3px 0 var(--accent-color);
+}
+
+.rd-table td.rd-focus {
+  background: color-mix(in srgb, var(--accent-color) 7%, #fff);
+  box-shadow: inset 2px 0 0 var(--accent-color), inset -2px 0 0 var(--accent-color);
+}
+
+.rd-value {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.rp-comment {
+  display: block;
+  margin-top: 6px;
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.rd-observations {
+  margin: 0;
+  color: var(--neutral-700);
+}
+
+/* Etiquetas compartidas con la pantalla del Resumen */
+.rp-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.rp-result {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+/* Etiqueta de calificación: la regla general va ANTES de los colores, para que cada calificación la pinte. */
+.rp-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid var(--neutral-100);
+  border-radius: 999px;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.rp-result-aprobado {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.rp-result-con_mejoras {
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+}
+
+.rp-result-parcial {
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+}
+
+.rp-result-no_aprobado {
+  background: var(--state-error-bg);
+  color: var(--state-error-fg);
+}
+
+/* Aplica verde, Parcial (con propuesta de mejora) ámbar, Requiere ajuste naranja, No aplica rojo. */
+.rp-tag-aplica {
+  border-color: color-mix(in srgb, var(--state-ok-fg) 35%, transparent);
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.rp-tag-parcial {
+  border-color: color-mix(in srgb, var(--state-warn-accent) 60%, transparent);
+  background: var(--state-warn-bg);
+  color: #a16207;
+}
+
+.rp-tag-requiere_ajuste {
+  border-color: color-mix(in srgb, var(--state-warn-fg) 40%, transparent);
+  background: #fff1e8;
+  color: #c2410c;
+}
+
+.rp-tag-no_aplica {
+  border-color: color-mix(in srgb, var(--state-error-fg) 35%, transparent);
+  background: var(--state-error-bg);
+  color: var(--state-error-fg);
+}
+
+:host-context(.shell.dark-mode) .rp-tag-aplica {
+  background: rgba(52, 154, 0, 0.18);
+  color: #8fd86a;
+}
+
+:host-context(.shell.dark-mode) .rp-tag-parcial {
+  background: rgba(253, 195, 0, 0.16);
+  color: #fcd34d;
+}
+
+:host-context(.shell.dark-mode) .rp-tag-requiere_ajuste {
+  background: rgba(234, 88, 12, 0.18);
+  color: #fdba74;
+}
+
+:host-context(.shell.dark-mode) .rp-tag-no_aplica {
+  background: rgba(232, 28, 28, 0.18);
+  color: #ff9b9b;
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .rd-header,
+:host-context(.shell.dark-mode) .rd-occupation,
+:host-context(.shell.dark-mode) .rd-close,
+:host-context(.shell.dark-mode) .rd-table th,
+:host-context(.shell.dark-mode) .rd-table td {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .rd-occupation,
+:host-context(.shell.dark-mode) .rd-fixed {
+  background: var(--dark-surface);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .rd-table th {
+  background: var(--dark-recessed);
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .rd-sub,
+:host-context(.shell.dark-mode) .rd-occupation-head p,
+:host-context(.shell.dark-mode) .rp-comment {
+  color: #d4d4d4;
+}

@@ -1,0 +1,145 @@
+/* Solo lo específico de Correlativa; el resto son las piezas compartidas de ui.css. */
+
+.correlativa-header {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.correlativa-header .ui-page-title {
+  margin-bottom: 4px;
+}
+
+/* Pestañas sin mayúsculas, como el resto de textos de la vista. */
+.correlativa-tabs {
+  margin-bottom: 0;
+}
+
+.correlativa-tab {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.correlativa-search {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.correlativa-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.correlativa-search-field {
+  flex: 1 1 260px;
+}
+
+.correlativa-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  align-items: end;
+  gap: 14px;
+}
+
+.correlativa-filters .ui-field {
+  min-width: 0;
+}
+
+.correlativa-filter-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+@media (min-width: 1100px) {
+  .correlativa-filters {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.correlativa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* La tabla nunca supera el ancho de su tarjeta: columnas de ancho fijo en
+   porcentaje (suman 100 % en cada pestaña) y textos que parten en varias
+   líneas. Reemplaza, solo en esta vista, el `white-space: nowrap` que ui.css
+   pone a los encabezados y a las etiquetas, que era lo que la ensanchaba. */
+.correlativa-table {
+  table-layout: fixed;
+}
+
+.correlativa-table th,
+.correlativa-table td {
+  overflow-wrap: break-word;
+}
+
+.correlativa-table .ui-badge {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Denominación: ID, código ocupación CNO, código denominación CNO, descripción
+   denominación, código ocupación CUOC, descripción, estado, observación. */
+.correlativa-table[data-kind='denominacion'] th:nth-child(1) { width: 5%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(2) { width: 11%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(3) { width: 14%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(4) { width: 18%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(5) { width: 11%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(6) { width: 18%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(7) { width: 10%; }
+.correlativa-table[data-kind='denominacion'] th:nth-child(8) { width: 13%; }
+
+/* Ocupación: ID, código ocupación CNO, nombre, código ocupación CUOC, nombre CUOC. */
+.correlativa-table[data-kind='ocupacion'] th:nth-child(1) { width: 6%; }
+.correlativa-table[data-kind='ocupacion'] th:nth-child(2) { width: 12%; }
+.correlativa-table[data-kind='ocupacion'] th:nth-child(3) { width: 35%; }
+.correlativa-table[data-kind='ocupacion'] th:nth-child(4) { width: 12%; }
+.correlativa-table[data-kind='ocupacion'] th:nth-child(5) { width: 35%; }
+
+/* Conocimiento: ID, código CNO, nombre CNO, código CUOC, nombre CUOC, aplicado. */
+.correlativa-table[data-kind='conocimiento'] th:nth-child(1) { width: 6%; }
+.correlativa-table[data-kind='conocimiento'] th:nth-child(2) { width: 14%; }
+.correlativa-table[data-kind='conocimiento'] th:nth-child(3) { width: 26%; }
+.correlativa-table[data-kind='conocimiento'] th:nth-child(4) { width: 14%; }
+.correlativa-table[data-kind='conocimiento'] th:nth-child(5) { width: 26%; }
+.correlativa-table[data-kind='conocimiento'] th:nth-child(6) { width: 14%; }
+
+/* Pantallas angostas: menos aire en las celdas para que quepa más texto por línea. */
+@media (max-width: 700px) {
+  .correlativa-results {
+    padding: 14px;
+  }
+
+  .correlativa-table th,
+  .correlativa-table td {
+    padding: 8px 6px;
+  }
+
+  .correlativa-table th {
+    letter-spacing: 0;
+  }
+
+  /* La columna ID necesita más parte del ancho para que quepa el número; se la ceden las de texto. */
+  .correlativa-table[data-kind] th:nth-child(1) { width: 10%; }
+  .correlativa-table[data-kind='denominacion'] th:nth-child(4) { width: 16%; }
+  .correlativa-table[data-kind='denominacion'] th:nth-child(6) { width: 15%; }
+  .correlativa-table[data-kind='ocupacion'] th:nth-child(3),
+  .correlativa-table[data-kind='ocupacion'] th:nth-child(5) { width: 33%; }
+  .correlativa-table[data-kind='conocimiento'] th:nth-child(3),
+  .correlativa-table[data-kind='conocimiento'] th:nth-child(5) { width: 24%; }
+}
+

@@ -1,0 +1,261 @@
+<section class="ui-page ui-stack">
+  <header class="ui-card i3-header">
+    <div class="ui-card-header i3-header-main">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+      </div>
+      <div class="ui-card-header-main">
+        <h1 class="ui-page-title">{{ 'instrumento3.title' | translate }}</h1>
+        <p class="ui-page-subtitle"><b>{{ 'instrumento3.objectiveLabel' | translate }}</b> {{ 'instrumento3.objective' | translate }}</p>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- ============ Formulario ============ -->
+  <form class="ui-card i3-form" (ngSubmit)="requestSend()" novalidate>
+    <p class="i3-strip">{{ 'instrumento3.fillNotice' | translate }}</p>
+
+    <!-- Datos generales -->
+    <section class="i3-general">
+      <header class="i3-general-head">
+        <h2>{{ 'instrumento3.generalData' | translate }}</h2>
+        <span class="ui-badge ui-badge-info">{{ 'instrumento3.editable' | translate }}</span>
+      </header>
+      <div class="i3-grid">
+        <div class="ui-field">
+          <label class="i3-label" for="i3-date">{{ 'instrumento3.fieldDate' | translate }}</label>
+          <input class="ui-input" id="i3-date" name="date" type="date" [(ngModel)]="draft.date" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-name">{{ 'instrumento3.fieldFullName' | translate }} <span class="i3-required" aria-hidden="true">*</span></label>
+          <input class="ui-input" id="i3-name" name="fullName" type="text" maxlength="200" [placeholder]="'instrumento3.namePlaceholder' | translate" [class.invalid]="hasError('fullName')"
+                 [attr.aria-invalid]="hasError('fullName')" [(ngModel)]="draft.fullName" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-email">{{ 'instrumento3.fieldEmail' | translate }} <span class="i3-required" aria-hidden="true">*</span></label>
+          <input class="ui-input" id="i3-email" name="email" type="email" placeholder="correo@ejemplo.com" [class.invalid]="hasError('email')" [attr.aria-invalid]="hasError('email')"
+                 [(ngModel)]="draft.email" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-phone">{{ 'instrumento3.fieldPhone' | translate }}</label>
+          <input class="ui-input" id="i3-phone" name="phone" type="tel" maxlength="45" [(ngModel)]="draft.phone" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-department">{{ 'instrumento3.fieldDepartment' | translate }}</label>
+          <select class="ui-select" id="i3-department" name="department" [(ngModel)]="draft.department" (ngModelChange)="onDepartmentChange()" [disabled]="saving">
+            <option value="">{{ 'instrumento3.chooseDepartment' | translate }}</option>
+            <option *ngFor="let option of departments" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-municipality">{{ 'instrumento3.fieldMunicipality' | translate }}</label>
+          <select class="ui-select" id="i3-municipality" name="municipality" [(ngModel)]="draft.municipality" [disabled]="saving || !municipalities.length">
+            <option value="">{{ (municipalities.length ? 'instrumento3.chooseMunicipality' : 'instrumento3.chooseDepartmentFirst') | translate }}</option>
+            <option *ngFor="let option of municipalities" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-organization">{{ 'instrumento3.fieldOrganization' | translate }}</label>
+          <input class="ui-input" id="i3-organization" name="organization" type="text" [(ngModel)]="draft.organization" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-position">{{ 'instrumento3.fieldPosition' | translate }}</label>
+          <input class="ui-input" id="i3-position" name="position" type="text" [(ngModel)]="draft.position" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-profession">{{ 'instrumento3.fieldProfession' | translate }}</label>
+          <input class="ui-input" id="i3-profession" name="profession" type="text" [(ngModel)]="draft.profession" [disabled]="saving">
+        </div>
+        <div class="ui-field">
+          <label class="i3-label" for="i3-sector">{{ 'instrumento3.fieldSector' | translate }}</label>
+          <select class="ui-select" id="i3-sector" name="sector" [(ngModel)]="draft.sector" [disabled]="saving">
+            <option value="">{{ 'instrumento3.chooseSector' | translate }}</option>
+            <option *ngFor="let option of sectors" [value]="option.value">{{ option.label }}</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Enlaces de referencia -->
+    <section class="i3-references">
+      <p>{{ 'instrumento3.referencesIntro' | translate }}</p>
+      <ul>
+        <li *ngFor="let link of referenceLinks; let index = index">
+          <a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ index + 1 }}. {{ link.labelKey | translate }}</a>
+        </li>
+      </ul>
+    </section>
+
+    <p class="i3-orange">{{ 'instrumento3.readNotice' | translate }}</p>
+
+    <!-- Las nueve secciones: el título, lo que se pide y dónde se responde -->
+    <div class="i3-sections">
+      <div class="i3-section">
+        <div class="i3-srow i3-srow-ctrl">
+          <h2 class="i3-srow-label"><label for="i3-occupation">1. {{ 'instrumento3.s1Title' | translate }}</label><span class="i3-required" aria-hidden="true">*</span></h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s1Text' | translate }}</p>
+          <div class="i3-srow-control">
+            <input class="ui-input" id="i3-occupation" name="occupationName" type="text" maxlength="500" [placeholder]="'instrumento3.occupationPlaceholder' | translate"
+                   [class.invalid]="hasError('occupationName')" [attr.aria-invalid]="hasError('occupationName')" [(ngModel)]="draft.occupationName" [disabled]="saving">
+          </div>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow i3-srow-ctrl">
+          <h2 class="i3-srow-label"><label for="i3-area">2. {{ 'instrumento3.s2Title' | translate }}</label><span class="i3-required" aria-hidden="true">*</span></h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s2Text' | translate }}</p>
+          <div class="i3-srow-control">
+            <select class="ui-select" id="i3-area" name="area" [class.invalid]="hasError('area')" [attr.aria-invalid]="hasError('area')" [(ngModel)]="draft.area" [disabled]="saving">
+              <option value="">{{ 'instrumento3.choose' | translate }}</option>
+              <option *ngFor="let option of areas" [value]="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow i3-srow-ctrl">
+          <h2 class="i3-srow-label"><label for="i3-level">3. {{ 'instrumento3.s3Title' | translate }}</label><span class="i3-required" aria-hidden="true">*</span></h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s3Text' | translate }}</p>
+          <div class="i3-srow-control">
+            <select class="ui-select" id="i3-level" name="level" [class.invalid]="hasError('level')" [attr.aria-invalid]="hasError('level')" [(ngModel)]="draft.level" [disabled]="saving">
+              <option value="">{{ 'instrumento3.choose' | translate }}</option>
+              <option *ngFor="let option of levels" [value]="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow">
+          <h2 class="i3-srow-label"><label for="i3-description">4. {{ 'instrumento3.s4Title' | translate }}</label><span class="i3-required" aria-hidden="true">*</span></h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s4Text' | translate }}</p>
+        </div>
+        <div class="i3-scontent">
+          <textarea class="ui-textarea" id="i3-description" name="description" rows="5" [class.invalid]="hasError('description')" [attr.aria-invalid]="hasError('description')"
+                    [(ngModel)]="draft.description" [disabled]="saving"></textarea>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow">
+          <h2 class="i3-srow-label">5. {{ 'instrumento3.s5Title' | translate }}</h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s5Text' | translate }}</p>
+        </div>
+        <div class="i3-scontent">
+          <div *ngFor="let item of draft.functions; let index = index; trackBy: trackByIndex" class="i3-item">
+            <textarea class="ui-textarea" rows="2" [name]="'function-' + index" [placeholder]="'instrumento3.functionN' | translate: { n: index + 1 }"
+                      [attr.aria-label]="'instrumento3.functionN' | translate: { n: index + 1 }" [(ngModel)]="draft.functions[index]" [disabled]="saving"></textarea>
+            <button type="button" class="i3-remove" [disabled]="draft.functions.length <= 1 || saving" [title]="'instrumento3.remove' | translate"
+                    [attr.aria-label]="('instrumento3.remove' | translate) + ': ' + ('instrumento3.functionN' | translate: { n: index + 1 })" (click)="removeItem('functions', index)">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="i3-add" [disabled]="saving" (click)="addItem('functions')">+ {{ 'instrumento3.addFunction' | translate }}</button>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow">
+          <h2 class="i3-srow-label">6. {{ 'instrumento3.s6Title' | translate }}</h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s6Text' | translate }}</p>
+        </div>
+        <div class="i3-scontent">
+          <div *ngFor="let item of draft.denominations; let index = index; trackBy: trackByIndex" class="i3-item">
+            <input class="ui-input" type="text" [name]="'denomination-' + index" [placeholder]="'instrumento3.denominationN' | translate: { n: index + 1 }"
+                   [attr.aria-label]="'instrumento3.denominationN' | translate: { n: index + 1 }" [(ngModel)]="draft.denominations[index]" [disabled]="saving">
+            <button type="button" class="i3-remove" [disabled]="draft.denominations.length <= 1 || saving" [title]="'instrumento3.remove' | translate"
+                    [attr.aria-label]="('instrumento3.remove' | translate) + ': ' + ('instrumento3.denominationN' | translate: { n: index + 1 })" (click)="removeItem('denominations', index)">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="i3-add" [disabled]="saving" (click)="addItem('denominations')">+ {{ 'instrumento3.addDenomination' | translate }}</button>
+          <p class="i3-note">{{ 'instrumento3.otherDenominations' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow">
+          <h2 class="i3-srow-label">7. {{ 'instrumento3.s7Title' | translate }}</h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s7Text' | translate }}</p>
+        </div>
+        <div class="i3-scontent">
+          <div *ngFor="let item of draft.relatedOccupations; let index = index; trackBy: trackByIndex" class="i3-item">
+            <input class="ui-input" type="text" [name]="'related-' + index" [placeholder]="'instrumento3.relatedN' | translate: { n: index + 1 }"
+                   [attr.aria-label]="'instrumento3.relatedN' | translate: { n: index + 1 }" [(ngModel)]="draft.relatedOccupations[index]" [disabled]="saving">
+            <button type="button" class="i3-remove" [disabled]="draft.relatedOccupations.length <= 1 || saving" [title]="'instrumento3.remove' | translate"
+                    [attr.aria-label]="('instrumento3.remove' | translate) + ': ' + ('instrumento3.relatedN' | translate: { n: index + 1 })" (click)="removeItem('relatedOccupations', index)">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="i3-add" [disabled]="saving" (click)="addItem('relatedOccupations')">+ {{ 'instrumento3.addRelated' | translate }}</button>
+          <p class="i3-note">{{ 'instrumento3.otherRelated' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow">
+          <h2 class="i3-srow-label">8. {{ 'instrumento3.s8Title' | translate }}</h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s8Text' | translate }}</p>
+        </div>
+        <div class="i3-scontent">
+          <div class="i3-chips" role="group" [attr.aria-label]="'instrumento3.s8Title' | translate">
+            <label *ngFor="let option of choices('skills')" class="i3-chip" [class.on]="isChosen('skills', option)">
+              <input type="checkbox" [name]="'skills-' + option" [checked]="isChosen('skills', option)" [disabled]="saving" (change)="toggleChoice('skills', option)">
+              {{ option }}
+            </label>
+          </div>
+          <label class="i3-note" for="i3-other-skills">{{ 'instrumento3.otherSkills' | translate }}</label>
+          <input class="ui-input" id="i3-other-skills" name="otherSkills" type="text" [(ngModel)]="draft.otherSkills" [disabled]="saving">
+        </div>
+      </div>
+
+      <div class="i3-section">
+        <div class="i3-srow">
+          <h2 class="i3-srow-label">9. {{ 'instrumento3.s9Title' | translate }}</h2>
+          <p class="i3-srow-desc">{{ 'instrumento3.s9Text' | translate }}</p>
+        </div>
+        <div class="i3-scontent">
+          <div class="i3-chips" role="group" [attr.aria-label]="'instrumento3.s9Title' | translate">
+            <label *ngFor="let option of choices('knowledge')" class="i3-chip" [class.on]="isChosen('knowledge', option)">
+              <input type="checkbox" [name]="'knowledge-' + option" [checked]="isChosen('knowledge', option)" [disabled]="saving" (change)="toggleChoice('knowledge', option)">
+              {{ option }}
+            </label>
+          </div>
+          <label class="i3-note" for="i3-other-knowledge">{{ 'instrumento3.otherKnowledge' | translate }}</label>
+          <input class="ui-input" id="i3-other-knowledge" name="otherKnowledge" type="text" [(ngModel)]="draft.otherKnowledge" [disabled]="saving">
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <footer class="i3-actions">
+      <p class="i3-actions-note" aria-live="polite"><ng-container *ngIf="showErrors && missing.length">{{ 'instrumento3.missingNote' | translate }}</ng-container></p>
+      <div class="i3-actions-buttons">
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="saving" (click)="save()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2ZM17 21v-8H7v8M7 3v5h8"/></svg>
+          {{ (saving && !confirmSend ? 'instrumento3.saving' : 'instrumento3.save') | translate }}
+        </button>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="saving">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+          {{ 'instrumento3.send' | translate }}
+        </button>
+      </div>
+    </footer>
+  </form>
+
+</section>
+
+<!-- Confirmación de envío: después ya no se puede cambiar -->
+<app-confirm-dialog
+  *ngIf="confirmSend"
+  [title]="'instrumento3.confirmSendTitle' | translate"
+  [message]="'instrumento3.confirmSendText' | translate: { name: draft.occupationName }"
+  [confirmLabel]="(saving ? 'instrumento3.sending' : 'instrumento3.send') | translate"
+  [cancelLabel]="'common.cancel' | translate"
+  [busy]="saving"
+  (confirm)="send()"
+  (cancel)="cancelSend()">
+</app-confirm-dialog>

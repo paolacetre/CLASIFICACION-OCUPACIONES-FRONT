@@ -1,0 +1,315 @@
+<!-- ============ Lista de comparativas ============ -->
+<section *ngIf="!selected && embeddedId === null" class="ui-page">
+  <div class="ui-card comparativa-list">
+    <header class="ui-card-header comparativa-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4h6v16H4zM14 4h6v16h-6z"/></svg>
+      </div>
+      <div class="ui-card-header-main">
+        <h1 class="ui-page-title">{{ 'comparativa.title' | translate }}</h1>
+        <p class="ui-page-subtitle">{{ 'comparativa.subtitle' | translate }}</p>
+      </div>
+      <div class="ui-page-actions">
+        <button type="button" class="ui-btn ui-btn-secondary" (click)="guideOpen = true">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          {{ 'comparativa.guide' | translate }}
+        </button>
+      </div>
+    </header>
+
+    <!-- Resumen por estado: indicadores informativos (no filtran la lista) -->
+    <ul class="comparativa-summary" [attr.aria-label]="'comparativa.summaryAria' | translate">
+      <li *ngFor="let card of statusCards" class="comparativa-stat">
+        <strong>{{ summary[card.status] }}</strong>
+        <span>{{ card.labelKey | translate }}</span>
+        <small>{{ card.hintKey | translate }}</small>
+      </li>
+    </ul>
+
+    <form class="comparativa-search" role="search" (submit)="$event.preventDefault()">
+      <div class="ui-input-icon comparativa-search-field">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input class="ui-input" type="text" name="text" autocomplete="off" [placeholder]="'comparativa.searchPlaceholder' | translate"
+               [attr.aria-label]="'comparativa.searchPlaceholder' | translate" [(ngModel)]="query.text" (ngModelChange)="onTextChange()">
+      </div>
+      <button type="button" class="ui-btn ui-btn-secondary" [disabled]="!hasFilters" (click)="clearFilters()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        {{ 'comparativa.clearFilters' | translate }}
+      </button>
+    </form>
+
+    <div aria-live="polite">
+      <div *ngIf="!result.total && !loading" class="ui-empty">
+        <strong>{{ 'comparativa.emptyTitle' | translate }}</strong>
+        <p>{{ (hasFilters ? 'comparativa.emptyFiltered' : 'comparativa.emptyText') | translate }}</p>
+      </div>
+
+      <ng-container *ngIf="result.total">
+        <div class="ui-table-wrap ui-table-responsive ui-table-responsive-md">
+          <table class="ui-table comparativa-table">
+            <thead>
+              <tr>
+                <th scope="col">{{ 'comparativa.colId' | translate }}</th>
+                <th scope="col">{{ 'comparativa.colOccupations' | translate }}</th>
+                <th scope="col">{{ 'comparativa.colAnalyst' | translate }}</th>
+                <th scope="col">{{ 'comparativa.colDate' | translate }}</th>
+                <th scope="col">{{ 'comparativa.colStatus' | translate }}</th>
+                <th scope="col">{{ 'common.actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let comparison of result.items">
+                <td class="comparativa-id" [attr.data-label]="'comparativa.colId' | translate">{{ comparison.id }}</td>
+                <td [attr.data-label]="'comparativa.colOccupations' | translate">
+                  <ol class="comparativa-occupations">
+                    <li *ngFor="let occupation of comparison.occupations">
+                      <span class="ui-badge ui-badge-neutral">{{ occupation.catalog }} {{ occupation.code }}</span>
+                      <span>{{ occupation.name }}</span>
+                    </li>
+                  </ol>
+                </td>
+                <td [attr.data-label]="'comparativa.colAnalyst' | translate">{{ comparison.analyst }}</td>
+                <td [attr.data-label]="'comparativa.colDate' | translate">{{ comparison.date }}</td>
+                <td [attr.data-label]="'comparativa.colStatus' | translate"><span class="ui-badge" [ngClass]="card(comparison.status).badge">{{ card(comparison.status).labelKey | translate }}</span></td>
+                <td>
+                  <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" [attr.aria-label]="('comparativa.open' | translate) + ' ' + comparison.id" (click)="open(comparison.id)">
+                    {{ 'comparativa.open' | translate }}
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <nav app-pagination [page]="query.page" [pageSize]="query.pageSize" [total]="result.total" summaryKey="comparativa.showing" sizeLabelKey="comparativa.pageSizeAria"
+             (pageChange)="goToPage($event)" (pageSizeChange)="query.pageSize = $event; onFiltersChange()"></nav>
+      </ng-container>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Comparativa abierta (vista y modo edición, como la versión desplegada) ============ -->
+<section *ngIf="selected as comparison" class="ui-page cpv-page">
+  <!-- Encabezado: volver, título, ocupaciones, datos de registro, estado y "Editar" / "Modo edición" -->
+  <header class="ui-card cpv-head">
+    <button type="button" class="ui-btn ui-btn-outline ui-btn-sm cpv-back" (click)="requestBack()">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      {{ 'comparativa.back' | translate }}
+    </button>
+    <div class="ui-card-icon cpv-head-icon" aria-hidden="true">
+      <svg class="ui-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="16" rx="1"/></svg>
+    </div>
+    <div class="cpv-head-text">
+      <h1 class="ui-page-title">{{ 'comparativa.detailTitle' | translate: { id: comparison.id } }}</h1>
+      <p class="cpv-head-names">
+        <ng-container *ngFor="let occupation of comparison.occupations; let last = last">
+          {{ occupation.name }}<svg *ngIf="!last" class="ui-icon cpv-versus" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h14l-3-3M20 16H6l3 3"/></svg>
+        </ng-container>
+      </p>
+      <p class="cpv-head-meta">
+        <span>
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 4a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"/></svg>
+          {{ 'comparativa.occupationCount' | translate: { count: comparison.occupations.length } }}
+        </span>
+        <span>
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          {{ 'comparativa.savedBy' | translate: { date: comparison.date || '—', user: comparison.analyst || '—' } }}
+        </span>
+      </p>
+    </div>
+    <div class="cpv-head-side">
+      <span class="ui-badge cpv-status" [ngClass]="card(comparison.status).badge">{{ card(comparison.status).labelKey | translate }}</span>
+      <button *ngIf="editable && !editing" type="button" class="ui-btn ui-btn-outline cpv-edit" (click)="startEditing()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        {{ 'comparativa.edit' | translate }}
+      </button>
+      <span *ngIf="editing" class="ui-badge ui-badge-info cpv-editing-pill">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        {{ 'comparativa.editMode' | translate }}
+      </span>
+    </div>
+  </header>
+
+  <!-- Pestañas en píldoras, con el total de cada sección -->
+  <div class="cpv-tabs" role="tablist" [attr.aria-label]="'comparativa.tabsAria' | translate">
+    <button *ngFor="let tab of tabs" type="button" class="cpv-tab" role="tab" [id]="'comparativa-tab-' + tab.id" [class.active]="activeTab === tab.id"
+            [attr.aria-selected]="activeTab === tab.id" aria-controls="comparativa-panel" (click)="selectTab(tab.id)">
+      {{ tab.labelKey | translate }}
+      <span class="cpv-tab-count">{{ tabCount(tab.id) }}</span>
+    </button>
+  </div>
+
+  <!-- Tarjeta de cada ocupación; la columna "Comparación" va después de la primera -->
+  <div id="comparativa-panel" class="cpv-grid" role="tabpanel" [attr.aria-labelledby]="'comparativa-tab-' + activeTab"
+       [class.three]="comparison.occupations.length === 3">
+    <ng-container *ngFor="let occupation of comparison.occupations; let index = index">
+      <article class="ui-card cpv-card" [class.focused]="editing && focusedColumn === index" (focusin)="focusColumn(index)">
+        <header class="cpv-card-head">
+          <span class="cpv-number" aria-hidden="true">{{ index + 1 | number: '2.0' }}</span>
+          <div class="cpv-card-title-block">
+            <h2 class="cpv-card-title">{{ occupation.name }}</h2>
+            <p class="cpv-card-tags">
+              <span class="cpv-code"><span>{{ occupation.catalog }}</span>{{ occupation.code }}</span>
+              <span *ngIf="occupation.level" class="cpv-level">{{ occupation.level }}</span>
+            </p>
+          </div>
+          <button *ngIf="editable && !editing" type="button" class="ui-btn ui-btn-outline ui-btn-sm cpv-edit" (click)="startEditing(index)"
+                  [attr.aria-label]="'comparativa.editOccupation' | translate: { number: index + 1 }">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            {{ 'comparativa.edit' | translate }}
+          </button>
+        </header>
+
+        <div class="cpv-card-body">
+          <!-- Información: datos básicos, descripción y observación -->
+          <ng-container *ngIf="activeTab === 'info'">
+            <section class="cpv-section">
+              <h3 class="cpv-section-title">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                {{ 'comparativa.basicInfo' | translate }}
+              </h3>
+              <div class="cpv-fields">
+                <div class="cpv-field">
+                  <label class="cpv-label" [for]="'cpv-name-' + index">{{ 'comparativa.fieldName' | translate }}</label>
+                  <textarea *ngIf="editing; else nameView" class="ui-textarea cpv-input" rows="2" maxlength="200" [id]="'cpv-name-' + index"
+                            [(ngModel)]="drafts[index].name" [name]="'name' + index"></textarea>
+                  <ng-template #nameView><p class="cpv-box" [id]="'cpv-name-' + index">{{ occupation.name || '—' }}</p></ng-template>
+                </div>
+                <div class="cpv-field">
+                  <label class="cpv-label" [for]="'cpv-level-' + index">{{ 'comparativa.aspect.level' | translate }}</label>
+                  <select *ngIf="editing; else levelView" class="ui-select cpv-input" [id]="'cpv-level-' + index" [(ngModel)]="drafts[index].level" [name]="'level' + index">
+                    <option *ngFor="let option of levelOptions(index)" [value]="option">{{ option }}</option>
+                  </select>
+                  <ng-template #levelView><p class="cpv-box" [id]="'cpv-level-' + index">{{ occupation.level || '—' }}</p></ng-template>
+                </div>
+                <div class="cpv-field">
+                  <label class="cpv-label" [for]="'cpv-area-' + index">{{ 'comparativa.aspect.area' | translate }}</label>
+                  <select *ngIf="editing; else areaView" class="ui-select cpv-input" [id]="'cpv-area-' + index" [(ngModel)]="drafts[index].area" [name]="'area' + index">
+                    <option *ngFor="let option of areaOptions(index)" [value]="option">{{ option }}</option>
+                  </select>
+                  <ng-template #areaView><p class="cpv-box" [id]="'cpv-area-' + index">{{ occupation.area || '—' }}</p></ng-template>
+                </div>
+              </div>
+            </section>
+
+            <section class="cpv-section">
+              <h3 class="cpv-section-title">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l5 5v13H6z"/><path d="M14 3v6h6M9 13h7M9 17h7"/></svg>
+                <label [for]="'cpv-description-' + index">{{ 'comparativa.description' | translate }}</label>
+              </h3>
+              <textarea *ngIf="editing; else descriptionView" class="ui-textarea cpv-input" rows="6" maxlength="1000" [id]="'cpv-description-' + index"
+                        [(ngModel)]="drafts[index].description" [name]="'description' + index"></textarea>
+              <ng-template #descriptionView><p class="cpv-box cpv-box-text">{{ occupation.description || ('comparativa.noDescription' | translate) }}</p></ng-template>
+            </section>
+
+            <!-- La observación es una sola por comparativa (así la guarda el servidor): se ve igual en cada tarjeta. -->
+            <section class="cpv-section">
+              <h3 class="cpv-section-title">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                <label [for]="'cpv-observation-' + index">{{ 'comparativa.observation' | translate }}</label>
+              </h3>
+              <textarea *ngIf="editing; else observationView" class="ui-textarea cpv-input" rows="3" maxlength="2000" [id]="'cpv-observation-' + index"
+                        [placeholder]="'comparativa.observationPlaceholder' | translate" [(ngModel)]="observation" [name]="'observation' + index"></textarea>
+              <ng-template #observationView>
+                <p class="cpv-box cpv-box-text" [class.empty]="!comparison.observation">{{ comparison.observation || ('comparativa.noObservation' | translate) }}</p>
+              </ng-template>
+            </section>
+          </ng-container>
+
+          <!-- Listas (funciones, denominaciones, habilidades, conocimientos, relacionadas). En modo edición cada
+               elemento se edita o se quita, y "+ Agregar" suma del catálogo (o una fila en blanco, en denominaciones). -->
+          <section *ngIf="activeTab !== 'info'" class="cpv-section">
+            <header class="cpv-list-head">
+              <h3 class="cpv-section-title">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/></svg>
+                {{ tabLabelKey | translate }}
+                <span class="cpv-list-count">{{ listItems(index).length }}</span>
+              </h3>
+              <button *ngIf="editing" type="button" class="cpv-add" [attr.aria-expanded]="activeTab === 'denominations' ? null : pickerColumn === index"
+                      (click)="addItem(index)">+ {{ 'comparativa.add' | translate }}</button>
+            </header>
+
+            <app-option-picker *ngIf="editing && pickerColumn === index" [options]="pickerOptionsOf(index)" [selected]="listCodes(index)"
+                               [showCode]="true" [searchCode]="true" [placeholder]="'comparativa.searchCatalog' | translate"
+                               [emptyText]="(pickerOptionsOf(index).length ? 'comparativa.noMatches' : 'comparativa.loadingCatalog') | translate"
+                               (picked)="addPicked(index, $event)"></app-option-picker>
+
+            <ul *ngIf="listItems(index).length; else emptyList" class="cpv-items">
+              <li *ngFor="let item of listItems(index); let position = index" class="cpv-item" [class.editing]="editing">
+                <span class="cpv-item-code" [class.new]="!item.code">{{ item.code || ('comparativa.newItem' | translate) }}</span>
+                <textarea *ngIf="editing; else itemText" class="ui-textarea cpv-input cpv-item-input" rows="2"
+                          [attr.aria-label]="(tabLabelKey | translate) + ' ' + (position + 1)" [(ngModel)]="item.text" [name]="activeTab + index + '-' + position"></textarea>
+                <ng-template #itemText><span class="cpv-item-text">{{ item.text }}</span></ng-template>
+                <button *ngIf="editing" type="button" class="ui-icon-btn cpv-remove" [title]="'comparativa.remove' | translate"
+                        [attr.aria-label]="'comparativa.remove' | translate" (click)="removeItem(index, position)">
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+              </li>
+            </ul>
+            <ng-template #emptyList><p class="cpv-box cpv-box-text empty">{{ 'comparativa.noItems' | translate }}</p></ng-template>
+          </section>
+        </div>
+      </article>
+
+      <!-- Columna "Comparación": en qué coinciden las ocupaciones; cada aspecto abre su pestaña -->
+      <aside *ngIf="index === 0" class="ui-card cpv-compare" [attr.aria-label]="'comparativa.comparison' | translate">
+        <h2 class="cpv-compare-title">{{ 'comparativa.comparison' | translate }}</h2>
+        <p class="cpv-compare-count"><strong>{{ matchCount }}</strong> {{ 'comparativa.matchOf' | translate: { total: aspects.length } }}</p>
+        <ul class="cpv-aspects">
+          <li *ngFor="let chip of aspects">
+            <button type="button" class="cpv-aspect" [class.ok]="chip.matches" [class.current]="chip.current" [attr.aria-pressed]="chip.current"
+                    (click)="showAspect(chip.aspect)">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path [attr.d]="chip.matches ? 'm8 12 3 3 5-6' : 'M9 9l6 6M15 9l-6 6'"/></svg>
+              {{ chip.labelKey | translate }}
+              <span class="comparativa-sr">{{ (chip.matches ? 'comparativa.matches' : 'comparativa.differs') | translate }}</span>
+            </button>
+          </li>
+        </ul>
+      </aside>
+    </ng-container>
+  </div>
+
+  <!-- Barra fija del pie: estado de los cambios y acciones -->
+  <footer class="cpv-footer">
+    <p class="cpv-footer-note" [class.warn]="dirty" [class.locked]="!editable" aria-live="polite">
+      <svg *ngIf="!editable" class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <svg *ngIf="editable && !dirty" class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>
+      <svg *ngIf="editable && dirty" class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      {{ footerNoteKey | translate }}
+    </p>
+    <div class="cpv-footer-actions">
+      <button type="button" class="ui-btn ui-btn-ghost" [disabled]="saving" (click)="cancel()">{{ (editing ? 'comparativa.cancel' : 'comparativa.back') | translate }}</button>
+      <ng-container *ngIf="editable">
+        <button *ngIf="fromInstrument2; else ownActions" type="button" class="ui-btn ui-btn-primary" [disabled]="!dirty || saving" (click)="save()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8M8 21v-7h8v7"/></svg>
+          {{ 'comparativa.saveInInstrument' | translate }}
+        </button>
+        <ng-template #ownActions>
+          <button type="button" class="ui-btn ui-btn-outline" [disabled]="!dirty || saving" (click)="save()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8M8 21v-7h8v7"/></svg>
+            {{ 'comparativa.save' | translate }}
+          </button>
+          <button type="button" class="ui-btn ui-btn-primary" [disabled]="saving || !canSend" (click)="requestSend()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4Z"/></svg>
+            {{ 'comparativa.send' | translate }}
+          </button>
+        </ng-template>
+      </ng-container>
+    </div>
+  </footer>
+</section>
+
+<!-- Confirmaciones: descartar cambios y enviar a Instrumento 2 -->
+<app-confirm-dialog *ngIf="pendingConfirm === 'discard'" variant="warn" [title]="'comparativa.discardTitle' | translate"
+                    [message]="'comparativa.discardText' | translate" [confirmLabel]="'comparativa.discard' | translate"
+                    [cancelLabel]="'comparativa.keepEditing' | translate" (confirm)="discard()" (cancel)="pendingConfirm = null"></app-confirm-dialog>
+<app-confirm-dialog *ngIf="pendingConfirm === 'send'" variant="primary" [title]="'comparativa.sendTitle' | translate"
+                    [message]="'comparativa.sendText' | translate" [confirmLabel]="'comparativa.send' | translate"
+                    [cancelLabel]="'comparativa.cancel' | translate" [busy]="saving"
+                    (confirm)="confirmSend()" (cancel)="pendingConfirm = null"></app-confirm-dialog>
+
+<!-- Guía de uso -->
+<app-guide-dialog *ngIf="guideOpen" titleKey="comparativa.guideTitle" [steps]="guideSteps"
+                  noteTitleKey="comparativa.guideNoteTitle" noteTextKey="comparativa.guideNoteText" closeKey="comparativa.guideClose"
+                  (closed)="guideOpen = false"></app-guide-dialog>

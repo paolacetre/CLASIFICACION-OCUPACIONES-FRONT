@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Clasificación de Ocupaciones</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <!-- El logo de inicio de sesión se descarga junto con la app, para que esté listo al mostrarse. -->
+  <link rel="preload" as="image" href="/assets/logos/logo-login.png">
+  <!-- Aplica el tema guardado antes de que cargue Angular: sin destello claro al abrir en modo oscuro. -->
+  <!-- La clave es <PROJECT_STORAGE_PREFIX>_system_config (src/app/proyecto/config.ts). -->
+  <script>
+    try {
+      var config = JSON.parse(localStorage.getItem('clasificacion_system_config') || '{}');
+      document.documentElement.setAttribute('data-theme', config.theme === 'oscuro' ? 'oscuro' : 'claro');
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

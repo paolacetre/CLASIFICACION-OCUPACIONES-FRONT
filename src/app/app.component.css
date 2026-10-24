@@ -1,0 +1,908 @@
+﻿:host {
+  display: block;
+  min-height: 100vh;
+  font-family: var(--app-font-family, "Work Sans", "Segoe UI", Arial, sans-serif);
+}
+
+.shell {
+  min-height: 100vh;
+  background: #F1F1F1;
+  color: #001631;
+}
+
+/* App layout: menú principal vertical a la izquierda + área de contenido */
+.app-layout {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+}
+
+/* Sidebar (menú principal) */
+.sidebar {
+  flex: 0 0 248px;
+  width: 248px;
+  /* Fijo al hacer scroll: el menú y la tarjeta del usuario siempre visibles. */
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: #fff;
+  border-right: 1px solid #D4D4D4;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 22px 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary-color);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  padding: 0 6px;
+}
+
+/* Logo principal (símbolo) al lado del nombre de la plataforma. */
+.brand-logo {
+  display: block;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: var(--border-radius);
+  background: var(--primary-color);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 0;
+  background: transparent;
+  color: #525252;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  padding: 11px 14px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-tab svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.nav-tab:hover:not(.active) {
+  color: var(--primary-color);
+  background: #F1F1F1;
+}
+
+.nav-tab.active {
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+}
+
+.nav-tab svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Rol de la sesión, debajo del logo */
+.brand-role {
+  margin: -12px 0 0;
+  padding: 0 6px;
+  color: #525252;
+  font-size: var(--fs-body);
+}
+
+/* Pie del menú: usuario de la sesión + cerrar sesión */
+.sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #D4D4D4;
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px;
+  min-width: 0;
+}
+
+.user-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--state-ok-bg);
+  color: var(--accent-color-hover);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-avatar svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-info strong {
+  font-weight: var(--fw-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-info small {
+  color: #525252;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--state-error-fg);
+  font-size: var(--fs-body);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+}
+
+.logout-button:hover {
+  background: var(--state-error-bg);
+}
+
+.logout-button:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.logout-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Área principal: barra superior con acciones + contenido de la vista */
+.main-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  height: 70px;
+  flex-shrink: 0;
+  background: #fff;
+  border-bottom: 1px solid #D4D4D4;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 34px;
+}
+
+.top-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: #F1F1F1;
+  color: #525252;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.icon-button:hover,
+.icon-button.active {
+  background: #F1F1F1;
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.notification-count {
+  position: absolute;
+  right: -3px;
+  top: -6px;
+  background: #E81C1C;
+  color: #fff;
+  border: 2px solid #fff;
+  font-size: var(--fs-body);
+  border-radius: var(--border-radius);
+  padding: 2px 4px;
+}
+
+.icon-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Main Content Area */
+.content {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 28px 48px;
+}
+
+.configuration-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.58);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  animation: configurationBackdropIn 0.2s ease-out;
+}
+
+.configuration-modal {
+  position: relative;
+  width: min(1000px, 94vw);
+  /* Altura fija: el modal nunca crece con el contenido ni genera scroll de
+     página. Solo el panel de la pestaña activa hace scroll (.settings-body).
+     Tope más bajo que antes (era 850px/90vh): se veía demasiado grande en
+     pantallas altas y dejaba muy poco alto disponible para el preview en
+     pantallas de portátil típicas (~768px de alto). */
+  height: min(760px, 92vh);
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #F1F1F1;
+  border: 2px solid #D4D4D4;
+  border-radius: var(--border-radius);
+  box-shadow: 0 20px 54px rgba(8, 21, 36, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  animation: configurationModalIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.configuration-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 22px;
+  z-index: 3;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #D4D4D4;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #525252;
+  font-size: var(--fs-title);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  font-weight: var(--fw-semibold);
+}
+
+.configuration-modal-close:hover {
+  background: #F1F1F1;
+  color: var(--primary-color);
+  transform: rotate(4deg);
+}
+
+.configuration-modal-close:focus-visible {
+  outline: 3px solid #1FACE3;
+  outline-offset: 2px;
+}
+
+.configuration-modal > app-settings {
+  /* Ya no es el elemento con scroll (eso vive ahora en .settings-body,
+     dentro de app-settings): aquí solo se reparte el alto fijo del modal
+     entre encabezado, tabs, layout de 2 columnas y footer. */
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 10px 22px 0;
+  overflow: hidden;
+}
+
+@keyframes configurationBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes configurationModalIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Restricted State */
+.restricted {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 32px;
+}
+
+.lock {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  display: grid;
+  place-items: center;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-semibold);
+  margin: 0 auto 18px;
+}
+
+.restricted h1 {
+  margin: 0 0 10px;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-semibold);
+}
+
+.restricted p {
+  margin: 0;
+  color: #525252;
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+/* Global Focus Styles */
+.icon-button:focus-visible,
+.nav-tab:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Dark Mode Shell — misma relación que en claro: página en el tono base
+   (--dark-recessed), sidebar/topbar/modal "elevados" un paso (--dark-surface),
+   igual que en claro son blanco puro sobre el gris #F1F1F1 de la página. */
+.shell.dark-mode {
+  background: var(--dark-recessed);
+  color: #F1F1F1;
+}
+
+.shell.dark-mode .sidebar,
+.shell.dark-mode .topbar {
+  background: var(--dark-surface);
+  border-color: #525252;
+}
+
+.shell.dark-mode .brand {
+  color: #F1F1F1;
+}
+
+.shell.dark-mode .nav-tab {
+  color: #D4D4D4;
+}
+
+.shell.dark-mode .nav-tab:hover:not(.active) {
+  background: var(--dark-surface-hover);
+  color: #F1F1F1;
+}
+
+.shell.dark-mode .nav-tab.active {
+  background: rgba(125, 183, 40, 0.16);
+  color: var(--accent-color);
+}
+
+.shell.dark-mode .brand-role,
+.shell.dark-mode .user-info small {
+  color: #D4D4D4;
+}
+
+.shell.dark-mode .sidebar-footer {
+  border-top-color: #525252;
+}
+
+.shell.dark-mode .user-avatar {
+  background: rgba(125, 183, 40, 0.16);
+  color: var(--accent-color);
+}
+
+.shell.dark-mode .logout-button {
+  color: #ff8a8a;
+}
+
+.shell.dark-mode .logout-button:hover {
+  background: rgba(232, 28, 28, 0.14);
+}
+
+.shell.dark-mode .nav-tab:focus-visible {
+  outline: 3px solid #1FACE3;
+  outline-offset: 2px;
+}
+
+.shell.dark-mode .icon-button {
+  background: var(--dark-recessed);
+  border: 1px solid #525252;
+  color: #F1F1F1;
+}
+
+.shell.dark-mode .icon-button:hover,
+.shell.dark-mode .icon-button.active {
+  background: var(--primary-color-soft);
+  color: var(--primary-color);
+}
+
+.shell.dark-mode .notification-count {
+  border-color: var(--dark-surface);
+}
+
+.shell.dark-mode .configuration-modal {
+  /* El modal es el "fondo de página" de Configuración (igual que en claro es
+     #F1F1F1, no blanco): las .config-card de dentro son las que se elevan. */
+  background: var(--dark-recessed);
+  border-color: #525252;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48), inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+}
+
+.shell.dark-mode .configuration-modal-close {
+  background: var(--dark-recessed);
+  border-color: #525252;
+  color: #D4D4D4;
+}
+
+.shell.dark-mode .configuration-modal-close:hover {
+  background: var(--dark-surface-hover);
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 0 18px;
+  }
+
+  .content {
+    padding: 24px 18px 40px;
+  }
+
+  .configuration-modal-backdrop {
+    align-items: stretch;
+    padding: 8px;
+  }
+
+  .configuration-modal {
+    width: 100%;
+    height: calc(100vh - 16px);
+    max-height: calc(100vh - 16px);
+    border-radius: var(--border-radius);
+  }
+
+  .configuration-modal > app-settings {
+    padding: 18px 14px 0;
+    border-radius: var(--border-radius);
+  }
+}
+
+
+/* Aviso global del modo de solo lectura (bajo la barra superior, en todas las vistas) */
+.icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  .global-readonly-banner {
+    padding: 10px 16px;
+  }
+}
+
+/* ---------- Menú lateral organizado ----------
+   Encabezado (marca + rol) | opciones y grupos desplegables |
+   pie con la tarjeta del usuario (lleva a Perfil) y cerrar sesión. */
+.sidebar {
+  gap: 0;
+  padding: 18px 14px 14px;
+  /* Sin barra de desplazamiento: el menú es acordeón y cabe en la pantalla; si una pantalla muy
+     baja no alcanza, se sigue moviendo con la rueda del mouse o el teclado, pero sin mostrar la barra. */
+  scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 6px 14px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #D4D4D4;
+}
+
+.brand-role {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 12px 4px 8px;
+  border-radius: 999px;
+  background: var(--state-ok-bg);
+  color: var(--accent-color-hover);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.brand-role svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.side-nav {
+  gap: 2px;
+}
+
+/* Subopciones de un grupo desplegado. */
+.nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-tab {
+  position: relative;
+  min-height: 40px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  line-height: 1.25;
+  /* Cada nivel de subopciones se sangra un paso más. */
+  padding-left: calc(14px + var(--nav-level, 0) * 16px);
+}
+
+.nav-tab > span {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Primer nivel del menú: Semibold; las subopciones van en Regular (solo hay
+   dos grosores en el sistema). */
+.nav-tab.nav-top {
+  font-weight: var(--fw-semibold);
+}
+
+/* Flecha de un grupo: apunta a la derecha y gira hacia abajo al desplegarlo. */
+.nav-tab .nav-group-arrow {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+  stroke: none;
+  transition: transform 0.18s ease;
+}
+
+.nav-group.expanded .nav-group-arrow {
+  transform: rotate(90deg);
+}
+
+/* Grupo recogido que contiene la vista actual. */
+.nav-group.has-active {
+  color: var(--primary-color);
+}
+
+.shell.dark-mode .nav-group.has-active {
+  color: var(--accent-color);
+}
+
+/* Barra de color a la izquierda de la opción activa. */
+.nav-tab.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent-color);
+}
+
+.sidebar-footer {
+  gap: 4px;
+  padding-top: 12px;
+}
+
+.user-card {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #D4D4D4;
+  border-radius: var(--border-radius);
+  background: #FAFAFA;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.user-card:hover,
+.user-card.active {
+  border-color: var(--accent-color);
+  background: var(--state-ok-bg);
+}
+
+.user-card:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.user-card {
+  gap: 10px;
+}
+
+.user-card .user-avatar {
+  width: 36px;
+  height: 36px;
+}
+
+.user-card .user-info {
+  flex: 1;
+}
+
+.user-card-chevron {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: #8F8F8F;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logout-button {
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.shell.dark-mode .sidebar-header {
+  border-bottom-color: #525252;
+}
+
+.shell.dark-mode .brand-role {
+  background: rgba(125, 183, 40, 0.16);
+  color: var(--accent-color);
+}
+
+.shell.dark-mode .user-card {
+  background: var(--dark-recessed);
+  border-color: #525252;
+}
+
+.shell.dark-mode .user-card:hover,
+.shell.dark-mode .user-card.active {
+  background: rgba(125, 183, 40, 0.12);
+  border-color: var(--accent-color);
+}
+
+/* "Cerrar sesión" en la pantalla de acceso restringido (rol sin acceso al shell). */
+.restricted-logout {
+  width: auto;
+  margin: 20px auto 0;
+}
+
+/* ---------- Menú lateral: abrir y cerrar ----------
+   El botón de las tres rayas de la barra superior lo muestra u oculta. En
+   escritorio el contenido ocupa el espacio que deja; en pantallas angostas el
+   menú es un panel que se desliza sobre el contenido, con un fondo que lo
+   cierra al tocarlo. */
+.topbar {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.menu-toggle {
+  border-radius: var(--border-radius);
+}
+
+.app-layout.menu-closed .sidebar {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(300px, 86vw);
+    height: 100dvh;
+    box-shadow: 0 0 40px rgba(22, 34, 51, 0.28);
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(18, 28, 41, 0.52);
+  }
+}
+
+/* ---------- Configuración: panel de vidrio (translúcido, con la vista de fondo desenfocada) ---------- */
+.configuration-modal-backdrop {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.configuration-modal {
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--modal-radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* La X va suelta, sin círculo, alineada con el título. */
+.configuration-modal-close {
+  top: 22px;
+  right: 22px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: #525252;
+  font-size: calc(28px * var(--type-scale));
+  font-weight: var(--fw-regular);
+}
+
+.configuration-modal-close:hover {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--primary-color);
+  transform: none;
+}
+
+/* El relleno lo pone cada franja de Configuración (encabezado, columnas y pie llegan hasta el borde). */
+.configuration-modal > app-settings {
+  padding: 0;
+}
+
+@media (min-width: 901px) {
+  .configuration-modal {
+    width: min(1150px, 100%);
+    height: min(760px, 85vh);
+    max-height: 85vh;
+  }
+}
+
+.shell.dark-mode .configuration-modal {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.shell.dark-mode .configuration-modal-close {
+  background: transparent;
+  color: #F1F1F1;
+}
+
+.shell.dark-mode .configuration-modal-close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 900px) {
+  .configuration-modal {
+    border-radius: var(--modal-radius);
+  }
+
+  .configuration-modal-backdrop {
+    padding: 8px;
+  }
+
+  .configuration-modal-close {
+    top: 14px;
+    right: 12px;
+  }
+
+  .configuration-modal > app-settings {
+    padding: 0;
+  }
+}
+
+/* Sin desenfoque disponible, el panel vuelve a ser opaco para que se lea bien. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .configuration-modal {
+    background: #F1F1F1;
+  }
+
+  .shell.dark-mode .configuration-modal {
+    background: var(--dark-recessed);
+  }
+}
+
+/* Alto contraste: nada translúcido. */
+:root[data-high-contrast='true'] .configuration-modal {
+  background: #F1F1F1;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 2px solid var(--hc-border);
+}
+
+:root[data-high-contrast='true'] .shell.dark-mode .configuration-modal {
+  background: var(--dark-recessed);
+}

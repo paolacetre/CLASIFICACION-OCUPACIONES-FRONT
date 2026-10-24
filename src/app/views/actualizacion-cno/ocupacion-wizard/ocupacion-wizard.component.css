@@ -1,0 +1,407 @@
+/* Lo propio del asistente "Registrar nueva ocupación CNO"; lo demás viene de las clases ui- (src/styles/ui.css). */
+
+.ow-modal {
+  display: flex;
+  flex-direction: column;
+  max-width: 880px;
+  padding: 0;
+  /* Solo el cuerpo se desplaza: el contenido no se sale de las esquinas redondeadas. */
+  overflow: hidden;
+}
+
+.ow-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 24px 12px;
+}
+
+.ow-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ow-header-text h2 {
+  margin: 0 0 4px;
+}
+
+/* ---------- Pasos ---------- */
+
+.ow-steps {
+  margin: 0 24px;
+  padding: 6px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.ow-steps ol {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--neutral-500);
+  font: inherit;
+  font-size: calc(13px * var(--type-scale));
+  text-align: left;
+  cursor: pointer;
+}
+
+.ow-step:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.ow-step.active {
+  background: #fff;
+  color: var(--ui-text);
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
+}
+
+.ow-step.done {
+  color: var(--ui-text);
+}
+
+.ow-step:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.ow-step-num {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--neutral-400);
+  border-radius: 50%;
+  font-size: calc(13px * var(--type-scale));
+}
+
+.ow-step.active .ow-step-num {
+  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.ow-step.done .ow-step-num {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.ow-step-num .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Cuerpo ---------- */
+
+.ow-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 16px 24px;
+}
+
+.ow-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.ow-section + .ow-section {
+  margin-top: 14px;
+}
+
+.ow-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.ow-section > .ui-hint {
+  margin-top: -6px;
+}
+
+.ow-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.ow-wide {
+  grid-column: 1 / -1;
+}
+
+.ow-hint-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ow-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+}
+
+.ow-error {
+  color: var(--state-error-fg);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.ow-add-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.ow-grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.ow-list-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.ow-empty {
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--neutral-100);
+  border-radius: var(--border-radius);
+  color: var(--neutral-500);
+  font-size: calc(14px * var(--type-scale));
+  text-align: center;
+}
+
+.ow-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ow-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.ow-code {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+  white-space: nowrap;
+}
+
+.ow-danger {
+  color: var(--state-error-fg);
+}
+
+.ow-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ow-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--neutral-100);
+  border-radius: 999px;
+  background: var(--neutral-50);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.ow-chip-remove {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--neutral-100);
+  color: var(--ui-text);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ow-chip-remove:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ---------- Resumen ---------- */
+
+.ow-summary-card {
+  padding: 14px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.ow-summary-card header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ow-summary-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: var(--fs-body);
+  font-weight: 600;
+}
+
+.ow-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+}
+
+.ow-summary-grid dt {
+  color: var(--neutral-500);
+  font-size: calc(13px * var(--type-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ow-summary-grid dd {
+  margin: 2px 0 0;
+  font-size: calc(14px * var(--type-scale));
+  overflow-wrap: anywhere;
+}
+
+.ow-pre {
+  white-space: pre-line;
+}
+
+.ow-summary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: calc(14px * var(--type-scale));
+}
+
+/* ---------- Pie ---------- */
+
+.ow-footer {
+  align-items: center;
+  margin: 0;
+  padding: 14px 24px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.ow-pending {
+  flex: 1;
+  text-align: right;
+}
+
+/* "Siguiente" atenuado mientras falta algo, pero activo para explicar qué falta. */
+.ow-dimmed {
+  opacity: 0.6;
+}
+
+/* ---------- Pantallas angostas ---------- */
+
+@media (max-width: 720px) {
+  .ow-steps ol {
+    grid-template-columns: repeat(5, auto);
+    overflow-x: auto;
+  }
+
+  .ow-step {
+    white-space: nowrap;
+  }
+
+  .ow-grid,
+  .ow-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ow-add-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ow-footer {
+    flex-wrap: wrap;
+  }
+
+  .ow-pending {
+    flex-basis: 100%;
+    order: -1;
+    text-align: left;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+
+:host-context(.shell.dark-mode) .ow-steps,
+:host-context(.shell.dark-mode) .ow-chip {
+  border-color: #525252;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.shell.dark-mode) .ow-step.active {
+  background: var(--dark-surface);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .ow-section,
+:host-context(.shell.dark-mode) .ow-item,
+:host-context(.shell.dark-mode) .ow-summary-card,
+:host-context(.shell.dark-mode) .ow-empty,
+:host-context(.shell.dark-mode) .ow-footer {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .ow-danger,
+:host-context(.shell.dark-mode) .ow-error {
+  color: #ff8f8f;
+}

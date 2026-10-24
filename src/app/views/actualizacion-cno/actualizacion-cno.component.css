@@ -1,0 +1,289 @@
+/* Lo propio de Actualización CNO; lo demás viene de las clases ui- (src/styles/ui.css). */
+
+.acno-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.acno-header {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.acno-tabs {
+  overflow-x: auto;
+}
+
+/* ---------- Barra de búsqueda, filtros y agregar ---------- */
+
+.acno-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.acno-search {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.acno-filters-anchor {
+  position: relative;
+}
+
+.acno-filters-btn.active {
+  border-color: var(--primary-color);
+}
+
+.acno-filters {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 230px;
+  padding: 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+}
+
+.acno-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.acno-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  font-size: calc(14px * var(--type-scale));
+  cursor: pointer;
+}
+
+.acno-filter-option input {
+  accent-color: var(--primary-color);
+}
+
+.acno-filters-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.acno-add {
+  margin-left: auto;
+}
+
+/* ---------- Conteo ---------- */
+
+.acno-count {
+  margin: 14px 0 10px;
+  color: var(--neutral-500);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.acno-count strong {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
+.acno-inactive.alert {
+  color: var(--state-warn-fg);
+  font-weight: 600;
+}
+
+/* ---------- Tabla ---------- */
+
+/* Encabezado que ordena: se ve como el texto del encabezado (mayúsculas), igual que en CNO. */
+.acno-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.acno-sort.active {
+  color: var(--ui-text);
+}
+
+.acno-sort:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.acno-sort-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--neutral-400);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.acno-sort-icon .on {
+  stroke: var(--accent-color-hover);
+}
+
+.acno-col-check {
+  width: 44px;
+}
+
+.acno-check {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.acno-col-code,
+.acno-code {
+  width: 90px;
+  white-space: nowrap;
+}
+
+.acno-code,
+.acno-name {
+  font-weight: 600;
+}
+
+.acno-name .ui-badge {
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.acno-description {
+  display: -webkit-box;
+  max-width: 460px;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--neutral-500);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.acno-col-date,
+.acno-date {
+  white-space: nowrap;
+}
+
+.acno-table tbody tr.selected {
+  background: var(--neutral-50);
+}
+
+.acno-table tbody tr.inactive .acno-name {
+  color: var(--neutral-400);
+}
+
+.acno-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.acno-actions .ui-btn {
+  white-space: nowrap;
+}
+
+.acno-delete {
+  color: var(--state-error-fg);
+}
+
+/* ---------- Modal de agregar y editar ---------- */
+
+.acno-modal {
+  max-width: 560px;
+}
+
+.acno-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.acno-modal-header h2 {
+  margin: 0 0 4px;
+}
+
+.acno-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.acno-modal-body .ui-overline {
+  margin: 4px 0 0;
+}
+
+.acno-official {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+}
+
+.acno-locked {
+  cursor: not-allowed;
+}
+
+.acno-counter {
+  align-self: flex-end;
+}
+
+.acno-modal .ui-form-error {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+}
+
+/* ---------- Modo oscuro ---------- */
+
+:host-context(.shell.dark-mode) .acno-filters {
+  border-color: #525252;
+  background: var(--dark-surface);
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .acno-filters-actions {
+  border-top-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .acno-table tbody tr.selected {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:host-context(.shell.dark-mode) .acno-delete {
+  color: #ff8f8f;
+}
+
+@media (max-width: 640px) {
+  .acno-add {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+}

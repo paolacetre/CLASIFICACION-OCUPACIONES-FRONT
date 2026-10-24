@@ -1,0 +1,717 @@
+// Reglas compartidas por las pestañas de Configuración (settings/tabs/*).
+// Se incluye con `@use '../../settings-shared';` en cada .scss de pestaña:
+// Angular encapsula los estilos por componente, así que cada uno recibe su
+// propia copia ya scopeada — es el patrón idiomático para CSS compartido
+// entre componentes standalone en Angular.
+
+.config-card {
+  background: #ffffff;
+  border: 1px solid #D4D4D4;
+  border-radius: var(--border-radius);
+  padding: 16px 18px 14px;
+}
+
+:host-context(.shell.dark-mode) .config-card {
+  background: var(--dark-surface);
+  border-color: #525252;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.card-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #D4D4D4;
+}
+
+.card-title-row-inline {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+:host-context(.shell.dark-mode) .card-title-row {
+  border-bottom-color: #525252;
+}
+
+.card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--border-radius);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.card-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.card-title-row h2,
+.card-title-row-inline h2 {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  margin: 0 0 3px;
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .card-title-row h2,
+:host-context(.shell.dark-mode) .card-title-row-inline h2 {
+  color: #F1F1F1;
+}
+
+.card-description {
+  font-size: var(--fs-body);
+  color: #525252;
+  margin: 0;
+  line-height: 1.4;
+}
+
+:host-context(.shell.dark-mode) .card-description {
+  color: #D4D4D4;
+}
+
+.compact-preview-note {
+  padding: 13px 18px;
+  background: rgba(31, 172, 227, 0.14);
+  border-color: rgba(31, 172, 227, 0.14);
+  color: var(--primary-color);
+}
+
+.compact-preview-note p {
+  margin: 0;
+  font-size: var(--fs-body);
+  line-height: 1.45;
+}
+
+.compact-preview-note strong {
+  color: var(--primary-color);
+}
+
+:host-context(.shell.dark-mode) .compact-preview-note {
+  background: var(--primary-color-soft);
+  border-color: #1FACE3;
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .compact-preview-note strong {
+  color: #1FACE3;
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Interruptor (Alto contraste en Apariencia) */
+.switch-control {
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: #D4D4D4;
+  position: relative;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.18s ease;
+  padding: 0;
+}
+
+:host-context(.shell.dark-mode) .switch-control {
+  background: #525252;
+}
+
+.switch-control::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.switch-control.on {
+  background: var(--accent-color);
+}
+
+.switch-control.on::after {
+  transform: translateX(18px);
+}
+
+.switch-control:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Logos */
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--border-radius);
+  background: var(--accent-color);
+  color: #ffffff;
+  padding: 10px 16px;
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.upload-btn:hover {
+  background: var(--accent-color-hover, var(--accent-color-hover));
+  transform: translateY(-1px);
+}
+
+.upload-btn.full-width {
+  width: 100%;
+}
+
+.upload-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* El foco real lo tiene el input de archivo (oculto con .sr-only): se refleja en la etiqueta. */
+.upload-btn:focus-visible,
+.upload-btn:has(input:focus-visible) {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.logos-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--border-radius);
+  background: rgba(31, 172, 227, 0.14);
+  color: var(--primary-color);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+
+.logos-note.error {
+  background: #FFE9E9;
+  color: #E81C1C;
+}
+
+:host-context(.shell.dark-mode) .logos-note {
+  background: var(--primary-color-soft);
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .logos-note.error {
+  background: rgba(232, 28, 28, 0.16);
+  color: #E81C1C;
+}
+
+.logos-note svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.logo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+  .logo-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.logo-slot-card {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+}
+
+.logo-slot-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.logo-slot-head svg {
+  width: 18px;
+  height: 18px;
+  stroke: var(--accent-color-hover);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+.logo-slot-head h3 {
+  margin: 0;
+  font-size: var(--fs-subtitle) !important;
+  font-weight: var(--fw-semibold);
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .logo-slot-head h3 {
+  color: #F1F1F1;
+}
+
+/* Descripción y "Dónde aparece" alineados con el título (no con el icono). */
+.logo-slot-text {
+  padding-left: 28px;
+}
+
+.logo-slot-text .card-description {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.logo-where {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 0;
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+  font-size: calc(15px * var(--type-scale));
+}
+
+.logo-where svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logo-recommended {
+  margin: 6px 0 0;
+  color: #8F8F8F;
+  font-size: calc(14px * var(--type-scale));
+}
+
+:host-context(.shell.dark-mode) .logo-where {
+  color: var(--accent-color);
+}
+
+/* Vista del logo actual: recuadro punteado con la imagen, el nombre y el formato. */
+.logo-drop {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 150px;
+  margin: 16px 0;
+  padding: 18px;
+  border: 2px dashed #D4D4D4;
+  border-radius: var(--border-radius);
+  background: #FAFAFA;
+  text-align: center;
+}
+
+:host-context(.shell.dark-mode) .logo-drop {
+  background: var(--dark-recessed);
+  border-color: #525252;
+}
+
+.logo-drop img {
+  max-height: 56px;
+  max-width: 80%;
+  object-fit: contain;
+  margin-bottom: 6px;
+}
+
+.logo-placeholder {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 6px;
+  fill: none;
+  stroke: #8F8F8F;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.logo-file-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #303030;
+  font-weight: var(--fw-semibold);
+}
+
+.logo-file-meta {
+  color: #8F8F8F;
+  font-size: calc(13px * var(--type-scale));
+}
+
+:host-context(.shell.dark-mode) .logo-file-name {
+  color: #F1F1F1;
+}
+
+.logo-drop-empty {
+  font-size: var(--fs-body);
+  color: #525252;
+}
+
+:host-context(.shell.dark-mode) .logo-drop-empty {
+  color: #8F8F8F;
+}
+
+.logo-slot-card .upload-btn {
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: var(--fw-semibold);
+  padding: 12px 18px;
+}
+
+/* Tarjeta a lo ancho (Favicon): vista del icono | texto | botón. */
+.logo-slot-card.logo-slot-wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 20px;
+}
+
+/* Si no cabe todo en una fila (columna angosta), el botón baja a su propia línea, a la derecha. */
+.logo-slot-body {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.logo-slot-wide .upload-btn {
+  margin-left: auto;
+}
+
+.favicon-tile {
+  flex: 0 0 110px;
+  width: 110px;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border: 1px solid #D4D4D4;
+  border-radius: var(--border-radius);
+  background: #FFFFFF;
+  text-align: center;
+}
+
+.favicon-tile img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.favicon-tile .logo-placeholder {
+  width: 28px;
+  height: 28px;
+  stroke: var(--accent-color-hover);
+}
+
+.favicon-tile .logo-file-name {
+  font-size: calc(14px * var(--type-scale));
+}
+
+.favicon-tile .logo-file-meta {
+  font-size: calc(12px * var(--type-scale));
+}
+
+:host-context(.shell.dark-mode) .favicon-tile {
+  background: var(--dark-recessed);
+  border-color: #525252;
+}
+
+@media (max-width: 640px) {
+  .logo-slot-card.logo-slot-wide {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .favicon-tile {
+    align-self: center;
+  }
+}
+
+/* Idioma */
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .language-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.language-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  text-align: left;
+  padding: 16px;
+  border: 1.5px solid #D4D4D4;
+  border-radius: var(--border-radius);
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.language-card:hover {
+  border-color: #D4D4D4;
+  background: #FFFFFF;
+}
+
+.language-card.selected {
+  border-color: var(--primary-color);
+  background: #F1F1F1;
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.language-card:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+:host-context(.shell.dark-mode) .language-card {
+  background: var(--dark-surface);
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .language-card:hover {
+  background: var(--dark-surface-hover);
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .language-card.selected {
+  background: var(--primary-color-soft);
+  border-color: #1FACE3;
+  box-shadow: 0 0 0 1px #1FACE3;
+}
+
+/* Bandera del país dibujada 100% en CSS (antes era el texto "ES"/"EN"/"PT"
+   dentro de una placa gris). Se descartó el emoji de bandera: en Windows,
+   sin la fuente de emoji con soporte de banderas, un emoji de bandera cae
+   de vuelta a mostrar las dos letras del código de país en texto plano —
+   exactamente lo que se veía antes. Dibujarla en CSS se ve igual en
+   cualquier sistema operativo o navegador. */
+/* Código de idioma ISO 639-1 (ES / EN / PT) en lugar de bandera: un idioma
+   no pertenece a un solo país (p. ej. español ≠ solo España). */
+.language-code {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  height: 30px;
+  padding: 0 8px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  background: var(--primary-color-light);
+  color: var(--primary-color);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+
+.language-card.selected .language-code {
+  background: var(--accent-color);
+  color: #FFFFFF;
+}
+
+:host-context(.shell.dark-mode) .language-code {
+  background: var(--primary-on-dark-soft);
+  color: var(--primary-on-dark);
+}
+
+:host-context(.shell.dark-mode) .language-card.selected .language-code {
+  background: var(--accent-color);
+  color: #FFFFFF;
+}
+
+.language-card strong {
+  font-size: var(--fs-body);
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .language-card strong {
+  color: #F1F1F1;
+}
+
+.language-native {
+  font-size: var(--fs-body);
+  color: #525252;
+}
+
+:host-context(.shell.dark-mode) .language-native {
+  color: #D4D4D4;
+}
+
+.language-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  display: grid;
+  place-items: center;
+}
+
+:host-context(.shell.dark-mode) .language-check {
+  background: #1FACE3;
+}
+
+.language-check svg {
+  width: 10px;
+  height: 10px;
+  stroke: #ffffff;
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Acerca de */
+.about-hero-card {
+  text-align: center;
+  padding: 24px 18px 20px;
+}
+
+.about-hero-card h2 {
+  margin: 0 0 6px;
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .about-hero-card h2 {
+  color: #F1F1F1;
+}
+
+.about-hero-card .card-description {
+  margin: 0 0 16px;
+}
+
+.version-pill {
+  display: inline-block;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: #F1F1F1;
+  color: var(--primary-color);
+  font-weight: var(--fw-regular);
+  font-size: var(--fs-body);
+}
+
+:host-context(.shell.dark-mode) .version-pill {
+  background: var(--primary-color-soft);
+  color: var(--primary-color);
+}
+
+.about-subtitle {
+  margin: 0 0 8px;
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .about-subtitle {
+  color: #F1F1F1;
+}
+
+.kv-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: var(--fs-body);
+}
+
+.kv-row + .kv-row {
+  border-top: 1px solid #D4D4D4;
+}
+
+:host-context(.shell.dark-mode) .kv-row + .kv-row {
+  border-top-color: #525252;
+}
+
+.kv-row span {
+  color: #525252;
+}
+
+:host-context(.shell.dark-mode) .kv-row span {
+  color: #D4D4D4;
+}
+
+.kv-row strong {
+  font-weight: var(--fw-regular);
+  color: #001631;
+}
+
+:host-context(.shell.dark-mode) .kv-row strong {
+  color: #F1F1F1;
+}
+
+.status-ok {
+  color: #349A00 !important;
+}
+
+:host-context(.shell.dark-mode) .status-ok {
+  color: #349A00 !important;
+}
+
+.status-error {
+  color: var(--state-error-fg) !important;
+}

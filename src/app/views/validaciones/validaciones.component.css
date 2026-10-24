@@ -1,0 +1,409 @@
+/* Validación experta (bandeja): solo lo específico; tarjeta, tabla, botones y paginación son de ui.css. */
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.ve-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---------- Encabezado ---------- */
+.ve-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.ve-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.ve-header-text .ui-page-title {
+  margin: 0;
+}
+
+.ve-header-text .ui-page-subtitle {
+  margin: 4px 0 0;
+}
+
+.ve-received-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--state-warn-accent) 45%, transparent);
+  border-radius: 999px;
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.ve-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ---------- Indicadores ---------- */
+.ve-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.ve-kpi {
+  --kpi-fg: var(--state-warn-fg);
+  --kpi-bg: var(--state-warn-bg);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ve-kpi-filled {
+  --kpi-fg: var(--state-ok-fg);
+  --kpi-bg: var(--state-ok-bg);
+}
+
+.ve-kpi-edited {
+  --kpi-fg: #c2410c;
+  --kpi-bg: #fff1e8;
+}
+
+.ve-kpi-sent {
+  --kpi-fg: #0f766e;
+  --kpi-bg: #e6f6f3;
+}
+
+.ve-kpi:hover,
+.ve-kpi.active {
+  border-color: var(--kpi-fg);
+  box-shadow: 0 6px 18px rgba(22, 34, 51, 0.07);
+}
+
+.ve-kpi:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.ve-kpi-icon {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--border-radius);
+  background: var(--kpi-bg);
+  color: var(--kpi-fg);
+}
+
+.ve-kpi-icon .ui-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.ve-kpi-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ve-kpi-count {
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+  line-height: 1.1;
+}
+
+.ve-kpi-label {
+  font-weight: var(--fw-semibold);
+}
+
+.ve-kpi-hint {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+/* ---------- Búsqueda y estado ---------- */
+.ve-toolbar {
+  display: flex;
+  gap: 12px;
+}
+
+.ve-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.ve-state-filter {
+  flex: 0 0 200px;
+}
+
+.ve-status {
+  margin: 0;
+}
+
+/* ---------- Tabla ---------- */
+.ve-table th {
+  white-space: nowrap;
+}
+
+.ve-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.ve-sort .ui-icon {
+  width: 14px;
+  height: 14px;
+  color: var(--neutral-400);
+}
+
+.ve-sort.active .ui-icon {
+  color: var(--accent-color-hover);
+}
+
+.ve-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ve-copy {
+  width: 28px;
+  height: 28px;
+}
+
+.ve-copy .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.ve-instrument {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: 999px;
+  background: var(--neutral-50);
+  font-size: calc(14px * var(--type-scale));
+  white-space: nowrap;
+}
+
+.ve-instrument .ui-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--accent-color-hover);
+}
+
+.ve-occupation {
+  display: block;
+  font-weight: var(--fw-semibold);
+}
+
+.ve-occupation-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.ve-code {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.ve-more {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.ve-analyst {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+
+.ve-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-color-soft);
+  color: var(--accent-color-hover);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.ve-day {
+  display: block;
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.ve-time {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+/* Etiqueta de estado con los colores de cada indicador */
+.ve-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.ve-state-received {
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+}
+
+.ve-state-filled {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.ve-state-edited {
+  background: #fff1e8;
+  color: #c2410c;
+}
+
+.ve-state-sent {
+  background: #e6f6f3;
+  color: #0f766e;
+}
+
+.ve-col-action {
+  text-align: right;
+}
+
+@container (max-width: 1100px) {
+  .ve-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 620px) {
+  .ve-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .ve-toolbar {
+    flex-direction: column;
+  }
+
+  .ve-state-filter {
+    flex-basis: auto;
+  }
+
+  .ve-header {
+    flex-wrap: wrap;
+  }
+
+  .ve-col-action {
+    text-align: left;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .ve-kpi,
+:host-context(.shell.dark-mode) .ve-instrument {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .ve-header {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .ve-kpi-hint,
+:host-context(.shell.dark-mode) .ve-code,
+:host-context(.shell.dark-mode) .ve-time {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .ve-kpi-icon,
+:host-context(.shell.dark-mode) .ve-state,
+:host-context(.shell.dark-mode) .ve-received-pill {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+:host-context(.shell.dark-mode) .ve-state-received,
+:host-context(.shell.dark-mode) .ve-received-pill,
+:host-context(.shell.dark-mode) .ve-kpi-received {
+  --kpi-fg: #fcd34d;
+  color: #fcd34d;
+}
+
+:host-context(.shell.dark-mode) .ve-state-filled,
+:host-context(.shell.dark-mode) .ve-kpi-filled {
+  --kpi-fg: #8fd86a;
+  color: #8fd86a;
+}
+
+:host-context(.shell.dark-mode) .ve-state-edited,
+:host-context(.shell.dark-mode) .ve-kpi-edited {
+  --kpi-fg: #fdba74;
+  color: #fdba74;
+}
+
+:host-context(.shell.dark-mode) .ve-state-sent,
+:host-context(.shell.dark-mode) .ve-kpi-sent {
+  --kpi-fg: #5eead4;
+  color: #5eead4;
+}
+
+:host-context(.shell.dark-mode) .ve-kpi {
+  color: #f1f1f1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ve-kpi {
+    transition: none;
+  }
+}

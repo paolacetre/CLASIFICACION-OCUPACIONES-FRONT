@@ -1,0 +1,444 @@
+/* Solo lo específico de Análisis; el resto son las piezas compartidas de ui.css. */
+
+.analisis-header {
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.analisis-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.analisis-heading .ui-page-title {
+  margin-bottom: 4px;
+}
+
+/* ---------- Buscador ---------- */
+.analisis-search-header {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.analisis-search-header .ui-card-header-main {
+  flex: 1 1 300px;
+}
+
+.analisis-limit {
+  flex: 0 1 300px;
+}
+
+.analisis-count {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: var(--fs-subtitle);
+}
+
+.analisis-count strong {
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+}
+
+.analisis-count small {
+  font-size: calc(14px * var(--type-scale));
+}
+
+.analisis-search {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  align-items: end;
+  gap: 14px;
+}
+
+.analisis-results {
+  margin-top: 14px;
+}
+
+.analisis-result {
+  display: flex;
+}
+
+/* La fila completa es el botón que agrega la ocupación. */
+.analisis-result-row {
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.analisis-result-row:hover:not(:disabled),
+.analisis-result-row:focus-visible {
+  border-color: var(--accent-color);
+  background: var(--state-ok-bg);
+}
+
+.analisis-result-row:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.analisis-result-row:disabled {
+  cursor: not-allowed;
+}
+
+.analisis-result-add {
+  color: var(--accent-color-hover);
+  font-weight: var(--fw-semibold);
+}
+
+.analisis-result-name {
+  flex: 1 1 200px;
+  min-width: 0;
+  color: var(--ui-text);
+}
+
+/* ---------- Ocupaciones seleccionadas ---------- */
+.analisis-selected {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.analisis-chips {
+  flex: 1 1 320px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analisis-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.analisis-chip-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--ui-text);
+}
+
+.analisis-chip-text strong {
+  font-weight: var(--fw-semibold);
+}
+
+.analisis-chip-text small {
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.analisis-chip-add {
+  flex: 1 1 220px;
+  display: flex;
+}
+
+/* Espacio libre: abre el buscador para agregar la siguiente ocupación. */
+.analisis-add-slot {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1.5px dashed var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--accent-color-hover);
+  font: inherit;
+  cursor: pointer;
+}
+
+.analisis-add-slot:hover {
+  border-color: var(--accent-color);
+  background: var(--state-ok-bg);
+}
+
+.analisis-add-slot:focus-visible,
+.analisis-more:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ---------- Columnas: ficha (solo vista) + copia (editar) ---------- */
+.analisis-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.analisis-columns.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.analisis-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.analisis-column > .ui-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.analisis-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Título de tarjeta en tamaño de párrafo: caben tres columnas sin partir el texto. */
+.analisis-card-title {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: var(--fs-body) !important;
+}
+
+.analisis-card-title span {
+  color: var(--neutral-700);
+  font-weight: var(--fw-regular);
+}
+
+.analisis-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.analisis-facts > div {
+  padding: 8px 12px;
+  min-width: 0;
+}
+
+.analisis-facts > div + div {
+  border-left: 1px solid var(--neutral-100);
+}
+
+.analisis-facts > .wide {
+  grid-column: 1 / -1;
+}
+
+.analisis-facts dd {
+  margin: 2px 0 0;
+  color: var(--ui-text);
+  overflow-wrap: break-word;
+}
+
+.analisis-name {
+  margin: 0 0 2px;
+  color: var(--ui-text);
+}
+
+.analisis-description {
+  margin: 0;
+  color: var(--neutral-700);
+  line-height: 1.5;
+}
+
+.analisis-more {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-color-hover);
+  font: inherit;
+  cursor: pointer;
+}
+
+.analisis-facts.three {
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+}
+
+/* ---------- "Ver más detalles": diálogo con toda la información ---------- */
+/* El encabezado y "Cerrar" quedan fijos y solo se desplaza el contenido: así la
+   barra de desplazamiento queda dentro del diálogo y no recorta sus esquinas
+   redondeadas. */
+.analisis-detail {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  overflow: hidden;
+}
+
+.analisis-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.analisis-detail-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0;
+  color: var(--ui-text);
+}
+
+.analisis-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 0;
+  margin-top: 20px;
+  padding-right: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* Las secciones conservan su alto: lo que se desplaza es el contenido completo. */
+.analisis-detail-body > * {
+  flex-shrink: 0;
+}
+
+/* Títulos de sección en tamaño de párrafo, con línea debajo. */
+.analisis-detail-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: var(--ui-text);
+  font-size: var(--fs-body) !important;
+}
+
+.analisis-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analisis-detail-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  color: var(--ui-text);
+  line-height: 1.5;
+}
+
+.analisis-empty {
+  background: transparent;
+  padding: 20px;
+}
+
+/* ---------- Pie: estado y acciones ---------- */
+.analisis-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.analisis-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.analisis-save {
+  margin-left: auto;
+}
+
+/* Cada columna necesita unos 410px para que las pestañas de la copia quepan
+   completas: con menos ancho la tercera ocupación baja a una segunda fila y,
+   más abajo, queda una sola columna. */
+@media (max-width: 1500px) {
+  .analisis-columns.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .analisis-columns,
+  .analisis-columns.three {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .analisis-search {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .analisis-save {
+    margin-left: 0;
+  }
+}
+
+:host-context(.shell.dark-mode) .analisis-chip {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .analisis-chip,
+:host-context(.shell.dark-mode) .analisis-add-slot,
+:host-context(.shell.dark-mode) .analisis-detail-section,
+:host-context(.shell.dark-mode) .analisis-detail-list li,
+:host-context(.shell.dark-mode) .analisis-facts,
+:host-context(.shell.dark-mode) .analisis-facts > div + div {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .analisis-result-name,
+:host-context(.shell.dark-mode) .analisis-chip-text,
+:host-context(.shell.dark-mode) .analisis-card-title,
+:host-context(.shell.dark-mode) .analisis-facts dd,
+:host-context(.shell.dark-mode) .analisis-name,
+:host-context(.shell.dark-mode) .analisis-detail-title,
+:host-context(.shell.dark-mode) .analisis-detail-section,
+:host-context(.shell.dark-mode) .analisis-detail-list li {
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .analisis-count,
+:host-context(.shell.dark-mode) .analisis-chip-text small,
+:host-context(.shell.dark-mode) .analisis-card-title span,
+:host-context(.shell.dark-mode) .analisis-description {
+  color: #D4D4D4;
+}
+
+:host-context(.shell.dark-mode) .analisis-count strong,
+:host-context(.shell.dark-mode) .analisis-add-slot,
+:host-context(.shell.dark-mode) .analisis-more {
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .analisis-result-row:hover:not(:disabled),
+:host-context(.shell.dark-mode) .analisis-result-row:focus-visible,
+:host-context(.shell.dark-mode) .analisis-add-slot:hover {
+  background: rgba(125, 183, 40, 0.12);
+}

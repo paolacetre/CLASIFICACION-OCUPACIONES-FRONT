@@ -1,0 +1,182 @@
+<div class="shell" [class.dark-mode]="darkMode">
+  <!-- Sin sesión, o con la contraseña temporal sin cambiar: pantalla de ingreso (también permite cambiar el modo oscuro).
+       Es un solo *ngIf para que el ingreso no se vuelva a crear al pasar al cambio obligatorio. -->
+  <app-login *ngIf="!sessionReady()"></app-login>
+
+  <ng-container *ngIf="sessionReady()">
+  <ng-container *ngIf="hasShell(); else restricted">
+    <div class="app-layout" [class.menu-closed]="!menuOpen">
+      <!-- Menú principal: vertical, al lado izquierdo -->
+      <aside class="sidebar" id="main-menu">
+        <!-- Marca y rol de la sesión -->
+        <header class="sidebar-header">
+          <div class="brand">
+            <img *ngIf="brandLogo(); else brandFallback" class="brand-logo" [src]="brandLogo()" alt="">
+            <ng-template #brandFallback>
+              <span class="brand-mark">T</span>
+            </ng-template>
+            <span class="brand-name">{{ 'about.appName' | translate }}</span>
+          </div>
+          <p class="brand-role">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            {{ 'shell.roleAdmin' | translate }}
+          </p>
+        </header>
+
+        <!-- Opciones del proyecto y, al final, Gestión de usuarios (común a todos los proyectos).
+             Una opción con subopciones es un grupo desplegable; los grupos se pueden anidar. -->
+        <nav class="side-nav" [attr.aria-label]="'shell.mainNavAria' | translate">
+          <ng-container *ngTemplateOutlet="menuLevel; context: { $implicit: menu, level: 0 }"></ng-container>
+        </nav>
+
+        <ng-template #menuLevel let-items let-level="level">
+          <ng-container *ngFor="let item of items">
+            <ng-container *ngIf="item.children; else menuOption">
+              <button type="button" class="nav-tab nav-group" [class.nav-top]="level === 0" [class.expanded]="isExpanded(item.id)"
+                      [class.has-active]="!isExpanded(item.id) && containsCurrentView(item)" [style.--nav-level]="level"
+                      [attr.aria-expanded]="isExpanded(item.id)" [attr.aria-controls]="'nav-group-' + item.id"
+                      [title]="item.labelKey | translate" (click)="toggleGroup(item.id)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path *ngFor="let d of item.icon" [attr.d]="d"/></svg>
+                <span>{{ item.labelKey | translate }}</span>
+                <svg class="nav-group-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7l6 5-6 5z"/></svg>
+              </button>
+              <div *ngIf="isExpanded(item.id)" class="nav-children" role="group" [id]="'nav-group-' + item.id" [attr.aria-label]="item.labelKey | translate">
+                <ng-container *ngTemplateOutlet="menuLevel; context: { $implicit: item.children, level: level + 1 }"></ng-container>
+              </div>
+            </ng-container>
+            <ng-template #menuOption>
+              <button type="button" class="nav-tab" [class.nav-top]="level === 0" [class.active]="currentView === item.id" [style.--nav-level]="level"
+                      [attr.aria-current]="currentView === item.id ? 'page' : null" [title]="item.labelKey | translate" (click)="switchView(item.id)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path *ngFor="let d of item.icon" [attr.d]="d"/></svg>
+                <span>{{ item.labelKey | translate }}</span>
+              </button>
+            </ng-template>
+          </ng-container>
+        </ng-template>
+
+        <!-- Usuario de la sesión: la tarjeta lleva a Perfil; debajo, cerrar sesión -->
+        <footer class="sidebar-footer">
+          <button type="button" class="user-card" [class.active]="currentView === 'perfil'" [title]="'shell.goToProfile' | translate" (click)="switchView('perfil')">
+            <span class="user-avatar" aria-hidden="true">
+              <img *ngIf="profileUser.photoUrl; else avatarIcon" [src]="profileUser.photoUrl" alt="">
+              <ng-template #avatarIcon>
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+              </ng-template>
+            </span>
+            <span class="user-info">
+              <strong>{{ profileUser.name }}</strong>
+              <small>{{ profileUser.email }}</small>
+            </span>
+            <svg class="user-card-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <button type="button" class="logout-button" (click)="requestLogout()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            {{ 'shell.logout' | translate }}
+          </button>
+        </footer>
+      </aside>
+
+      <!-- En pantallas angostas el menú se abre sobre el contenido: tocar fuera lo cierra -->
+      <div class="sidebar-backdrop" *ngIf="menuOpen" (click)="toggleMenu()"></div>
+
+      <div class="main-area">
+        <header class="topbar">
+          <button class="icon-button menu-toggle" type="button" aria-controls="main-menu" [attr.aria-expanded]="menuOpen"
+                  [title]="(menuOpen ? 'shell.closeMenu' : 'shell.openMenu') | translate" [attr.aria-label]="(menuOpen ? 'shell.closeMenu' : 'shell.openMenu') | translate"
+                  (click)="toggleMenu()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <div class="top-actions">
+            <button class="icon-button notification" type="button" [title]="'topbar.notifications' | translate" [attr.aria-label]="'topbar.notifications' | translate" (click)="notifyNoNewNotifications()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+              <span *ngIf="unreadNotifications" class="notification-count">{{ unreadNotifications }}</span>
+            </button>
+            <button class="icon-button" [class.active]="currentView === 'configuracion'" type="button" [title]="'topbar.settingsShortcut' | translate" [attr.aria-label]="'nav.configuracion' | translate" (click)="toggleConfiguration()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2.5V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.6-1H6v-2.5h.4A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2h2.5V5a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v2.5H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+            </button>
+            <button class="icon-button" type="button" [title]="darkMode ? ('topbar.themeToLight' | translate) : ('topbar.themeToDark' | translate)" [attr.aria-label]="darkMode ? ('topbar.themeToLight' | translate) : ('topbar.themeToDark' | translate)" (click)="toggleDarkMode()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 15.2A8.5 8.5 0 0 1 8.8 3.5 8.5 8.5 0 1 0 20.5 15.2Z"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="content">
+          <!-- Vistas propias del proyecto (src/app/proyecto/menu.ts) -->
+          <ng-container *ngIf="projectView as view">
+            <ng-container *ngComponentOutlet="view"></ng-container>
+          </ng-container>
+
+          <!-- Parte administrativa (igual en todos los proyectos) -->
+          <app-usuarios
+            *ngIf="pageView === 'usuarios' && isAdminSession()"
+            [(users)]="users">
+          </app-usuarios>
+
+          <app-perfil
+            *ngIf="pageView === 'perfil'"
+            [profile]="profileUser"
+            (profileSaved)="onProfileSaved($event)"
+            (cancel)="switchView(defaultView)">
+          </app-perfil>
+        </main>
+      </div>
+    </div>
+
+    <!-- Configuración se presenta como modal sobre la vista actual -->
+    <div
+      class="configuration-modal-backdrop"
+      *ngIf="configurationOpen"
+      role="presentation"
+      (click)="closeConfiguration()">
+      <section
+        class="configuration-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        tabindex="-1"
+        appDialog
+        (dialogEscape)="closeConfiguration()"
+        (click)="$event.stopPropagation()">
+        <button
+          class="configuration-modal-close"
+          type="button"
+          [title]="'shell.closeSettings' | translate"
+          [attr.aria-label]="'shell.closeSettings' | translate"
+          (click)="closeConfiguration()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+        <app-settings></app-settings>
+      </section>
+    </div>
+  </ng-container>
+
+  <ng-template #restricted>
+    <div class="restricted">
+      <div class="lock">!</div>
+      <h1>{{ 'shell.restrictedTitle' | translate }}</h1>
+      <p>{{ 'shell.restrictedDesc' | translate }}</p>
+      <button type="button" class="logout-button restricted-logout" (click)="requestLogout()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        {{ 'shell.logout' | translate }}
+      </button>
+    </div>
+  </ng-template>
+
+  <app-confirm-dialog
+    *ngIf="logoutConfirmOpen"
+    [title]="'shell.logoutConfirmTitle' | translate"
+    [message]="'shell.logoutConfirmMessage' | translate"
+    [confirmLabel]="'shell.logout' | translate"
+    [cancelLabel]="'common.cancel' | translate"
+    variant="warn"
+    icon="logout"
+    [busy]="loggingOut"
+    (confirm)="confirmLogout()"
+    (cancel)="cancelLogout()">
+  </app-confirm-dialog>
+  </ng-container>
+</div>
+
+<app-toast-container></app-toast-container>
+

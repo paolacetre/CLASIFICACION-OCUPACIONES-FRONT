@@ -1,0 +1,249 @@
+﻿<section class="ui-page ui-stack">
+  <header class="ui-page-header analisis-header">
+    <div class="analisis-heading">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V7M18 17v-8"/></svg>
+      </div>
+      <div>
+        <h1 class="ui-page-title">{{ 'analisis.title' | translate }}</h1>
+        <p class="ui-page-subtitle">{{ 'analisis.subtitle' | translate }}</p>
+      </div>
+    </div>
+    <div class="ui-page-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" (click)="guideOpen = true">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        {{ 'analisis.guide' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Buscador de ocupaciones -->
+  <div class="ui-card">
+    <header class="ui-card-header analisis-search-header">
+      <div class="ui-card-header-main">
+        <h2 class="ui-card-title">{{ 'analisis.searchTitle' | translate }}</h2>
+        <p class="ui-card-desc">{{ 'analisis.searchDesc' | translate }}</p>
+      </div>
+      <p class="ui-hint analisis-limit">{{ 'analisis.limitNote' | translate: { max: maxOccupations } }}</p>
+      <p class="analisis-count" aria-live="polite">
+        <span><strong>{{ slots.length }}</strong> / {{ maxOccupations }}</span>
+        <small>{{ 'analisis.selectedCount' | translate }}</small>
+      </p>
+    </header>
+
+    <form class="analisis-search" role="search" (submit)="$event.preventDefault()">
+      <div class="ui-field">
+        <label class="ui-label" for="analisis-catalog">{{ 'analisis.catalog' | translate }}</label>
+        <app-filter-combobox inputId="analisis-catalog" [options]="catalogChoices" [value]="catalog" [allLabel]="catalog" [showAll]="false" (valueChange)="onCatalogChange($event)"></app-filter-combobox>
+      </div>
+      <div class="ui-input-icon">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input #searchInput class="ui-input" type="text" name="searchText" autocomplete="off" [placeholder]="'analisis.searchPlaceholder' | translate"
+               [attr.aria-label]="'analisis.searchPlaceholder' | translate" [(ngModel)]="searchText" (ngModelChange)="onSearchChange()" (keydown.enter)="addFirstResult()">
+      </div>
+    </form>
+
+    <!-- Ocupaciones encontradas -->
+    <div *ngIf="searchResults !== null" class="analisis-results" aria-live="polite">
+      <p *ngIf="!searchResults.length" class="ui-hint">{{ 'analisis.noResults' | translate }}</p>
+      <p *ngIf="searchResults.length && isFull" class="ui-note-warn">{{ 'analisis.fullNote' | translate: { max: maxOccupations } }}</p>
+      <ul *ngIf="searchResults.length" class="ui-list">
+        <li *ngFor="let result of searchResults" class="analisis-result">
+          <!-- Toda la fila agrega la ocupación: no hace falta acertar en "Agregar". -->
+          <button type="button" class="ui-list-item analisis-result-row" [disabled]="isFull || isSelected(result)" (click)="add(result)">
+            <span class="ui-badge ui-badge-info">{{ result.code }}</span>
+            <span class="analisis-result-name">{{ result.name }}</span>
+            <span *ngIf="isSelected(result); else addLabel" class="ui-hint">{{ 'analisis.alreadyAdded' | translate }}</span>
+            <ng-template #addLabel><span class="analisis-result-add">+ {{ 'analisis.add' | translate }}</span></ng-template>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Ocupaciones seleccionadas -->
+  <div class="ui-card analisis-selected">
+    <h2 class="ui-card-title">{{ 'analisis.selectedTitle' | translate }}</h2>
+    <ul class="analisis-chips">
+      <li *ngFor="let slot of slots; let index = index" class="analisis-chip">
+        <span class="analisis-chip-text">
+          <strong>{{ slot.original.code }}</strong>
+          <small>{{ slot.original.name }}</small>
+        </span>
+        <button type="button" class="ui-icon-btn" [title]="'analisis.removeFromAnalysis' | translate"
+                [attr.aria-label]="('analisis.removeFromAnalysis' | translate) + ': ' + slot.original.code" (click)="remove(index)">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </li>
+      <li *ngIf="!isFull" class="analisis-chip-add">
+        <button type="button" class="analisis-add-slot" (click)="focusSearch()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          {{ 'analisis.addSlot' | translate }} {{ slots.length + 1 }}
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Una columna por ocupación: arriba la ficha original (solo vista) y debajo su copia editable -->
+  <div class="analisis-columns" [class.three]="columns.length === 3">
+    <div *ngFor="let index of columns" class="analisis-column">
+      <section class="ui-card" [attr.aria-labelledby]="'analisis-view-title-' + index">
+        <header class="analisis-card-head">
+          <h2 class="analisis-card-title" [id]="'analisis-view-title-' + index">
+            {{ index + 1 }}. {{ 'analisis.occupation' | translate }} <span>({{ 'analisis.viewOnly' | translate }})</span>
+          </h2>
+          <button *ngIf="slots[index]" type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="edit(index)">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/></svg>
+            {{ 'analisis.edit' | translate }}
+          </button>
+        </header>
+
+        <ng-container *ngIf="slots[index] as slot; else emptyView">
+          <dl class="analisis-facts">
+            <div class="wide">
+              <dt class="ui-label">{{ 'analisis.code' | translate }}</dt>
+              <dd>{{ slot.original.code }}</dd>
+            </div>
+          </dl>
+          <div>
+            <h3 class="analisis-name">{{ slot.original.name }}</h3>
+            <p class="ui-hint">{{ slot.original.catalog }} · {{ slot.original.area }}</p>
+          </div>
+          <dl class="analisis-facts">
+            <div>
+              <dt class="ui-label">{{ (slot.original.catalog === 'CUOC' ? 'analisis.fieldLevelCuoc' : 'analisis.fieldLevel') | translate }}</dt>
+              <dd>{{ levelText(slot.original) || '—' }}</dd>
+            </div>
+            <div>
+              <dt class="ui-label">{{ (slot.original.catalog === 'CUOC' ? 'analisis.fieldAreaCuoc' : 'analisis.fieldArea') | translate }}</dt>
+              <dd>{{ slot.original.area || '—' }}</dd>
+            </div>
+          </dl>
+          <p class="analisis-description">{{ slot.original.description || '—' }}</p>
+
+          <button type="button" class="analisis-more" aria-haspopup="dialog" (click)="detailIndex = index">
+            {{ 'analisis.moreDetails' | translate }}
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+        </ng-container>
+
+        <ng-template #emptyView>
+          <div class="ui-empty analisis-empty">
+            <strong>{{ 'analisis.emptyViewTitle' | translate }}</strong>
+            <p>{{ 'analisis.emptyViewText' | translate }}</p>
+            <button type="button" class="ui-btn ui-btn-outline" (click)="focusSearch()">+ {{ 'analisis.addSlot' | translate }}</button>
+          </div>
+        </ng-template>
+      </section>
+
+      <section class="ui-card" [attr.aria-labelledby]="'analisis-edit-title-' + index">
+        <header class="analisis-card-head">
+          <h2 class="analisis-card-title" [id]="'analisis-edit-title-' + index">
+            {{ index + 1 }}. {{ 'analisis.occupation' | translate }} <span>({{ 'analisis.edit' | translate }})</span>
+          </h2>
+        </header>
+
+        <app-analisis-editor *ngIf="slots[index] as slot; else emptyEdit" [occupation]="slot.draft" [options]="options[slot.draft.catalog]" [position]="index + 1"
+                             [showErrors]="showErrors" [disabled]="saving" (remove)="remove(index)" (levelCreated)="loadOptions(slot.draft.catalog)">
+        </app-analisis-editor>
+
+        <ng-template #emptyEdit>
+          <div class="ui-empty analisis-empty">
+            <strong>{{ 'analisis.emptyEditTitle' | translate }}</strong>
+            <p>{{ 'analisis.emptyEditText' | translate: { position: index + 1 } }}</p>
+            <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="focusSearch()">+ {{ 'analisis.searchOccupation' | translate }}</button>
+          </div>
+        </ng-template>
+      </section>
+    </div>
+  </div>
+
+  <!-- Acciones del análisis -->
+  <footer class="ui-card analisis-footer">
+    <p class="ui-hint" aria-live="polite">{{ statusKey | translate: { count: slots.length } }}</p>
+    <div class="analisis-actions">
+      <button type="button" class="ui-btn ui-btn-outline" [disabled]="!slots.length" (click)="download()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        {{ 'analisis.download' | translate }}
+      </button>
+      <button type="button" class="ui-btn ui-btn-secondary" [disabled]="!isComplete || saving" (click)="sendToInstrument2()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-9 18-2.5-7.5L2 11z"/></svg>
+        {{ 'analisis.send' | translate }}
+      </button>
+      <button type="button" class="ui-btn ui-btn-primary analisis-save" [disabled]="!isComplete || saving" (click)="save()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v6h7V3M8 21v-7h8v7"/></svg>
+        {{ (saving ? 'analisis.saving' : 'common.save') | translate }}
+      </button>
+    </div>
+  </footer>
+</section>
+
+<!-- "Ver más detalles": toda la información de la ocupación original -->
+<div class="ui-modal-backdrop" *ngIf="detailIndex !== null && slots[detailIndex] as slot" (click)="detailIndex = null">
+  <section class="ui-modal ui-modal-fixed analisis-detail" role="dialog" aria-modal="true" aria-labelledby="analisis-detail-title" tabindex="-1"
+           appDialog (dialogEscape)="detailIndex = null" (click)="$event.stopPropagation()">
+    <header class="analisis-detail-header">
+      <div>
+        <p class="ui-hint">{{ detailIndex! + 1 }}. {{ 'analisis.occupation' | translate }} · {{ slot.original.catalog }}</p>
+        <h2 id="analisis-detail-title" class="analisis-detail-title">
+          <span class="ui-badge ui-badge-neutral">{{ slot.original.code }}</span>
+          {{ slot.original.name }}
+        </h2>
+        <p class="ui-hint">{{ slot.original.area }}</p>
+      </div>
+      <button type="button" class="ui-icon-btn" [title]="'common.close' | translate" [attr.aria-label]="'common.close' | translate" (click)="detailIndex = null">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <div class="analisis-detail-body">
+      <dl class="analisis-facts three">
+        <div>
+          <dt class="ui-label">{{ 'analisis.status' | translate }}</dt>
+          <dd><span class="ui-badge" [ngClass]="slot.original.status === 'Activo' ? 'ui-badge-ok' : 'ui-badge-neutral'">{{ slot.original.status }}</span></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{{ (slot.original.catalog === 'CUOC' ? 'analisis.fieldLevelCuoc' : 'analisis.fieldLevel') | translate }}</dt>
+          <dd>{{ levelText(slot.original) || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="ui-label">{{ (slot.original.catalog === 'CUOC' ? 'analisis.fieldAreaCuoc' : 'analisis.fieldArea') | translate }}</dt>
+          <dd>{{ slot.original.area || '—' }}</dd>
+        </div>
+      </dl>
+
+      <section>
+        <h3 class="analisis-detail-section">{{ 'analisis.fieldDescription' | translate }}</h3>
+        <p class="analisis-description">{{ slot.original.description || '—' }}</p>
+      </section>
+
+      <ng-container *ngTemplateOutlet="detailList; context: { $implicit: slot.original.functions, titleKey: 'analisis.functions' }"></ng-container>
+      <ng-container *ngTemplateOutlet="detailList; context: { $implicit: slot.original.skills, titleKey: 'analisis.skills' }"></ng-container>
+      <ng-container *ngTemplateOutlet="detailList; context: { $implicit: slot.original.knowledge, titleKey: 'analisis.knowledge' }"></ng-container>
+      <ng-container *ngTemplateOutlet="detailList; context: { $implicit: slot.original.denominations, titleKey: 'analisis.denominations' }"></ng-container>
+    </div>
+
+    <footer class="ui-modal-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" (click)="detailIndex = null">{{ 'common.close' | translate }}</button>
+    </footer>
+  </section>
+</div>
+
+<!-- Lista de componentes del detalle: título con su cantidad y cada uno con su código -->
+<ng-template #detailList let-items let-titleKey="titleKey">
+  <section>
+    <h3 class="analisis-detail-section">{{ titleKey | translate }} <span class="ui-badge ui-badge-neutral">{{ items.length }}</span></h3>
+    <ul *ngIf="items.length; else noItems" class="analisis-detail-list">
+      <li *ngFor="let item of items">
+        <span class="ui-badge ui-badge-neutral">{{ item.code }}</span>
+        <span>{{ item.text }}</span>
+      </li>
+    </ul>
+    <ng-template #noItems><p class="ui-hint">{{ 'analisis.noItems' | translate }}</p></ng-template>
+  </section>
+</ng-template>
+
+<!-- Guía de uso -->
+<app-guide-dialog *ngIf="guideOpen" titleKey="analisis.guideTitle" [steps]="guideSteps"
+                  noteTitleKey="analisis.guideNoteTitle" noteTextKey="analisis.guideNoteText" closeKey="analisis.guideClose"
+                  (closed)="guideOpen = false"></app-guide-dialog>

@@ -1,0 +1,719 @@
+/* Solo lo específico de Comparativa; el resto son las piezas compartidas de ui.css. */
+
+/* ---------- Lista ---------- */
+.comparativa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.comparativa-header {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.comparativa-header .ui-card-header-main {
+  flex: 1 1 300px;
+}
+
+.comparativa-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Indicador de cuántas comparativas hay en un estado (solo informa). */
+.comparativa-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+}
+
+.comparativa-stat strong {
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+}
+
+.comparativa-stat small {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.comparativa-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.comparativa-search-field {
+  flex: 1 1 260px;
+}
+
+.comparativa-table td {
+  vertical-align: middle;
+}
+
+.comparativa-id {
+  color: var(--accent-color-hover) !important;
+  font-weight: var(--fw-semibold);
+}
+
+/* Ocupaciones de una comparativa, numeradas. */
+.comparativa-occupations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.comparativa-occupations li {
+  padding-left: 4px;
+}
+
+.comparativa-occupations li > span + span {
+  margin-left: 8px;
+}
+
+/* Texto solo para lectores de pantalla ("coincide" / "difiere"): a la vista lo dice el ícono. */
+.comparativa-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+:host-context(.shell.dark-mode) .comparativa-stat {
+  border-color: #525252;
+  background: var(--dark-recessed);
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .comparativa-stat small {
+  color: #D4D4D4;
+}
+
+:host-context(.shell.dark-mode) .comparativa-id {
+  color: var(--accent-color) !important;
+}
+
+/* ---------- Comparativa abierta (vista y modo edición, como la versión desplegada) ---------- */
+.cpv-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Encabezado: volver, ícono, título con las ocupaciones y datos; a la derecha estado y "Editar" / "Modo edición". */
+.cpv-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cpv-back {
+  flex: none;
+}
+
+.cpv-head-icon {
+  border-radius: var(--border-radius);
+}
+
+.cpv-head-text {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.cpv-head-text .ui-page-title {
+  margin: 0;
+}
+
+.cpv-head-names {
+  margin: 4px 0 6px;
+  color: var(--ui-text);
+}
+
+.cpv-versus {
+  width: 18px;
+  height: 18px;
+  margin: 0 8px;
+  color: var(--accent-color);
+  vertical-align: -3px;
+}
+
+.cpv-head-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cpv-head-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cpv-head-meta .ui-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.cpv-head-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.cpv-edit {
+  border-color: var(--accent-color);
+  color: var(--accent-color-hover);
+}
+
+.cpv-editing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cpv-editing-pill .ui-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* Pestañas en píldoras: la activa en verde con su cantidad. */
+.cpv-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cpv-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cpv-tab:hover {
+  border-color: var(--accent-color);
+}
+
+.cpv-tab.active {
+  border-color: var(--accent-color-hover);
+  background: var(--accent-color-hover);
+  color: #fff;
+  font-weight: var(--fw-semibold);
+}
+
+.cpv-tab:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.cpv-tab-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  text-align: center;
+}
+
+.cpv-tab.active .cpv-tab-count {
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+
+/* Tarjetas de las ocupaciones con la columna "Comparación" entre la primera y la segunda. */
+.cpv-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.cpv-grid.three {
+  grid-template-columns: minmax(0, 1fr) 190px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.cpv-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* En modo edición, la tarjeta en la que se escribe queda marcada en verde. */
+.cpv-card.focused {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 1px var(--accent-color);
+}
+
+.cpv-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.cpv-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius);
+  background: var(--accent-color-hover);
+  color: #fff;
+  font-weight: var(--fw-semibold);
+}
+
+.cpv-card-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.cpv-card-title {
+  margin: 0 0 6px;
+  font-size: var(--fs-body) !important;
+  font-weight: var(--fw-semibold);
+  line-height: 1.35;
+}
+
+.cpv-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.cpv-code,
+.cpv-level {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.cpv-code {
+  border: 1px solid var(--neutral-100);
+  color: var(--ui-text);
+}
+
+.cpv-code span {
+  color: var(--neutral-700);
+}
+
+.cpv-level {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+/* El cuerpo se desplaza por dentro para que las tarjetas queden parejas. */
+.cpv-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: calc(100vh - 330px);
+  min-height: 280px;
+  padding: 18px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.cpv-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cpv-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--accent-color-hover);
+  font-size: var(--fs-body) !important;
+  font-weight: var(--fw-semibold);
+}
+
+.cpv-section-title .ui-icon {
+  width: 17px;
+  height: 17px;
+}
+
+.cpv-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.cpv-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cpv-label {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+}
+
+/* Valor en modo vista: caja verde clara. */
+.cpv-box {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--border-radius);
+  background: var(--state-ok-bg);
+  color: var(--ui-text);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.cpv-box-text {
+  font-size: calc(15px * var(--type-scale));
+  line-height: 1.6;
+}
+
+.cpv-box.empty {
+  color: var(--neutral-700);
+  font-style: italic;
+}
+
+.cpv-input {
+  width: 100%;
+  border-color: var(--accent-color);
+}
+
+/* Listas (funciones, denominaciones...): un renglón por componente con su código. */
+.cpv-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cpv-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--border-radius);
+  background: var(--state-ok-bg);
+  line-height: 1.5;
+}
+
+.cpv-item-code {
+  flex: none;
+  padding: 1px 8px;
+  border: 1px solid var(--neutral-100);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+/* Columna "Comparación": un botón por aspecto, verde si coincide y naranja si difiere. */
+.cpv-compare {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 18px 14px;
+  text-align: center;
+}
+
+.cpv-compare-title {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale)) !important;
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.cpv-compare-count {
+  margin: 0 0 8px;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.cpv-compare-count strong {
+  color: var(--accent-color-hover);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
+}
+
+.cpv-aspects {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cpv-aspect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  background: var(--state-warn-bg);
+  color: var(--state-warn-fg);
+  font: inherit;
+  font-size: calc(13px * var(--type-scale));
+  text-align: left;
+  cursor: pointer;
+}
+
+.cpv-aspect.ok {
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.cpv-aspect.current {
+  border-color: currentColor;
+}
+
+.cpv-aspect:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.cpv-aspect .ui-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
+/* Barra fija del pie: estado de los cambios a la izquierda y acciones a la derecha. */
+.cpv-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--neutral-100);
+  background: #fff;
+  box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.cpv-footer-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--accent-color-hover);
+}
+
+.cpv-footer-note.warn {
+  color: var(--state-warn-fg);
+}
+
+.cpv-footer-note.locked {
+  color: var(--neutral-700);
+}
+
+.cpv-footer-note .ui-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.cpv-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* Hasta 1100px las tarjetas y la comparación bajan en una sola columna. */
+@media (max-width: 1100px) {
+  .cpv-grid,
+  .cpv-grid.three {
+    grid-template-columns: 1fr;
+  }
+
+  .cpv-card-body {
+    max-height: none;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) .cpv-tab,
+:host-context(.shell.dark-mode) .cpv-footer {
+  border-color: #3d5470;
+  background: var(--dark-surface);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .cpv-tab.active {
+  border-color: var(--accent-color-hover);
+  background: var(--accent-color-hover);
+}
+
+:host-context(.shell.dark-mode) .cpv-card-head,
+:host-context(.shell.dark-mode) .cpv-code {
+  border-color: #3d5470;
+}
+
+:host-context(.shell.dark-mode) .cpv-box,
+:host-context(.shell.dark-mode) .cpv-item {
+  background: rgba(125, 183, 40, 0.12);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .cpv-item-code {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .cpv-aspect {
+  background: rgba(217, 119, 6, 0.16);
+  color: #fdba74;
+}
+
+:host-context(.shell.dark-mode) .cpv-aspect.ok {
+  background: rgba(52, 154, 0, 0.18);
+  color: #8fd86a;
+}
+
+:host-context(.shell.dark-mode) .cpv-head-meta,
+:host-context(.shell.dark-mode) .cpv-label,
+:host-context(.shell.dark-mode) .cpv-compare-title,
+:host-context(.shell.dark-mode) .cpv-compare-count,
+:host-context(.shell.dark-mode) .cpv-box.empty,
+:host-context(.shell.dark-mode) .cpv-tab-count {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .cpv-tab-count {
+  background: var(--dark-recessed);
+}
+
+/* ---------- Listas de la comparativa en modo edición ---------- */
+.cpv-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cpv-list-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+  font-size: calc(12px * var(--type-scale));
+  text-align: center;
+}
+
+/* "+ Agregar": botón con borde punteado, como la versión desplegada. */
+.cpv-add {
+  padding: 7px 14px;
+  border: 1px dashed var(--neutral-400);
+  border-radius: var(--border-radius);
+  background: transparent;
+  color: var(--neutral-700);
+  font: inherit;
+  font-size: calc(14px * var(--type-scale));
+  cursor: pointer;
+}
+
+.cpv-add:hover,
+.cpv-add[aria-expanded="true"] {
+  border-color: var(--accent-color);
+  color: var(--accent-color-hover);
+}
+
+.cpv-add:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* En edición cada elemento es una caja gris clara con su código, el campo y la X para quitarlo. */
+.cpv-item.editing {
+  align-items: center;
+  border: 1px solid var(--neutral-100);
+  background: var(--neutral-50);
+}
+
+.cpv-item-code.new {
+  border-color: var(--accent-color);
+  color: var(--accent-color-hover);
+}
+
+.cpv-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cpv-item-input {
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+}
+
+.cpv-remove {
+  flex: none;
+  color: var(--neutral-700);
+}
+
+.cpv-remove:hover {
+  color: var(--state-error-fg);
+}
+
+:host-context(.shell.dark-mode) .cpv-item.editing {
+  border-color: #3d5470;
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .cpv-item-input {
+  background: var(--dark-surface);
+}
+
+:host-context(.shell.dark-mode) .cpv-add,
+:host-context(.shell.dark-mode) .cpv-remove {
+  color: #d4d4d4;
+}

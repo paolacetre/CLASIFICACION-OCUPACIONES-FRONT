@@ -1,0 +1,125 @@
+<section class="ui-page ui-stack">
+  <div class="ui-card ve-card">
+    <!-- Encabezado -->
+    <header class="ve-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <div class="ve-header-text">
+        <h1 class="ui-page-title">{{ 'validaciones.title' | translate }}</h1>
+        <p class="ui-page-subtitle">{{ 'validaciones.subtitle' | translate }}</p>
+      </div>
+      <span class="ve-received-pill"><span class="ve-dot" aria-hidden="true"></span>{{ 'validaciones.receivedPill' | translate: { count: count('received') } }}</span>
+    </header>
+
+    <!-- Indicadores (filtran la tabla) -->
+    <div class="ve-kpis">
+      <button *ngFor="let state of states" type="button" class="ve-kpi" [ngClass]="'ve-kpi-' + state" [class.active]="stateFilter === state"
+              [attr.aria-pressed]="stateFilter === state" (click)="toggleState(state)">
+        <span class="ve-kpi-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path [attr.d]="stateIcons[state]"/></svg></span>
+        <span class="ve-kpi-text">
+          <strong class="ve-kpi-count">{{ count(state) }}</strong>
+          <span class="ve-kpi-label">{{ 'validaciones.state.' + state | translate }}</span>
+          <span class="ve-kpi-hint">{{ 'validaciones.stateHint.' + state | translate }}</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- Búsqueda y estado -->
+    <div class="ve-toolbar">
+      <div class="ui-input-icon ve-search">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input class="ui-input" type="search" autocomplete="off" [placeholder]="'validaciones.searchPlaceholder' | translate" [attr.aria-label]="'validaciones.searchPlaceholder' | translate"
+               [(ngModel)]="search" (ngModelChange)="onFiltersChange()">
+      </div>
+      <div class="ui-input-icon ve-state-filter">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/></svg>
+        <select class="ui-select" [attr.aria-label]="'validaciones.stateFilter' | translate" [(ngModel)]="stateFilter" (ngModelChange)="onFiltersChange()">
+          <option value="">{{ 'validaciones.stateFilter' | translate }}</option>
+          <option *ngFor="let state of states" [value]="state">{{ 'validaciones.state.' + state | translate }}</option>
+        </select>
+      </div>
+    </div>
+
+    <p *ngIf="loading" class="ui-hint ve-status" role="status">{{ 'validaciones.loading' | translate }}</p>
+    <div *ngIf="!loading && loadError" class="ui-alert ui-alert-error ve-status" role="alert">
+      <p>{{ 'validaciones.loadError' | translate }}</p>
+      <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="load()">{{ 'validaciones.retry' | translate }}</button>
+    </div>
+
+    <ng-container *ngIf="!loading && !loadError">
+      <div *ngIf="filtered.length === 0" class="ui-empty ve-status">
+        <strong>{{ (hasFilters ? 'validaciones.noMatches' : 'validaciones.empty') | translate }}</strong>
+        <p>{{ (hasFilters ? 'validaciones.noMatchesHint' : 'validaciones.emptyHint') | translate }}</p>
+        <button *ngIf="hasFilters" type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="clearFilters()">{{ 'validaciones.clearFilters' | translate }}</button>
+      </div>
+
+      <div *ngIf="filtered.length > 0" class="ui-table-wrap ui-table-responsive ui-table-responsive-lg ve-table-wrap">
+        <table class="ui-table ve-table">
+          <thead>
+            <tr>
+              <th *ngFor="let column of ['id', 'kind', 'occupation', 'analyst', 'date', 'state']" scope="col" [attr.aria-sort]="ariaSort($any(column))">
+                <button type="button" class="ve-sort" [class.active]="sort === column" (click)="sortBy($any(column))">
+                  {{ 'validaciones.column.' + column | translate }}
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path *ngIf="sort !== column" d="m8 9 4-4 4 4M16 15l-4 4-4-4"/>
+                    <path *ngIf="sort === column && ascending" d="m8 14 4-4 4 4"/>
+                    <path *ngIf="sort === column && !ascending" d="m8 10 4 4 4-4"/>
+                  </svg>
+                </button>
+              </th>
+              <th scope="col" class="ve-col-action">{{ 'validaciones.column.action' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let record of pageRows; trackBy: trackRecord">
+              <td [attr.data-label]="'validaciones.column.id' | translate">
+                <span class="ve-id">{{ record.id }}
+                  <button type="button" class="ui-icon-btn ve-copy" [title]="'validaciones.copyId' | translate" [attr.aria-label]="'validaciones.copyIdAria' | translate: { id: record.id }" (click)="copyId(record)">
+                    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                  </button>
+                </span>
+              </td>
+              <td [attr.data-label]="'validaciones.column.kind' | translate">
+                <span class="ve-instrument">
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8zM14 3v5h5"/></svg>
+                  {{ 'validaciones.kind.' + record.kind | translate }}
+                </span>
+              </td>
+              <td [attr.data-label]="'validaciones.column.occupation' | translate">
+                <span class="ve-occupation">{{ first(record)?.name || '—' }}</span>
+                <span class="ve-occupation-meta">
+                  <span class="ve-code">{{ first(record)?.code }}</span>
+                  <span *ngIf="record.occupations.length > 1" class="ve-more" [title]="'validaciones.moreOccupations' | translate: { count: record.occupations.length - 1 }">+{{ record.occupations.length - 1 }}</span>
+                </span>
+              </td>
+              <td [attr.data-label]="'validaciones.column.analyst' | translate">
+                <span class="ve-analyst"><span class="ve-avatar" aria-hidden="true">{{ (record.analyst || '?').charAt(0).toUpperCase() }}</span>{{ record.analyst || '—' }}</span>
+              </td>
+              <td [attr.data-label]="'validaciones.column.date' | translate">
+                <ng-container *ngIf="when(record) as moment">
+                  <span class="ve-day">{{ moment.day || '—' }}</span>
+                  <span class="ve-time">{{ moment.time }}</span>
+                </ng-container>
+              </td>
+              <td [attr.data-label]="'validaciones.column.state' | translate">
+                <span class="ve-state" [ngClass]="'ve-state-' + record.state"><span class="ve-dot" aria-hidden="true"></span>{{ 'validaciones.state.' + record.state | translate }}</span>
+              </td>
+              <td class="ve-col-action" [attr.data-label]="'validaciones.column.action' | translate">
+                <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" (click)="open(record)">
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  {{ (editable(record) ? 'validaciones.review' : 'validaciones.view') | translate }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <nav app-pagination *ngIf="filtered.length > 0" class="ve-pagination" [page]="page" [pageSize]="pageSize" [total]="filtered.length"
+           summaryKey="validaciones.showingRange" sizeLabelKey="validaciones.perPageAria" (pageChange)="goToPage($event)" (pageSizeChange)="pageSize = $event; page = 1"></nav>
+    </ng-container>
+  </div>
+</section>
+
+<app-validacion-editor *ngIf="reviewing as record" [record]="record" (saved)="onSaved()" (closed)="onClosed()"></app-validacion-editor>

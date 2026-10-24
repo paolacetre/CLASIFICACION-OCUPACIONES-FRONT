@@ -1,0 +1,263 @@
+/* Piezas visuales compartidas (tarjetas, pestañas, botones, campos, tablas, modales): ver styles/ui.css. */
+@import './styles/ui.css';
+
+/* Sistema visual: Figma "Ecosistema visual nivel fábrica". Solo Work Sans
+   (400/600, cargada una sola vez desde index.html). */
+
+:root {
+  /* Brand Colors. `--primary-color` / `--accent-color` los reemplaza ThemeService
+     (colores de marca, o el "Personalizado" elegido en Configuración). */
+  --primary-color: #001631;
+  --primary-color-hover: #00122a;
+  --primary-color-light: #00163118;
+  --primary-color-dark: #000c1c;
+  --primary-color-soft: rgba(0, 22, 49, 0.14);
+  --accent-color: #7db728;
+  --accent-color-hover: #6a9d20;
+  --accent-color-soft: rgba(125, 183, 40, 0.2);
+  --primary-on-dark: #1face3;
+  --primary-on-dark-light: #1face318;
+  --primary-on-dark-soft: rgba(31, 172, 227, 0.14);
+  --brand-blue: #1face3;
+  --neutral-50: #f1f1f1;
+  --neutral-100: #d4d4d4;
+  --neutral-400: #8f8f8f;
+  --neutral-700: #525252;
+  --neutral-900: #303030;
+
+  /* Estados (únicos tres): Aprobado / Rechazado / Advertencia. */
+  --state-ok-bg: #ebf6e6;
+  --state-ok-fg: #349a00;
+  --state-error-bg: #ffe9e9;
+  --state-error-fg: #e81c1c;
+  --state-warn-bg: #fff9e6;
+  --state-warn-fg: #d97706;
+  --state-warn-accent: #fdc300;
+
+  /* Tipografía: Work Sans, 3 niveles. `--type-scale` lo fija ThemeService
+     (opciones seleccionables Pequeño/Normal/Grande/Muy grande; Normal = 1). */
+  --app-font-family: 'Work Sans', sans-serif;
+  --type-scale: 1;
+  --fs-title: calc(26px * var(--type-scale));
+  --fs-subtitle: calc(20px * var(--type-scale));
+  --fs-body: calc(16px * var(--type-scale));
+  --fw-semibold: 600;
+  --fw-regular: 400;
+
+  /* Radio único: "Suave" (16px, como los botones en Figma). */
+  --border-radius: 16px;
+  /* Radio de todos los modales (el del panel de Configuración): más redondeado que tarjetas y botones. */
+  --modal-radius: 24px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Con un modal abierto la página de fondo no se desplaza: así no se ven dos barras (la de la página y la del
+   fondo del modal). Vale para los modales comunes, los diálogos de Usuarios/Configuración y Configuración. */
+html:has(.ui-modal-backdrop, .dialog-backdrop, .configuration-modal-backdrop) {
+  overflow: hidden;
+}
+
+html, body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--neutral-50);
+  color: #001631;
+  font-family: var(--app-font-family);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+}
+
+/*
+ * Fondo mientras carga la app (app-root aún vacío): blanco como la pantalla de
+ * ingreso y, si el tema guardado es oscuro (index.html pone data-theme antes
+ * de que arranque Angular), oscuro. Así no hay destello al abrir la página.
+ */
+body:has(> app-root:empty) {
+  background: #fff;
+}
+
+:root[data-theme="oscuro"],
+:root[data-theme="oscuro"] body {
+  background: #001631;
+  color-scheme: dark;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* Jerarquía: Títulos 26 / Subtítulos 20 (Semibold) y párrafos 16 (Regular). */
+h1 {
+  font-size: var(--fs-title) !important;
+}
+
+h2, h3, h4, h5, h6 {
+  font-size: var(--fs-subtitle) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--fw-semibold) !important;
+}
+
+strong, b, th, dt, legend, caption {
+  font-weight: var(--fw-regular);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Modo oscuro: el color principal se sustituye por su variante legible, y se
+   define una jerarquía de elevación (2 niveles) para que tarjetas, barra
+   lateral/superior y modales se distingan del fondo, igual que en modo claro
+   el blanco puro se distingue del gris #F1F1F1 de la página.
+   --dark-surface/-hover son el navy de marca (#001631) con una superposición
+   blanca ligera (8%/14%): mismo método que --primary-color-hover/-dark ya
+   usa con adjustColor, no un color nuevo. --dark-recessed es el navy plano:
+   se usa en los campos "hundidos" dentro de una tarjeta (buscador, cabecera
+   de tabla), igual que el claro usa #F1F1F1 dentro de una tarjeta blanca. */
+.shell.dark-mode {
+  --primary-color: var(--primary-on-dark);
+  --primary-color-light: var(--primary-on-dark-light);
+  --primary-color-soft: var(--primary-on-dark-soft);
+  --dark-surface: #142941;
+  --dark-surface-hover: #1c3550;
+  --dark-recessed: #001631;
+}
+
+/* The density scale is applied globally after saving the configuration. */
+:root[data-density="compacta"] .content {
+  padding-top: 18px;
+  padding-bottom: 30px;
+}
+
+:root[data-density="compacta"] .filter-card,
+:root[data-density="compacta"] .users-table,
+:root[data-density="compacta"] .identity-card,
+:root[data-density="compacta"] .form-card {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+:root[data-density="compacta"] .user-row td {
+  height: 68px;
+}
+
+:root[data-density="compacta"] .config-card {
+  padding-top: 13px;
+  padding-bottom: 13px;
+}
+
+:root[data-density="amplia"] .content {
+  padding-top: 36px;
+  padding-bottom: 60px;
+}
+
+:root[data-density="amplia"] .config-card,
+:root[data-density="amplia"] .filter-card,
+:root[data-density="amplia"] .results-card,
+:root[data-density="amplia"] .users-table,
+:root[data-density="amplia"] .identity-card,
+:root[data-density="amplia"] .form-card {
+  margin-bottom: 4px;
+}
+
+/* Saved visual tokens are shared by existing screens. */
+:root[data-density="compacta"] .topbar {
+  height: 60px;
+}
+
+:root[data-density="amplia"] .topbar {
+  height: 78px;
+}
+
+:root[data-density="compacta"] .primary-button,
+:root[data-density="compacta"] .btn-save,
+:root[data-density="compacta"] .save-button {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+:root[data-density="amplia"] .primary-button,
+:root[data-density="amplia"] .btn-save,
+:root[data-density="amplia"] .save-button {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+:root[data-density="compacta"] .primary-button,
+:root[data-density="compacta"] .btn-save,
+:root[data-density="compacta"] .save-button {
+  min-height: 36px;
+}
+
+.shell .primary-button,
+.shell .btn-save,
+.shell .save-button {
+  background: var(--accent-color);
+}
+
+.shell .primary-button:hover,
+.shell .btn-save:hover:not(:disabled),
+.shell .save-button:hover:not(:disabled) {
+  background: var(--accent-color-hover);
+}
+
+.shell .nav-tab.active,
+.shell .role-pill,
+.shell .results-icon {
+  color: var(--primary-color);
+}
+
+.shell .nav-tab.active {
+  border-color: var(--primary-color-light);
+}
+
+/* ---- Alto contraste (Configuración > Apariencia) ---- */
+
+/* Alto contraste: texto de marca (#001631) sobre el fondo, bordes marcados y
+   foco muy visible. Solo usa colores del sistema. */
+:root[data-high-contrast="true"] .shell {
+  --hc-fg: #001631;
+  --hc-border: #001631;
+}
+
+:root[data-high-contrast="true"] .shell.dark-mode {
+  --hc-fg: #ffffff;
+  --hc-border: #ffffff;
+}
+
+:root[data-high-contrast="true"] .shell :is(h1, h2, h3, p, label, small, strong, td, th, dt, dd, li, .email, .card-description, .subtitle, .eyebrow):not(:is(.results-card, button, .role-pill, .status-pill, .role-badge, .status-badge) *):not(.role-pill, .status-pill, .role-badge, .status-badge) {
+  color: var(--hc-fg) !important;
+}
+
+:root[data-high-contrast="true"] .shell :is(.config-card, .filter-card, .results-card, .users-table, .identity-card, .form-card, .confirm-dialog, .configuration-modal, .icon-button, .switch-control, .secondary-button, .ghost-button, .settings-tabs, input, select, textarea) {
+  border-color: var(--hc-border) !important;
+}
+
+:root[data-high-contrast="true"] :focus-visible {
+  outline: 3px solid var(--state-warn-accent) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 5px #001631 !important;
+}
+
+/* Modo oscuro: texto secundario legible sobre superficies oscuras. */
+.shell.dark-mode :is(small, .email, .card-description, .subtitle, .eyebrow) {
+  color: var(--neutral-100) !important;
+}
+
+.shell.dark-mode .results-card :is(.result-copy, .results-count, .eyebrow) {
+  color: #f1f1f1 !important;
+}

@@ -1,0 +1,79 @@
+/* Solo lo específico de Inicio; el resto son las piezas compartidas de ui.css. */
+
+.inicio-header {
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.inicio-header .ui-page-title {
+  margin-bottom: 0;
+}
+
+.inicio-welcome {
+  margin: 0;
+  color: var(--neutral-700);
+  font-size: var(--fs-body);
+}
+
+.inicio-welcome strong {
+  color: var(--ui-text);
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+}
+
+.inicio-indicators {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.inicio-indicator-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.inicio-indicator-label {
+  min-width: 0;
+  color: var(--neutral-700);
+}
+
+.inicio-indicator-value {
+  margin: 14px 0 0;
+  color: var(--ui-text);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-semibold);
+  line-height: 1.1;
+}
+
+:host-context(.shell.dark-mode) .inicio-header {
+  border-bottom-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .inicio-welcome,
+:host-context(.shell.dark-mode) .inicio-indicator-label {
+  color: #D4D4D4;
+}
+
+:host-context(.shell.dark-mode) .inicio-welcome strong,
+:host-context(.shell.dark-mode) .inicio-indicator-value {
+  color: #F1F1F1;
+}
+
+
+/* Bitácora: cada registro con su fecha a la derecha. */
+.inicio-activity {
+  margin-top: 16px;
+}
+
+.inicio-activity .ui-list-item {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.inicio-activity .ui-list-item > div {
+  flex: 1 1 260px;
+  min-width: 0;
+}

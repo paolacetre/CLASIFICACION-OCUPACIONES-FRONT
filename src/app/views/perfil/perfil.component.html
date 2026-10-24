@@ -1,0 +1,236 @@
+<section class="profile-view">
+  <div class="profile-layout">
+    <!-- Tarjeta de identidad (izquierda): foto, nombre, rol, datos de la cuenta e indicadores -->
+    <aside class="ui-card profile-identity" [attr.aria-label]="'perfil.heroAria' | translate">
+      <div class="avatar-frame">
+        <img *ngIf="formProfile.photoUrl" [src]="formProfile.photoUrl" [alt]="'perfil.photoAlt' | translate:{ name: formName }" class="avatar-image">
+        <span *ngIf="!formProfile.photoUrl" class="avatar-initials" aria-hidden="true">{{ initials }}</span>
+      </div>
+
+      <div class="photo-actions">
+        <!-- El input de archivo va oculto (.sr-only) dentro de la etiqueta, que se ve como botón. -->
+        <label class="ui-btn ui-btn-secondary ui-btn-sm btn-upload-photo">
+          <input type="file" accept="image/png, image/jpeg, image/webp" class="sr-only" (change)="onPhotoSelected($event)">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <span>{{ (formProfile.photoUrl ? 'perfil.changePhoto' : 'perfil.uploadPhoto') | translate }}</span>
+        </label>
+        <button *ngIf="formProfile.photoUrl" type="button" class="ui-btn ui-btn-ghost ui-btn-sm btn-remove-photo" (click)="removePhoto()">
+          {{ 'perfil.removePhoto' | translate }}
+        </button>
+      </div>
+      <p class="photo-hint">{{ 'perfil.photoHint' | translate }}</p>
+
+      <h1 class="hero-name">{{ formName || formProfile.email }}</h1>
+      <p class="hero-mail">{{ formProfile.email }}</p>
+
+      <div class="hero-topline">
+        <span class="hero-badge badge-role">{{ formProfile.role }}</span>
+        <span class="hero-badge badge-level">{{ 'perfil.level' | translate:{ level: accessLevelKey | translate } }}</span>
+        <span class="hero-badge status-online"><span class="dot" aria-hidden="true"></span>{{ 'perfil.online' | translate }}</span>
+      </div>
+
+      <div class="identity-data">
+        <div class="identity-item">
+          <p class="identity-label">{{ 'perfil.entity' | translate }}</p>
+          <p class="identity-value">{{ formProfile.entity }}</p>
+        </div>
+        <div class="identity-item">
+          <p class="identity-label">{{ 'perfil.dateJoined' | translate }}</p>
+          <p class="identity-value" [class.identity-empty]="!formProfile.dateJoined">{{ formProfile.dateJoined || ('perfil.notRegistered' | translate) }}</p>
+        </div>
+        <p class="hero-meta identity-item" *ngIf="lastAccess"><strong>{{ 'perfil.lastAccess' | translate }}</strong> {{ lastAccess }}</p>
+      </div>
+
+      <ul class="hero-metrics" [attr.aria-label]="'perfil.metricsAria' | translate">
+        <li class="metric-card" *ngFor="let key of metricKeys" [title]="'perfil.metricUnavailable' | translate">
+          <p class="metric-label">{{ key | translate }}</p>
+          <p class="metric-value">—</p>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Columna derecha: pestañas y formularios -->
+    <div class="profile-main">
+      <nav class="profile-tabs" role="tablist" [attr.aria-label]="'perfil.tabsAria' | translate">
+        <button type="button" role="tab" id="profile-tab-perfil" aria-controls="profile-panel-perfil"
+                [class.active]="tab === 'perfil'" [attr.aria-selected]="tab === 'perfil'" (click)="selectTab('perfil')">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+          {{ 'perfil.tabProfile' | translate }}
+        </button>
+        <button type="button" role="tab" id="profile-tab-configuracion" aria-controls="profile-panel-configuracion"
+                [class.active]="tab === 'configuracion'" [attr.aria-selected]="tab === 'configuracion'" (click)="selectTab('configuracion')">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          {{ 'perfil.tabSettings' | translate }}
+        </button>
+      </nav>
+
+      <div class="ui-alert ui-alert-success success-banner" *ngIf="successNotice" role="status">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+        <p>{{ successNotice }}</p>
+      </div>
+
+      <!-- Pestaña Perfil -->
+      <div class="profile-panels" *ngIf="tab === 'perfil'" id="profile-panel-perfil" role="tabpanel" aria-labelledby="profile-tab-perfil">
+        <section class="ui-card panel-personal">
+          <header class="panel-head">
+            <span class="panel-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg>
+            </span>
+            <div>
+              <h2 class="ui-card-title">{{ 'perfil.personalTitle' | translate }}</h2>
+              <p class="ui-card-desc">{{ 'perfil.personalSubtitle' | translate }}</p>
+            </div>
+          </header>
+
+          <form (ngSubmit)="save()" #pForm="ngForm" novalidate>
+            <!-- Seis columnas: Nombre y apellido | Teléfono en la primera fila, Correo | Rol en la segunda. -->
+            <div class="profile-fields personal-fields">
+              <div class="ui-field field-name">
+                <label class="ui-label" for="profile-name">{{ 'perfil.fieldName' | translate }} <span class="required" aria-hidden="true">*</span></label>
+                <input class="ui-input" id="profile-name" name="name" autocomplete="name" [(ngModel)]="formProfile.name" required maxlength="200" [disabled]="isSaving">
+              </div>
+
+              <div class="ui-field">
+                <label class="ui-label" for="profile-phone">{{ 'perfil.fieldPhone' | translate }}</label>
+                <input class="ui-input" id="profile-phone" name="phone" type="tel" [(ngModel)]="formProfile.phone" maxlength="50" [disabled]="isSaving">
+              </div>
+
+              <!-- El correo identifica la cuenta: aquí no se cambia -->
+              <div class="ui-field field-half">
+                <label class="ui-label" for="profile-email">{{ 'perfil.fieldEmail' | translate }}</label>
+                <div class="locked-field">
+                  <input class="ui-input" id="profile-email" name="email" type="email" [value]="formProfile.email" readonly [title]="'perfil.emailLockedTitle' | translate">
+                  <svg class="ui-icon lock-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                </div>
+              </div>
+
+              <!-- El rol lo cambia un administrador en Gestión de usuarios -->
+              <div class="ui-field field-half">
+                <label class="ui-label" for="profile-role">{{ 'perfil.fieldRole' | translate }}</label>
+                <div class="locked-field role-field">
+                  <span class="role-dot" aria-hidden="true"></span>
+                  <input class="ui-input" id="profile-role" name="role" [value]="formProfile.role" readonly [title]="'perfil.roleLockedTitle' | translate">
+                  <svg class="ui-icon lock-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                </div>
+              </div>
+
+              <div class="ui-field field-full">
+                <label class="ui-label" for="profile-description">{{ 'perfil.fieldDescription' | translate }}</label>
+                <textarea class="ui-textarea" id="profile-description" name="description" rows="2" maxlength="2000" [(ngModel)]="formProfile.description" [disabled]="isSaving"></textarea>
+              </div>
+            </div>
+
+            <p class="ui-form-error error-msg" *ngIf="formError" role="alert">{{ formError }}</p>
+
+            <footer class="panel-actions">
+              <button type="button" class="ui-btn ui-btn-secondary btn-cancel" (click)="onCancel()" [disabled]="isSaving">
+                {{ 'perfil.cancel' | translate }}
+              </button>
+              <button type="submit" class="ui-btn ui-btn-primary btn-save" [disabled]="pForm.invalid || isSaving">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+                {{ (isSaving ? 'perfil.savingChanges' : 'perfil.saveChanges') | translate }}
+              </button>
+            </footer>
+          </form>
+        </section>
+
+        <section class="ui-card panel-institutional">
+          <header class="panel-head">
+            <span class="panel-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-5 7 5v11M9 21v-6h6v6"/></svg>
+            </span>
+            <div>
+              <h2 class="ui-card-title">{{ 'perfil.institutionalTitle' | translate }}</h2>
+              <p class="ui-card-desc">{{ 'perfil.institutionalSubtitle' | translate }}</p>
+            </div>
+          </header>
+
+          <dl class="inst-grid" [attr.aria-label]="'perfil.institutionalAria' | translate">
+            <div class="inst-card">
+              <span class="inst-icon" aria-hidden="true">RG</span>
+              <dt class="inst-label">{{ 'perfil.instRegional' | translate }}</dt>
+              <dd class="inst-value inst-empty">{{ 'perfil.notRegistered' | translate }}</dd>
+            </div>
+            <div class="inst-card">
+              <span class="inst-icon" aria-hidden="true">CE</span>
+              <dt class="inst-label">{{ 'perfil.instCenter' | translate }}</dt>
+              <dd class="inst-value inst-empty">{{ 'perfil.notRegistered' | translate }}</dd>
+            </div>
+            <div class="inst-card">
+              <span class="inst-icon" aria-hidden="true">AR</span>
+              <dt class="inst-label">{{ 'perfil.instArea' | translate }}</dt>
+              <dd class="inst-value">{{ 'perfil.instAreaValue' | translate }}</dd>
+            </div>
+            <div class="inst-card">
+              <span class="inst-icon" aria-hidden="true">CG</span>
+              <dt class="inst-label">{{ 'perfil.instPosition' | translate }}</dt>
+              <dd class="inst-value">{{ formProfile.role || '—' }}</dd>
+            </div>
+            <div class="inst-card">
+              <span class="inst-icon" aria-hidden="true">RL</span>
+              <dt class="inst-label">{{ 'perfil.instRole' | translate }}</dt>
+              <dd class="inst-value">{{ formProfile.role || '—' }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <!-- Pestaña Seguridad: cambio de contraseña de la propia cuenta -->
+      <div *ngIf="tab === 'configuracion'" id="profile-panel-configuracion" role="tabpanel" aria-labelledby="profile-tab-configuracion">
+        <section class="ui-card panel-security">
+          <header class="panel-head">
+            <span class="panel-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            </span>
+            <div>
+              <h2 class="ui-card-title">{{ 'perfil.securityTitle' | translate }}</h2>
+              <p class="ui-card-desc">{{ 'perfil.securitySubtitle' | translate }}</p>
+            </div>
+          </header>
+
+          <form (ngSubmit)="changePassword()" autocomplete="off" novalidate>
+            <div class="ui-grid-3 profile-fields">
+              <div class="ui-field">
+                <label class="ui-label" for="profile-current-password">{{ 'perfil.fieldCurrentPassword' | translate }}</label>
+                <input class="ui-input" id="profile-current-password" name="currentPassword" [type]="showPasswords ? 'text' : 'password'" autocomplete="current-password"
+                       [(ngModel)]="currentPassword" [disabled]="isSavingPassword">
+              </div>
+
+              <div class="ui-field">
+                <label class="ui-label" for="profile-new-password">{{ 'perfil.fieldNewPassword' | translate }}</label>
+                <input class="ui-input" id="profile-new-password" name="newPassword" [type]="showPasswords ? 'text' : 'password'" autocomplete="new-password"
+                       aria-describedby="profile-password-hint" [(ngModel)]="newPassword" [disabled]="isSavingPassword">
+              </div>
+
+              <div class="ui-field">
+                <label class="ui-label" for="profile-confirm-password">{{ 'perfil.fieldConfirmPassword' | translate }}</label>
+                <input class="ui-input" id="profile-confirm-password" name="confirmPassword" [type]="showPasswords ? 'text' : 'password'" autocomplete="new-password"
+                       [(ngModel)]="confirmPassword" [disabled]="isSavingPassword">
+              </div>
+            </div>
+
+            <p class="ui-hint password-hint" id="profile-password-hint">{{ 'login.changeRules' | translate }}</p>
+            <label class="password-toggle">
+              <input type="checkbox" name="showPasswords" [(ngModel)]="showPasswords">
+              {{ 'perfil.showPasswords' | translate }}
+            </label>
+
+            <p class="ui-form-error error-msg password-error" *ngIf="passwordError" role="alert">{{ passwordError }}</p>
+
+            <footer class="panel-actions">
+              <button type="button" class="ui-btn ui-btn-secondary" (click)="resetPasswordForm()" [disabled]="isSavingPassword">
+                {{ 'perfil.clearPassword' | translate }}
+              </button>
+              <button type="submit" class="ui-btn ui-btn-primary" [disabled]="isSavingPassword">
+                <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                {{ (isSavingPassword ? 'perfil.savingPassword' : 'perfil.savePassword') | translate }}
+              </button>
+            </footer>
+          </form>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <footer class="profile-footer">{{ 'perfil.footer' | translate:{ app: 'about.appName' | translate, year: currentYear } }}</footer>
+</section>

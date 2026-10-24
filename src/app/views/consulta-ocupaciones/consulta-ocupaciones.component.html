@@ -1,0 +1,407 @@
+<section class="ui-page">
+  <div class="ui-card">
+    <header class="ui-card-header co-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <!-- Mismos íconos del menú: CNO (cuadros superpuestos) y CUOC (barras). -->
+        <svg *ngIf="hasLevel; else cuocIcon" class="ui-icon" viewBox="0 0 24 24"><path d="M8 8h12v12H8z"/><path d="M16 4H4v12"/></svg>
+      </div>
+      <div class="ui-card-header-main">
+        <h1 class="ui-page-title">{{ k('title') | translate }}</h1>
+        <p class="ui-page-subtitle">{{ k('subtitle') | translate }}</p>
+      </div>
+      <div class="ui-page-actions">
+        <button type="button" class="ui-btn ui-btn-secondary" (click)="guideOpen = true">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          {{ k('guide') | translate }}
+        </button>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="!results?.length" (click)="openExport()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+          {{ k('export') | translate }}
+        </button>
+      </div>
+    </header>
+
+    <hr class="ui-divider">
+
+    <!-- Tarjeta «Filtros de búsqueda»: el texto busca mientras se escribe; los selectores se aplican con «Aplicar filtros». -->
+    <section class="co-filter-card" aria-labelledby="co-filters-title">
+      <header class="co-filter-head">
+        <span class="ui-card-icon co-filter-icon" aria-hidden="true">
+          <svg class="ui-icon" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+        </span>
+        <div class="co-filter-titles">
+          <h2 id="co-filters-title" class="ui-card-title">{{ k('filtersTitle') | translate }}</h2>
+          <p class="ui-card-desc">{{ k('filtersSubtitle') | translate }}</p>
+        </div>
+        <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" [disabled]="!canClear" (click)="clearFilters()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+          {{ k('clearFilters') | translate }}
+        </button>
+      </header>
+
+      <form class="co-filters" role="search" (submit)="$event.preventDefault(); applyFilters()">
+        <div class="ui-field co-filter co-filter-search">
+          <label class="ui-label co-filter-label" for="co-query">
+            <ng-container *ngTemplateOutlet="filterIcon; context: { $implicit: 'search' }"></ng-container>
+            {{ k('searchLabel') | translate }}
+          </label>
+          <div class="ui-input-icon">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <input class="ui-input co-search-input" id="co-query" type="search" name="query" autocomplete="off" [placeholder]="k('searchPlaceholder') | translate"
+                   [attr.aria-label]="k('searchAria') | translate" [(ngModel)]="filters.query" (ngModelChange)="onQueryChange()">
+            <button *ngIf="filters.query" type="button" class="ui-icon-btn co-search-clear" [title]="k('clearSearch') | translate"
+                    [attr.aria-label]="k('clearSearch') | translate" (click)="clearQuery()">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div *ngFor="let field of filterFields; trackBy: trackField; let last = last; let index = index" class="ui-field co-filter">
+          <label class="ui-label co-filter-label" [for]="'co-filter-' + field.key">
+            <ng-container *ngTemplateOutlet="filterIcon; context: { $implicit: field.icon }"></ng-container>
+            {{ k(field.labelKey) | translate }}
+          </label>
+          <app-filter-combobox [inputId]="'co-filter-' + field.key" [options]="comboOptionsOf(field)" [value]="draft[field.key] ?? ''"
+                               [allLabel]="k(field.allKey) | translate" [searchable]="isLongList(field)"
+                               [searchPlaceholder]="k('optionSearch') | translate"
+                               [emptyText]="k('optionEmpty') | translate"
+                               (valueChange)="setDraft(field.key, $event)"></app-filter-combobox>
+        </div>
+
+        <button type="submit" class="ui-btn ui-btn-primary co-apply" [class.co-apply-pending]="pendingChanges">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54z"/></svg>
+          {{ k('applyFilters') | translate }}
+          <span *ngIf="pendingChanges" class="sr-only">{{ k('pendingFilters') | translate }}</span>
+        </button>
+      </form>
+    </section>
+
+    <div aria-live="polite">
+      <!-- Sin búsqueda ni filtros: invitación a buscar -->
+      <div *ngIf="results === null && !loading" class="ui-empty co-prompt">
+        <span class="ui-empty-icon" aria-hidden="true">
+          <svg class="ui-icon" viewBox="0 0 24 24"><path d="M13 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h4"/><path d="M13 3v5h5v2"/><circle cx="16" cy="16" r="3"/><path d="m20 20-1.8-1.8"/></svg>
+        </span>
+        <strong>{{ k('promptTitle') | translate }}</strong>
+        <p>{{ k('promptText') | translate }}</p>
+        <div class="ui-alert ui-alert-warn co-tip">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.3 1 2.5h6c0-1.2.3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg>
+          <p>{{ k('tip') | translate }}</p>
+        </div>
+      </div>
+
+      <p *ngIf="loading" class="ui-hint co-status-line">{{ k('searching') | translate }}</p>
+
+      <!-- Resultados de la búsqueda -->
+      <ng-container *ngIf="results !== null && !loading && !selected">
+        <div *ngIf="!results.length" class="ui-empty">
+          <strong>{{ k('noResultsTitle') | translate }}</strong>
+          <p>{{ k('noResultsText') | translate }}</p>
+          <button type="button" class="ui-btn ui-btn-secondary" (click)="clearFilters()">{{ k('clearFilters') | translate }}</button>
+        </div>
+
+        <ng-container *ngIf="results.length">
+          <p class="ui-hint co-status-line">
+            <strong>{{ total | number }}</strong> {{ (total === 1 ? k('resultOne') : k('resultMany')) | translate }}<ng-container *ngIf="inactiveVisible">,
+            <strong>{{ inactiveVisible }}</strong> {{ k('inactiveVisible') | translate }}</ng-container>
+            <ng-container *ngIf="searchedQuery"> {{ k('resultsFor') | translate }} “{{ searchedQuery }}”</ng-container>
+          </p>
+          <div class="ui-table-wrap ui-table-responsive ui-table-responsive-lg">
+            <table class="ui-table co-results" [class.has-level]="hasLevel">
+              <thead>
+                <tr>
+                  <th scope="col" [attr.aria-sort]="ariaSort('code')">
+                    <button type="button" class="co-sort" [class.active]="sortColumn === 'code'" (click)="sortBy('code')">
+                      {{ k('colCode') | translate }}
+                      <ng-container *ngTemplateOutlet="sortIcon; context: { $implicit: 'code' }"></ng-container>
+                    </button>
+                  </th>
+                  <th scope="col" [attr.aria-sort]="ariaSort('name')">
+                    <button type="button" class="co-sort" [class.active]="sortColumn === 'name'" (click)="sortBy('name')">
+                      {{ k('colName') | translate }}
+                      <ng-container *ngTemplateOutlet="sortIcon; context: { $implicit: 'name' }"></ng-container>
+                    </button>
+                  </th>
+                  <th *ngIf="hasLevel" scope="col" [attr.aria-sort]="ariaSort('level')">
+                    <button type="button" class="co-sort" [class.active]="sortColumn === 'level'" (click)="sortBy('level')">
+                      {{ k('level') | translate }}
+                      <ng-container *ngTemplateOutlet="sortIcon; context: { $implicit: 'level' }"></ng-container>
+                    </button>
+                  </th>
+                  <th scope="col">{{ k('area') | translate }}</th>
+                  <th *ngIf="seesInactive" scope="col">{{ k('registeredAt') | translate }}</th>
+                  <th scope="col">{{ k('denominations') | translate }}</th>
+                  <th scope="col">{{ k('functions') | translate }}</th>
+                  <th scope="col">{{ k('skills') | translate }}</th>
+                  <th scope="col">{{ k('knowledge') | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let occupation of results" [class.co-row-inactive]="occupation.status === 'Inactivo'" (click)="openDetail(occupation.code)">
+                  <td [attr.data-label]="k('colCode') | translate">{{ occupation.code }}</td>
+                  <td [attr.data-label]="k('colName') | translate">
+                    <!-- El clic sube a la fila; el botón permite abrirla también con el teclado. -->
+                    <button type="button" class="co-row-link" [title]="k('openDetail') | translate">{{ occupation.name }}</button>
+                    <span *ngIf="occupation.status === 'Inactivo'" class="ui-badge ui-badge-neutral co-row-status">{{ k('statusInactive') | translate }}</span>
+                  </td>
+                  <td *ngIf="hasLevel" [attr.data-label]="k('level') | translate">{{ occupation.levelCode || occupation.level || '—' }}</td>
+                  <td [attr.data-label]="k('area') | translate">{{ occupation.area || '—' }}</td>
+                  <td *ngIf="seesInactive" [attr.data-label]="k('registeredAt') | translate">{{ occupation.registeredAt || '—' }}</td>
+                  <td [attr.data-label]="k('denominations') | translate">{{ occupation.denominationsCount }}</td>
+                  <td [attr.data-label]="k('functions') | translate">{{ occupation.functionsCount }}</td>
+                  <td [attr.data-label]="k('skills') | translate">{{ occupation.skillsCount }}</td>
+                  <td [attr.data-label]="k('knowledge') | translate">{{ occupation.knowledgeCount }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <nav app-pagination [page]="page" [pageSize]="pageSize" [total]="total" [summaryKey]="k('showing')" [sizeLabelKey]="k('pageSizeAria')"
+               (pageChange)="goToPage($event)" (pageSizeChange)="pageSize = $event; onPageSizeChange()"></nav>
+        </ng-container>
+      </ng-container>
+
+      <!-- Perfil de la ocupación elegida -->
+      <article *ngIf="selected as detail" class="co-detail">
+        <div class="co-detail-bar">
+          <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="closeDetail()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+            {{ k('backToResults') | translate }}
+          </button>
+          <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="closeDetail()">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+            {{ k('removeSelection') | translate }}
+          </button>
+        </div>
+
+        <header class="co-detail-header">
+          <div class="ui-card-icon" aria-hidden="true">
+            <!-- Mismos íconos del menú. -->
+            <svg *ngIf="hasLevel; else cuocIcon" class="ui-icon" viewBox="0 0 24 24"><path d="M8 8h12v12H8z"/><path d="M16 4H4v12"/></svg>
+          </div>
+          <div class="co-detail-heading">
+            <h2 class="co-detail-title">
+              <span class="co-detail-code">{{ detail.code }}</span>
+              {{ detail.name }}
+              <ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: detail.status }"></ng-container>
+            </h2>
+            <p class="ui-hint">{{ detail.area || '—' }}<ng-container *ngIf="detail.levelCode || detail.level"> • {{ detail.levelCode || detail.level }}</ng-container></p>
+          </div>
+          <dl class="co-detail-meta">
+            <div>
+              <dt class="ui-label">{{ k('registeredAt') | translate }}</dt>
+              <dd>{{ detail.registeredAt || '—' }}</dd>
+            </div>
+            <div>
+              <dt class="ui-label">{{ k('traceability') | translate }}</dt>
+              <dd>{{ detail.traceability || '—' }}</dd>
+            </div>
+          </dl>
+        </header>
+
+        <!-- Qué información tiene la ocupación: cada tarjeta abre su pestaña. -->
+        <div class="co-detail-stats">
+          <button *ngFor="let tab of statTabs" type="button" class="ui-card co-stat" (click)="selectTab(tab)">
+            <span class="co-stat-value">{{ tabCount(tab) }}</span>
+            <span class="co-stat-label">
+              {{ k(tab) | translate }}
+              <small *ngIf="inactiveOf(tab).length" class="co-inactive-count">{{ k('inactiveShort') | translate: { count: inactiveOf(tab).length } }}</small>
+            </span>
+          </button>
+        </div>
+
+        <div class="ui-tabs" role="tablist" [attr.aria-label]="k('detailTabsAria') | translate">
+          <button *ngFor="let tab of detailTabs" type="button" class="ui-tab co-tab" role="tab" [id]="'co-tab-' + tab.id" [class.active]="activeTab === tab.id"
+                  [attr.aria-selected]="activeTab === tab.id" aria-controls="co-tab-panel" (click)="selectTab(tab.id)">
+            {{ k(tab.labelKey) | translate }}
+            <span *ngIf="tabCount(tab.id) !== null" class="ui-badge ui-badge-neutral">{{ tabCount(tab.id) }}</span>
+            <span *ngIf="inactiveOf(tab.id).length" class="co-inactive-count">{{ k('inactiveShort') | translate: { count: inactiveOf(tab.id).length } }}</span>
+          </button>
+        </div>
+
+        <div id="co-tab-panel" role="tabpanel" [attr.aria-labelledby]="'co-tab-' + activeTab">
+          <!-- Información general -->
+          <div *ngIf="activeTab === 'general'" class="ui-stack">
+            <div class="co-general-grid">
+              <div class="ui-field">
+                <label class="ui-label" for="co-detail-code">{{ k('fieldCode') | translate }}</label>
+                <input class="ui-input" id="co-detail-code" type="text" readonly [value]="detail.code">
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="co-detail-name">{{ k('fieldName') | translate }}</label>
+                <input class="ui-input" id="co-detail-name" type="text" readonly [value]="detail.name">
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="co-detail-area">{{ k('area') | translate }}</label>
+                <input class="ui-input" id="co-detail-area" type="text" readonly [value]="(detail.areaCode ? detail.areaCode + ' · ' : '') + (detail.area || '—')">
+              </div>
+              <div class="ui-field">
+                <label class="ui-label" for="co-detail-level">{{ k('level') | translate }}</label>
+                <input class="ui-input" id="co-detail-level" type="text" readonly [value]="detail.levelCode || detail.level || '—'">
+              </div>
+              <div *ngIf="!hasLevel" class="ui-field">
+                <label class="ui-label" for="co-detail-group">{{ k('primaryGroup') | translate }}</label>
+                <input class="ui-input" id="co-detail-group" type="text" readonly [value]="detail.primaryGroup || '—'">
+              </div>
+            </div>
+            <div class="ui-field">
+              <label class="ui-label" for="co-detail-description">{{ k('fieldDescription') | translate }}</label>
+              <textarea class="ui-textarea" id="co-detail-description" rows="3" readonly [value]="detail.description || '—'"></textarea>
+            </div>
+            <div *ngIf="detail.levelDescription" class="ui-field">
+              <label class="ui-label" for="co-detail-level-description">{{ k('fieldLevelDescription') | translate }}</label>
+              <textarea class="ui-textarea" id="co-detail-level-description" rows="3" readonly [value]="detail.levelDescription"></textarea>
+            </div>
+            <dl class="co-general-meta">
+              <div>
+                <dt class="ui-label">{{ k('inactiveAt') | translate }}</dt>
+                <dd>{{ detail.inactiveAt || '—' }}</dd>
+              </div>
+              <div>
+                <dt class="ui-label">{{ k('status') | translate }}</dt>
+                <dd><ng-container *ngTemplateOutlet="statusBadge; context: { $implicit: detail.status }"></ng-container></dd>
+              </div>
+              <div>
+                <dt class="ui-label">{{ k('previousCode') | translate }}</dt>
+                <dd>{{ detail.previousCode || '—' }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <!-- Funciones, Denominaciones, Habilidades (o Destrezas) y Conocimientos: lo activo, paginado; lo inactivo, en un desplegable aparte -->
+          <ng-container *ngIf="activeTab !== 'general' && activeTab !== 'related'">
+            <ng-container *ngIf="tabTotal || inactiveOf(activeTab).length; else emptyTab">
+              <p *ngIf="inactiveOf(activeTab).length" class="ui-hint co-list-note">{{ k('inactiveNote') | translate: { count: inactiveOf(activeTab).length } }}</p>
+              <p *ngIf="!tabTotal" class="ui-hint">{{ k('noActive.' + activeTab) | translate }}</p>
+
+              <ng-container *ngIf="tabTotal">
+                <ng-container *ngTemplateOutlet="itemList; context: { $implicit: tabItems, tab: activeTab }"></ng-container>
+                <nav *ngIf="tabTotal > pageSizes[0]" app-pagination [page]="tabPage" [pageSize]="tabPageSize" [total]="tabTotal" [summaryKey]="k('showingItems')"
+                     [sizeLabelKey]="k('itemsPageSizeAria')" (pageChange)="tabPage = $event" (pageSizeChange)="onTabPageSizeChange($event)"></nav>
+              </ng-container>
+
+              <section *ngIf="inactiveOf(activeTab).length" class="co-inactive">
+                <button type="button" class="ui-btn ui-btn-secondary co-inactive-toggle" [attr.aria-expanded]="inactiveOpen[activeList]"
+                        aria-controls="co-inactive-list" (click)="toggleInactive(activeList)">
+                  <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+                  {{ k('inactiveTitle.' + activeTab) | translate }}
+                  <span class="ui-badge ui-badge-neutral">{{ inactiveOf(activeTab).length }}</span>
+                  <svg class="ui-icon co-inactive-caret" [class.open]="inactiveOpen[activeList]" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div *ngIf="inactiveOpen[activeList]" id="co-inactive-list" class="co-inactive-list">
+                  <ng-container *ngTemplateOutlet="itemList; context: { $implicit: inactiveOf(activeTab), tab: activeTab, inactive: true }"></ng-container>
+                </div>
+              </section>
+            </ng-container>
+          </ng-container>
+
+          <!-- Ocupaciones relacionadas (o afines): abren su propio perfil -->
+          <ng-container *ngIf="activeTab === 'related'">
+            <ng-container *ngIf="detail.related.length; else emptyTab">
+              <ul class="ui-list">
+                <li *ngFor="let related of relatedItems" class="ui-list-item">
+                  <button type="button" class="co-row-link" [title]="k('openDetail') | translate" (click)="openDetail(related.code)">
+                    {{ related.code }} — {{ related.name }}
+                  </button>
+                </li>
+              </ul>
+              <nav *ngIf="tabTotal > pageSizes[0]" app-pagination [page]="tabPage" [pageSize]="tabPageSize" [total]="tabTotal" [summaryKey]="k('showingItems')"
+                   [sizeLabelKey]="k('itemsPageSizeAria')" (pageChange)="tabPage = $event" (pageSizeChange)="onTabPageSizeChange($event)"></nav>
+            </ng-container>
+          </ng-container>
+
+          <ng-template #emptyTab>
+            <div class="ui-empty">
+              <strong>{{ k('empty.' + activeTab) | translate }}</strong>
+            </div>
+          </ng-template>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Lista de componentes de una pestaña: Código | texto (| fecha de registro en denominaciones, para Administrador y Analista). -->
+<ng-template #itemList let-items let-tab="tab" let-inactive="inactive">
+  <div class="co-list-head" [class.with-date]="tab === 'denominations' && seesInactive" aria-hidden="true">
+    <span>{{ k('colCode') | translate }}</span>
+    <span>{{ k('colItem.' + tab) | translate }}</span>
+    <span *ngIf="tab === 'denominations' && seesInactive">{{ k('registeredAt') | translate }}</span>
+  </div>
+  <ul class="ui-list">
+    <li *ngFor="let item of items" class="ui-list-item co-item" [class.with-date]="tab === 'denominations' && seesInactive" [class.co-item-inactive]="inactive">
+      <span class="ui-badge ui-badge-neutral co-item-code">{{ item.code || '—' }}</span>
+      <span>{{ item.text }}</span>
+      <span *ngIf="tab === 'denominations' && seesInactive" class="co-item-date">{{ item.registeredAt || '—' }}</span>
+    </li>
+  </ul>
+</ng-template>
+
+<ng-template #statusBadge let-status>
+  <span class="ui-badge" [ngClass]="status === 'Activo' ? 'ui-badge-ok' : 'ui-badge-neutral'">
+    {{ (status === 'Activo' ? k('statusActive') : k('statusInactive')) | translate }}
+  </span>
+</ng-template>
+
+<!-- Flechas de orden de una columna: resalta la del sentido aplicado. -->
+<ng-template #sortIcon let-column>
+  <svg class="co-sort-icon" viewBox="0 0 24 24" aria-hidden="true">
+    <path [class.on]="sortColumn === column && sortAscending" d="m8 10 4-4 4 4"/>
+    <path [class.on]="sortColumn === column && !sortAscending" d="m8 14 4 4 4-4"/>
+  </svg>
+</ng-template>
+
+<!-- Ícono de cada campo de la tarjeta de filtros (los del front original). -->
+<ng-template #filterIcon let-icon>
+  <svg class="ui-icon co-filter-field-icon" viewBox="0 0 24 24" aria-hidden="true" [ngSwitch]="icon">
+    <g *ngSwitchCase="'search'"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></g>
+    <g *ngSwitchCase="'level'"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></g>
+    <g *ngSwitchCase="'group'"><circle cx="9" cy="7" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 6"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></g>
+    <g *ngSwitchCase="'folder'"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></g>
+    <g *ngSwitchCase="'area'"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></g>
+    <g *ngSwitchCase="'function'"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></g>
+    <g *ngSwitchCase="'status'"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></g>
+  </svg>
+</ng-template>
+
+<!-- Exportar a Excel: las columnas que se incluyen -->
+<div class="ui-modal-backdrop" *ngIf="exportOpen" (click)="closeExport()">
+  <section class="ui-modal co-export" role="dialog" aria-modal="true" aria-labelledby="co-export-title" aria-describedby="co-export-text" tabindex="-1"
+           appDialog (dialogEscape)="closeExport()" (click)="$event.stopPropagation()">
+    <header class="ui-modal-header">
+      <div>
+        <h2 id="co-export-title">{{ k('exportTitle') | translate }}</h2>
+        <p id="co-export-text" class="ui-hint">{{ k('exportText') | translate }}</p>
+      </div>
+      <button type="button" class="ui-icon-btn" [disabled]="exporting" [attr.aria-label]="'common.close' | translate" (click)="closeExport()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="ui-modal-body">
+      <fieldset class="co-export-columns" [disabled]="exporting">
+        <legend class="sr-only">{{ k('exportTitle') | translate }}</legend>
+        <label *ngFor="let column of exportColumns" class="co-export-column">
+          <input type="checkbox" class="ui-check" [checked]="chosenColumns.has(column.key)" (change)="toggleColumn(column.key)">
+          {{ k(column.labelKey) | translate }}
+        </label>
+      </fieldset>
+    </div>
+    <footer class="ui-modal-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" [disabled]="exporting" (click)="closeExport()">{{ k('exportCancel') | translate }}</button>
+      <button type="button" class="ui-btn ui-btn-primary" [disabled]="exporting || !chosenColumns.size" (click)="confirmExport()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+        {{ (exporting ? k('exportDownloading') : k('exportDownload')) | translate }}
+      </button>
+    </footer>
+  </section>
+</div>
+
+<!-- Guía de uso -->
+<app-guide-dialog *ngIf="guideOpen" [titleKey]="k('guideTitle')" [steps]="guideSteps"
+                  [noteTitleKey]="k('guideNoteTitle')" [noteTextKey]="k('guideNoteText')" [closeKey]="k('guideClose')"
+                  (closed)="guideOpen = false"></app-guide-dialog>
+
+<!-- Ícono de CUOC (el mismo del menú) en el encabezado y en el perfil. -->
+<ng-template #cuocIcon>
+  <svg class="ui-icon" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M8 8v12"/><path d="M12 6v14"/><path d="m16 6 4 14"/></svg>
+</ng-template>

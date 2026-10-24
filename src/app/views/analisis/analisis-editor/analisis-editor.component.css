@@ -1,0 +1,209 @@
+/* Solo lo específico de la copia editable; el resto son las piezas compartidas de ui.css. */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editor-bar {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.editor-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin: 0;
+}
+
+.editor-identity {
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.editor-identity dd {
+  margin: 4px 0 0;
+  color: var(--ui-text);
+}
+
+.editor-section {
+  margin: 4px 0 0;
+}
+
+.editor-required,
+.editor-error {
+  color: var(--state-error-fg);
+}
+
+.editor-error {
+  margin: 4px 0 0;
+  font-size: calc(14px * var(--type-scale));
+}
+
+.editor-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.editor-count {
+  text-align: right;
+}
+
+/* Enlace de acción dentro del formulario ("+ Nuevo nivel…", "+ Agregar"). */
+.editor-link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent-color-hover);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.editor-link:hover {
+  text-decoration: underline;
+}
+
+.editor-link:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Diálogo "Nuevo nivel para Análisis". */
+.editor-level-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.editor-level-section {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+}
+
+.editor-level-actions {
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+/* Pestañas de la copia: sin mayúsculas y repartidas a lo ancho. */
+.editor-tabs {
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 2px;
+  margin-bottom: 0;
+}
+
+/* Siempre en una sola línea y sin barra de desplazamiento: las pestañas se
+   reparten el ancho de la columna y, si aun así no caben, la más larga se
+   recorta con puntos suspensivos (el nombre completo sale al pasar el cursor). */
+.editor-tab {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding-left: 2px;
+  padding-right: 2px;
+  overflow: hidden;
+  font-size: calc(13px * var(--type-scale));
+  letter-spacing: normal;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: none;
+}
+
+.editor-tab:focus-visible {
+  outline-offset: -3px;
+}
+
+.editor-details summary {
+  cursor: pointer;
+  color: var(--ui-text);
+}
+
+.editor-extra {
+  margin-top: 12px;
+}
+
+.editor-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 36px;
+  margin-bottom: 10px;
+}
+
+.editor-list-head .ui-overline {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+}
+
+.editor-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+/* La lista se desplaza dentro de la tarjeta para que las columnas no crezcan sin fin. */
+.editor-scroll {
+  max-height: 420px;
+  padding-right: 4px;
+  overflow-y: auto;
+}
+
+.editor-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+}
+
+.editor-item.open {
+  border-color: var(--accent-color);
+  background: var(--state-ok-bg);
+}
+
+.editor-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-item-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-text);
+}
+
+:host-context(.shell.dark-mode) .editor-identity,
+:host-context(.shell.dark-mode) .editor-item,
+:host-context(.shell.dark-mode) .editor-bar {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .editor-identity dd,
+:host-context(.shell.dark-mode) .editor-item-text,
+:host-context(.shell.dark-mode) .editor-details summary {
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .editor-item.open {
+  border-color: var(--accent-color);
+  background: rgba(125, 183, 40, 0.12);
+}
+
+:host-context(.shell.dark-mode) .editor-link {
+  color: var(--accent-color);
+}

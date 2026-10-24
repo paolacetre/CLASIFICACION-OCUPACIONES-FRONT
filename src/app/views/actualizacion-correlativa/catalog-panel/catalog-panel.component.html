@@ -1,0 +1,119 @@
+<article class="ui-card cp-panel">
+  <!-- Encabezado -->
+  <header class="cp-head">
+    <div class="ui-card-icon" aria-hidden="true">
+      <svg *ngIf="side === 'cno'" class="ui-icon" viewBox="0 0 24 24"><path d="M8 8h12v12H8z"/><path d="M16 4H4v12"/></svg>
+      <svg *ngIf="side === 'cuoc'" class="ui-icon" viewBox="0 0 24 24"><path d="M4 4v16"/><path d="M8 8v12"/><path d="M12 6v14"/><path d="m16 6 4 14"/></svg>
+    </div>
+    <div class="cp-titles">
+      <h2 class="ui-card-title">{{ 'actualizacionCorrelativa.' + side + 'Title' | translate }}</h2>
+      <p class="ui-card-desc">{{ 'actualizacionCorrelativa.' + side + 'Subtitle' | translate }}</p>
+    </div>
+    <span *ngIf="panel.selectedCount() > 0" class="cp-chip">
+      {{ 'actualizacionCorrelativa.selectedChip' | translate: { count: panel.selectedCount(), limit: panel.limit } }}
+    </span>
+  </header>
+
+  <!-- Búsqueda y filtros -->
+  <div class="cp-tools">
+    <div class="ui-input-icon cp-search">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input class="ui-input" type="search" autocomplete="off" [placeholder]="'actualizacionCorrelativa.searchPlaceholder' | translate"
+             [attr.aria-label]="'actualizacionCorrelativa.searchAria.' + side | translate"
+             [ngModel]="panel.searchText()" (ngModelChange)="panel.searchText.set($event)">
+    </div>
+    <button type="button" class="ui-btn ui-btn-outline cp-filters-btn" [class.active]="panel.filtersOpen() || panel.activeFilters() > 0"
+            [attr.aria-expanded]="panel.filtersOpen()" (click)="panel.filtersOpen.set(!panel.filtersOpen())">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      {{ 'actualizacionCorrelativa.filters' | translate }}
+      <span *ngIf="panel.activeFilters() > 0" class="cp-filters-count">{{ panel.activeFilters() }}</span>
+    </button>
+  </div>
+
+  <div *ngIf="panel.filtersOpen()" class="cp-filters">
+    <div class="ui-field">
+      <label class="ui-label" [for]="side + '-area'">{{ 'actualizacionCorrelativa.area.' + side | translate }}</label>
+      <select class="ui-select" [id]="side + '-area'" [ngModel]="panel.area()" (ngModelChange)="panel.setArea($event)">
+        <option value="">{{ 'actualizacionCorrelativa.allAreas' | translate }}</option>
+        <option *ngFor="let area of panel.areas()" [value]="area">{{ area }}</option>
+      </select>
+    </div>
+    <div class="ui-field">
+      <label class="ui-label" [for]="side + '-status'">{{ 'actualizacionCorrelativa.status' | translate }}</label>
+      <select class="ui-select" [id]="side + '-status'" [ngModel]="panel.status()" (ngModelChange)="panel.setStatus($event)">
+        <option value="">{{ 'actualizacionCorrelativa.allStatuses' | translate }}</option>
+        <option *ngFor="let status of statuses" [value]="status">{{ 'actualizacionCorrelativa.status.' + status | translate }}</option>
+      </select>
+    </div>
+    <div class="cp-filters-actions">
+      <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="panel.clearFilters()">{{ 'actualizacionCorrelativa.clear' | translate }}</button>
+      <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" (click)="panel.filtersOpen.set(false)">{{ 'actualizacionCorrelativa.apply' | translate }}</button>
+    </div>
+  </div>
+
+  <div class="cp-meta">
+    <span class="ui-badge ui-badge-ok cp-total">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/></svg>
+      {{ 'actualizacionCorrelativa.total' | translate: { count: format(panel.total()) } }}
+    </span>
+    <span class="ui-badge ui-badge-neutral">
+      {{ (panel.limit === 1 ? 'actualizacionCorrelativa.maxOne' : 'actualizacionCorrelativa.maxMany') | translate: { count: panel.limit } }}
+    </span>
+  </div>
+
+  <p *ngIf="panel.limitWarning()" class="ui-alert ui-alert-warn cp-limit" role="status">
+    {{ 'actualizacionCorrelativa.limitReached' | translate: { count: panel.limit } }}
+  </p>
+
+  <!-- Lista -->
+  <div class="cp-table" [attr.aria-busy]="panel.loading()">
+    <div class="cp-row cp-row-head">
+      <span class="cp-col-check">
+        <!-- Sin casilla de «todo» cuando solo cabe una ocupación. -->
+        <input *ngIf="panel.limit > 1" type="checkbox" class="ui-check" [checked]="panel.allVisibleSelected()" (change)="panel.toggleVisible()"
+               [attr.aria-label]="'actualizacionCorrelativa.selectVisibleAria' | translate">
+      </span>
+      <span>{{ 'actualizacionCorrelativa.code' | translate }}</span>
+      <span>{{ 'actualizacionCorrelativa.occupationName' | translate }}</span>
+      <span aria-hidden="true"></span>
+    </div>
+
+    <div class="cp-body">
+      <ng-container *ngIf="panel.loading(); else loaded">
+        <div *ngFor="let row of skeleton" class="cp-row cp-skeleton" aria-hidden="true">
+          <span class="cp-col-check"><span class="cp-sk cp-sk-check"></span></span>
+          <span><span class="cp-sk cp-sk-code"></span></span>
+          <span><span class="cp-sk cp-sk-name"></span></span>
+          <span></span>
+        </div>
+      </ng-container>
+
+      <ng-template #loaded>
+        <div *ngIf="panel.rows().length === 0" class="ui-empty cp-empty">
+          <strong>{{ (panel.loadError() ? 'actualizacionCorrelativa.loadError' : 'actualizacionCorrelativa.noResults') | translate }}</strong>
+          <p *ngIf="!panel.loadError()">{{ 'actualizacionCorrelativa.noResultsHint' | translate }}</p>
+          <button *ngIf="panel.activeFilters() > 0 || panel.searchText()" type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="panel.clearFilters()">
+            {{ 'actualizacionCorrelativa.clearFilters' | translate }}
+          </button>
+        </div>
+
+        <button *ngFor="let row of panel.rows()" type="button" class="cp-row cp-item" [class.selected]="panel.isSelected(row.code)"
+                [attr.aria-pressed]="panel.isSelected(row.code)" (click)="panel.toggle(row)">
+          <span class="cp-col-check">
+            <span class="cp-check" [class.on]="panel.isSelected(row.code)" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+          </span>
+          <span><span class="cp-code">{{ row.code }}</span></span>
+          <span class="cp-name">{{ row.name }}</span>
+          <svg class="ui-icon cp-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <nav app-pagination class="cp-pagination" [page]="panel.page()" [pageSize]="panel.pageSize()" [total]="panel.total()" [groupThousands]="true"
+       summaryKey="actualizacionCorrelativa.showingRange" sizeLabelKey="actualizacionCorrelativa.perPageAria"
+       (pageChange)="panel.goToPage($event)" (pageSizeChange)="panel.setPageSize($event)"></nav>
+</article>

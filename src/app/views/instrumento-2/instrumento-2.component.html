@@ -1,0 +1,348 @@
+<!-- ============ "Comparación": la pantalla de Comparativa, en solo lectura ============ -->
+<!-- "Editar" (pendientes de envío) la abre editable desde Instrumento 2; "Comparación" (las demás), en solo lectura. -->
+<app-comparativa *ngIf="comparisonId !== null" [embeddedId]="comparisonId" [readOnly]="!comparisonEditable" [fromInstrument2]="comparisonEditable"
+                 (closed)="closeComparison()"></app-comparativa>
+
+<!-- ============ Bandeja ============ -->
+<section *ngIf="comparisonId === null" class="ui-page ui-stack i2-page">
+  <div class="ui-card i2-card">
+    <header class="ui-card-header i2-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h12"/></svg>
+      </div>
+      <div class="ui-card-header-main">
+        <h1 class="ui-page-title">{{ 'instrumento2.title' | translate }}</h1>
+        <p class="ui-page-subtitle">{{ 'instrumento2.subtitle' | translate }}</p>
+      </div>
+      <div class="ui-page-actions">
+        <button type="button" class="ui-btn ui-btn-secondary" (click)="guideOpen = true">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          {{ 'instrumento2.guide' | translate }}
+        </button>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="loading" (click)="refresh()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.7-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.7 6.3L3 16M3 21v-5h5"/></svg>
+          {{ 'instrumento2.refresh' | translate }}
+        </button>
+      </div>
+    </header>
+
+    <!-- Indicadores por estado: son los mismos conteos de las pestañas; pulsar uno abre esa pestaña -->
+    <div class="i2-summary" role="group" [attr.aria-label]="'instrumento2.summaryAria' | translate">
+      <button *ngFor="let option of tabs" type="button" class="i2-kpi" [ngClass]="'i2-kpi-' + option.id" [class.active]="tab === option.id"
+              [attr.aria-pressed]="tab === option.id" (click)="setTab(option.id)">
+        <span class="i2-kpi-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path [attr.d]="option.icon"/></svg></span>
+        <span class="i2-kpi-body">
+          <strong>{{ count(option.id) }}</strong>
+          <span>{{ option.labelKey | translate }}</span>
+          <small>{{ option.hintKey | translate }}</small>
+        </span>
+      </button>
+    </div>
+
+    <form class="i2-toolbar" role="search" (submit)="$event.preventDefault()">
+      <div class="ui-input-icon i2-search">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input class="ui-input" type="text" name="search" autocomplete="off" [placeholder]="'instrumento2.searchPlaceholder' | translate"
+               [attr.aria-label]="'instrumento2.searchAria' | translate" [(ngModel)]="search" (ngModelChange)="onSearchChange()">
+      </div>
+      <button *ngIf="search" type="button" class="ui-btn ui-btn-secondary" (click)="clearSearch()">{{ 'instrumento2.clearSearch' | translate }}</button>
+      <button *ngIf="selectedIds.size" type="button" class="ui-btn ui-btn-primary i2-send-selected" [disabled]="sending" (click)="requestSendSelected()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+        {{ 'instrumento2.sendSelected' | translate: { count: selectedIds.size } }}
+      </button>
+    </form>
+
+    <nav class="i2-tabs" [attr.aria-label]="'instrumento2.tabsAria' | translate">
+      <button *ngFor="let option of tabs" type="button" class="i2-tab" [class.active]="tab === option.id" [attr.aria-current]="tab === option.id ? 'true' : null"
+              (click)="setTab(option.id)">
+        {{ option.labelKey | translate }}
+        <span class="ui-badge ui-badge-neutral">{{ count(option.id) }}</span>
+      </button>
+    </nav>
+
+    <div aria-live="polite" [attr.aria-busy]="loading">
+      <div *ngIf="!filtered.length" class="ui-empty">
+        <ng-container *ngIf="loading; else emptyState"><p>{{ 'instrumento2.loading' | translate }}</p></ng-container>
+        <ng-template #emptyState>
+          <strong>{{ (search ? 'instrumento2.emptySearchTitle' : 'instrumento2.emptyTitle') | translate }}</strong>
+          <p>{{ (search ? 'instrumento2.emptySearchText' : 'instrumento2.emptyText') | translate }}</p>
+          <button *ngIf="search" type="button" class="ui-btn ui-btn-outline ui-btn-sm" (click)="clearSearch()">{{ 'instrumento2.clearSearch' | translate }}</button>
+        </ng-template>
+      </div>
+
+      <ng-container *ngIf="filtered.length">
+        <div class="ui-table-wrap ui-table-responsive ui-table-responsive-lg">
+          <table class="ui-table i2-table" [attr.aria-label]="'instrumento2.tableAria' | translate">
+            <thead>
+              <tr>
+                <th scope="col" class="i2-col-check">
+                  <input type="checkbox" class="i2-check" [checked]="pageSelected" [disabled]="!hasSendableOnPage" (change)="togglePageSelection()"
+                         [attr.aria-label]="'instrumento2.selectPage' | translate">
+                </th>
+                <th scope="col">{{ 'instrumento2.colCatalog' | translate }}</th>
+                <th scope="col">{{ 'instrumento2.colCode' | translate }}</th>
+                <th scope="col">{{ 'instrumento2.colOccupation' | translate }}</th>
+                <th scope="col">{{ 'instrumento2.colAnalyst' | translate }}</th>
+                <th scope="col">{{ 'instrumento2.colDate' | translate }}</th>
+                <th scope="col">{{ 'instrumento2.colState' | translate }}</th>
+                <th scope="col">{{ 'common.actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of pageItems; trackBy: trackById" class="i2-row" [class.open]="openId === item.id" tabindex="0"
+                  [attr.aria-expanded]="openId === item.id" (click)="toggleDetail(item.id)"
+                  (keydown.enter)="onRowKey($event, item.id)" (keydown.space)="onRowKey($event, item.id)">
+                <td class="i2-col-check" (click)="$event.stopPropagation()">
+                  <input type="checkbox" class="i2-check" [checked]="isSelected(item.id)" [disabled]="!canSend(item)" (change)="toggleSelection(item)"
+                         [attr.aria-label]="'instrumento2.selectRow' | translate: { id: item.id }">
+                </td>
+                <td [attr.data-label]="'instrumento2.colCatalog' | translate">
+                  <ul class="i2-stack">
+                    <li *ngFor="let occupation of item.occupations"><span class="i2-catalog" [class.cuoc]="occupation.catalog === 'CUOC'">{{ occupation.catalog }}</span></li>
+                  </ul>
+                </td>
+                <td [attr.data-label]="'instrumento2.colCode' | translate">
+                  <ul class="i2-stack i2-codes">
+                    <li *ngFor="let occupation of item.occupations">{{ occupation.code }}</li>
+                  </ul>
+                </td>
+                <td class="i2-col-names" [attr.data-label]="'instrumento2.colOccupation' | translate">
+                  <ul class="i2-stack i2-names">
+                    <li *ngFor="let occupation of item.occupations" [title]="occupation.name">{{ occupation.name || ('instrumento2.noName' | translate) }}</li>
+                  </ul>
+                </td>
+                <td [attr.data-label]="'instrumento2.colAnalyst' | translate">
+                  <span class="i2-analyst" [title]="item.analyst">
+                    <span class="i2-avatar" aria-hidden="true">{{ initials(item.analyst) }}</span>
+                    <span class="i2-analyst-name">{{ item.analyst || '—' }}</span>
+                  </span>
+                </td>
+                <td [attr.data-label]="'instrumento2.colDate' | translate">
+                  <span class="i2-date">{{ item.day || '—' }}<small *ngIf="item.time">{{ item.time }}</small></span>
+                </td>
+                <td [attr.data-label]="'instrumento2.colState' | translate">
+                  <span class="ui-badge" [ngClass]="stateView(item.state).badge"><span class="i2-dot" aria-hidden="true"></span>{{ stateView(item.state).labelKey | translate }}</span>
+                </td>
+                <td (click)="$event.stopPropagation()">
+                  <!-- Como la versión desplegada: "Editar" (pendiente de envío) o "Comparación" (ya enviada), y "Enviar a experto",
+                       desactivado cuando ya no admite envío. -->
+                  <div class="i2-actions">
+                    <button type="button" class="ui-btn ui-btn-outline ui-btn-sm" [attr.aria-label]="(canSend(item) ? 'instrumento2.editAria' : 'instrumento2.comparisonAria') | translate: { id: item.id }" (click)="openComparison(item)">
+                      {{ (canSend(item) ? 'instrumento2.edit' : 'instrumento2.comparison') | translate }}
+                      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                    <button type="button" class="ui-btn ui-btn-primary ui-btn-sm i2-send" [disabled]="!canSend(item) || sending"
+                            [title]="(canSend(item) ? '' : 'instrumento2.cannotSend') | translate" (click)="requestSend([item.id])">
+                      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+                      {{ (isSending(item.id) ? 'instrumento2.sending' : 'instrumento2.send') | translate }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <nav app-pagination [page]="page" [pageSize]="pageSize" [total]="filtered.length" summaryKey="instrumento2.showing" sizeLabelKey="instrumento2.pageSizeAria"
+             (pageChange)="goToPage($event)" (pageSizeChange)="pageSize = $event; onPageSizeChange()"></nav>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ============ Detalle de la fila abierta (solo lectura) ============ -->
+  <section *ngIf="openId !== null" class="ui-card i2-detail" [attr.aria-label]="'instrumento2.detailAria' | translate" aria-live="polite">
+    <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm i2-detail-close" (click)="closeDetail()">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      {{ 'instrumento2.hideDetail' | translate }}
+    </button>
+
+    <p *ngIf="loadingDetail" class="ui-hint">{{ 'instrumento2.loading' | translate }}</p>
+
+    <ng-container *ngIf="detail as current">
+      <ng-container *ngIf="occupation as shown">
+        <!-- Un instrumento agrupa varias ocupaciones: se elige cuál ver -->
+        <div class="i2-occupations" role="tablist" [attr.aria-label]="'instrumento2.occupationsAria' | translate">
+          <span class="ui-overline">{{ 'instrumento2.occupationsCount' | translate: { count: current.occupations.length } }}</span>
+          <div class="i2-chips">
+            <button *ngFor="let item of current.occupations; let index = index" type="button" role="tab" class="i2-chip" [class.active]="activeOccupation === index"
+                    [attr.aria-selected]="activeOccupation === index" (click)="showOccupation(index)">
+              <span class="i2-catalog" [class.cuoc]="item.catalog === 'CUOC'">{{ item.catalog }}</span>
+              <span class="i2-chip-code">{{ item.code }}</span>
+              <span class="i2-chip-name">{{ item.name || ('instrumento2.noName' | translate) }}</span>
+            </button>
+          </div>
+        </div>
+
+        <header class="i2-detail-head">
+          <h2 class="i2-detail-name">{{ shown.name || ('instrumento2.noName' | translate) }}</h2>
+          <div class="i2-actions">
+            <button type="button" class="ui-btn ui-btn-outline" (click)="openComparison(current)">
+              {{ (canSend(current) ? 'instrumento2.edit' : 'instrumento2.comparison') | translate }}
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <button type="button" class="ui-btn ui-btn-primary i2-send" [disabled]="!canSend(current) || sending"
+                    [title]="(canSend(current) ? '' : 'instrumento2.cannotSend') | translate" (click)="requestSend([current.id])">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+              {{ (isSending(current.id) ? 'instrumento2.sending' : 'instrumento2.send') | translate }}
+            </button>
+          </div>
+        </header>
+
+        <dl class="i2-info">
+          <div><dt>{{ 'instrumento2.infoState' | translate }}</dt><dd><span class="ui-badge" [ngClass]="stateView(current.state).badge">{{ stateView(current.state).labelKey | translate }}</span></dd></div>
+          <div><dt>{{ 'instrumento2.colAnalyst' | translate }}</dt><dd>{{ current.analyst || '—' }}</dd></div>
+          <div><dt>{{ 'instrumento2.infoRegistered' | translate }}</dt><dd>{{ shown.registeredAt || '—' }}</dd></div>
+          <div><dt>{{ 'instrumento2.infoLevel' | translate }}</dt><dd>{{ shown.level || '—' }}</dd></div>
+          <div><dt>{{ 'instrumento2.infoArea' | translate }}</dt><dd>{{ shown.area || '—' }}</dd></div>
+        </dl>
+
+        <nav class="i2-tabs i2-sections" [attr.aria-label]="'instrumento2.sectionsAria' | translate">
+          <button *ngFor="let option of sections" type="button" class="i2-tab" [class.active]="section === option.id" [attr.aria-current]="section === option.id ? 'true' : null"
+                  (click)="section = option.id">
+            {{ option.labelKey | translate }}
+            <span *ngIf="sectionCount(shown, option.id) !== null" class="ui-badge ui-badge-neutral">{{ sectionCount(shown, option.id) }}</span>
+          </button>
+        </nav>
+
+        <div class="i2-detail-body">
+          <div *ngIf="section === 'general'" class="i2-general">
+            <section class="i2-box">
+              <h3 class="ui-section-title i2-box-title">{{ 'instrumento2.basicData' | translate }}</h3>
+              <dl class="i2-rows">
+                <div><dt>{{ 'instrumento2.colCode' | translate }}</dt><dd>{{ shown.code }}</dd></div>
+                <div><dt>{{ 'instrumento2.infoName' | translate }}</dt><dd>{{ shown.name || '—' }}</dd></div>
+                <div><dt>{{ 'instrumento2.infoLevel' | translate }}</dt><dd>{{ shown.level || '—' }}</dd></div>
+                <div><dt>{{ 'instrumento2.infoArea' | translate }}</dt><dd>{{ shown.area || '—' }}</dd></div>
+                <div><dt>{{ 'instrumento2.infoRegistered' | translate }}</dt><dd>{{ shown.registeredAt || '—' }}</dd></div>
+                <div><dt>{{ 'instrumento2.colState' | translate }}</dt><dd>{{ stateView(current.state).labelKey | translate }}</dd></div>
+                <div><dt>{{ 'instrumento2.colAnalyst' | translate }}</dt><dd>{{ current.analyst || '—' }}</dd></div>
+                <div><dt>{{ 'instrumento2.sectionTraceability' | translate }}</dt><dd>{{ shown.traceability || '—' }}</dd></div>
+              </dl>
+            </section>
+            <section class="i2-box">
+              <h3 class="ui-section-title i2-box-title">{{ 'instrumento2.occupationSummary' | translate }}</h3>
+              <p class="i2-summary-name"><strong>{{ shown.name || ('instrumento2.noName' | translate) }}</strong><span class="i2-catalog" [class.cuoc]="shown.catalog === 'CUOC'">{{ shown.catalog }}</span></p>
+              <p class="i2-text" [class.empty]="!shown.description">{{ shown.description || ('instrumento2.noDescription' | translate) }}</p>
+              <ul class="i2-stats">
+                <li><strong>{{ shown.functions.length }}</strong> {{ 'instrumento2.sectionFunctions' | translate }}</li>
+                <li><strong>{{ shown.denominations.length }}</strong> {{ 'instrumento2.sectionDenominations' | translate }}</li>
+                <li><strong>{{ shown.skills.length }}</strong> {{ 'instrumento2.sectionSkills' | translate }}</li>
+                <li><strong>{{ shown.knowledge.length }}</strong> {{ 'instrumento2.sectionKnowledge' | translate }}</li>
+              </ul>
+            </section>
+          </div>
+
+          <ng-container *ngIf="section === 'description'">
+            <p class="i2-text" [class.empty]="!shown.description">{{ shown.description || ('instrumento2.noDescription' | translate) }}</p>
+            <div *ngIf="current.observation" class="i2-observation">
+              <span class="ui-overline">{{ 'instrumento2.analystObservation' | translate }}</span>
+              <p class="i2-text">{{ current.observation }}</p>
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="sectionItems(shown) as list">
+            <div *ngIf="list.length; else noItems" class="ui-table-wrap">
+              <table class="ui-table i2-items">
+                <thead><tr><th scope="col">{{ 'instrumento2.colCode' | translate }}</th><th scope="col">{{ (section === 'functions' ? 'instrumento2.colDescription' : 'instrumento2.infoName') | translate }}</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let item of list"><td class="i2-item-code">{{ item.code || '—' }}</td><td>{{ item.text || '—' }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <ng-template #noItems><p class="ui-hint">{{ 'instrumento2.noItems' | translate }}</p></ng-template>
+          </ng-container>
+
+          <p *ngIf="section === 'traceability'" class="i2-text" [class.empty]="!shown.traceability">{{ shown.traceability || ('instrumento2.noTraceability' | translate) }}</p>
+        </div>
+
+        <p class="ui-note-warn i2-notice">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          {{ 'instrumento2.readOnlyNotice' | translate }}
+        </p>
+      </ng-container>
+    </ng-container>
+  </section>
+</section>
+
+<!-- Enviar a validación experta: 1) ocupaciones que se validan, 2) expertos que las reciben (como la versión desplegada) -->
+<div class="ui-modal-backdrop" *ngIf="sendModal as modal" (click)="cancelSend()">
+  <section class="ui-modal i2-send-modal" role="dialog" aria-modal="true" aria-labelledby="i2-send-title" tabindex="-1"
+           appDialog (dialogEscape)="cancelSend()" (click)="$event.stopPropagation()">
+    <header class="ui-modal-header i2-send-header">
+      <h2 id="i2-send-title">{{ 'instrumento2.sendModal.title' | translate }}</h2>
+    </header>
+
+    <div class="ui-modal-body i2-send-body">
+      <!-- Paso 1: ocupaciones -->
+      <section class="i2-send-step" aria-labelledby="i2-send-step-1">
+        <header class="i2-send-step-head">
+          <span class="i2-send-step-number" aria-hidden="true">1</span>
+          <h3 id="i2-send-step-1">{{ 'instrumento2.sendModal.occupationsTitle' | translate }}</h3>
+          <span class="i2-send-counter" [class.empty]="!occupationTotals.chosen" aria-live="polite">
+            {{ 'instrumento2.sendModal.counter' | translate: { count: occupationTotals.chosen, total: occupationTotals.total } }}
+          </span>
+        </header>
+        <p class="i2-send-hint">{{ 'instrumento2.sendModal.occupationsHint' | translate }}</p>
+        <p *ngIf="modal.experts === null" class="ui-alert ui-alert-warn i2-send-notice" role="status">{{ 'instrumento2.sendModal.unsupported' | translate }}</p>
+
+        <div *ngFor="let item of modal.items" class="i2-send-group" role="group"
+             [attr.aria-label]="'instrumento2.sendModal.groupTitle' | translate: { id: item.id }">
+          <p *ngIf="modal.items.length > 1" class="i2-send-group-title">{{ 'instrumento2.sendModal.groupTitle' | translate: { id: item.id } }}</p>
+          <label *ngFor="let occupation of item.occupations" class="i2-send-option i2-send-occupation" [class.chosen]="isOccupationChosen(item, occupation)">
+            <input type="checkbox" [checked]="isOccupationChosen(item, occupation)" [disabled]="modal.experts === null || sending"
+                   (change)="toggleOccupation(item, occupation)">
+            <span class="i2-catalog" [class.cuoc]="occupation.catalog === 'CUOC'">{{ occupation.catalog }}</span>
+            <span class="i2-send-code">{{ occupation.code }}</span>
+            <span class="i2-send-name" [title]="occupation.name">{{ occupation.name || ('instrumento2.noName' | translate) }}</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Paso 2: expertos (solo si el servidor permite elegirlos) -->
+      <section *ngIf="modal.experts !== null" class="i2-send-step" aria-labelledby="i2-send-step-2">
+        <header class="i2-send-step-head">
+          <span class="i2-send-step-number" aria-hidden="true">2</span>
+          <h3 id="i2-send-step-2">{{ 'instrumento2.sendModal.expertsTitle' | translate }}</h3>
+        </header>
+        <p class="i2-send-hint">{{ 'instrumento2.sendModal.expertsHint' | translate }}</p>
+
+        <p *ngIf="modal.loading" class="i2-send-hint">{{ 'instrumento2.sendModal.loadingExperts' | translate }}</p>
+        <p *ngIf="modal.loadError" class="ui-alert ui-alert-error" role="alert">{{ 'instrumento2.sendModal.expertsError' | translate }}</p>
+        <p *ngIf="!modal.loading && !modal.loadError && !modal.experts.length" class="ui-alert ui-alert-warn" role="status">
+          {{ 'instrumento2.sendModal.noExperts' | translate }}
+        </p>
+
+        <div *ngIf="modal.experts.length" class="i2-send-experts" role="group" [attr.aria-label]="'instrumento2.sendModal.expertsTitle' | translate">
+          <label class="i2-send-option i2-send-all">
+            <input type="checkbox" [checked]="allExpertsChosen" [disabled]="sending" (change)="toggleAllExperts()">
+            {{ 'instrumento2.sendModal.selectAll' | translate: { count: modal.experts.length } }}
+          </label>
+          <label *ngFor="let expert of modal.experts" class="i2-send-option i2-send-expert" [class.chosen]="isExpertChosen(expert.id)">
+            <input type="checkbox" [checked]="isExpertChosen(expert.id)" [disabled]="sending" (change)="toggleExpert(expert.id)">
+            <span class="i2-send-expert-text">
+              <span>{{ expert.name }}</span>
+              <small>{{ expert.email }}</small>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <p class="i2-send-warning">{{ 'instrumento2.sendModal.irreversible' | translate }}</p>
+      <p *ngIf="modal.error" class="i2-send-error" role="alert">{{ modal.error | translate }}</p>
+    </div>
+
+    <footer class="ui-modal-actions i2-send-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" [disabled]="sending" (click)="cancelSend()">{{ 'common.cancel' | translate }}</button>
+      <!-- Atenuado mientras falta algo, pero activo: al pulsarlo explica qué falta. -->
+      <button type="button" class="ui-btn ui-btn-primary" [class.i2-send-incomplete]="!!sendIssue" [disabled]="sending" (click)="confirmSend()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+        {{ (sending ? 'instrumento2.sending' : 'instrumento2.sendModal.send') | translate }}
+      </button>
+    </footer>
+  </section>
+</div>
+
+<!-- Guía de uso -->
+<app-guide-dialog *ngIf="guideOpen" titleKey="instrumento2.guideTitle" [steps]="guideSteps"
+                  noteTitleKey="instrumento2.guideNoteTitle" noteTextKey="instrumento2.guideNoteText" closeKey="instrumento2.guideClose"
+                  (closed)="guideOpen = false"></app-guide-dialog>

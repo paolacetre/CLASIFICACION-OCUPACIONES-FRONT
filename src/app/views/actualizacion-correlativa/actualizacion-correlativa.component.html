@@ -1,0 +1,206 @@
+<section class="ui-page ui-stack acr-page">
+  <!-- Encabezado -->
+  <header class="ui-card acr-hero">
+    <div class="ui-card-icon" aria-hidden="true">
+      <svg class="ui-icon" viewBox="0 0 24 24"><path d="M6 3a2 2 0 1 0 0 4a2 2 0 1 0 0-4z"/><path d="M18 17a2 2 0 1 0 0 4a2 2 0 1 0 0-4z"/><path d="M6 7v8a4 4 0 0 0 4 4h2"/><path d="m10 17 2 2-2 2"/><path d="M18 17V9a4 4 0 0 0-4-4h-2"/><path d="m14 7-2-2 2-2"/></svg>
+    </div>
+    <div class="acr-hero-text">
+      <h1 class="ui-page-title">{{ 'actualizacionCorrelativa.title' | translate }}</h1>
+      <p class="ui-page-subtitle">{{ 'actualizacionCorrelativa.subtitle' | translate }}</p>
+    </div>
+    <div class="ui-page-actions">
+      <button type="button" class="ui-btn ui-btn-primary"
+              (click)="uploadOpen.set(true)">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        {{ 'actualizacionCorrelativa.uploadExcel' | translate }}
+      </button>
+    </div>
+    <svg class="acr-hero-art" viewBox="0 0 200 120" fill="none" aria-hidden="true">
+      <path d="M40 0C80 40 120 20 160 60C190 90 210 120 220 140" stroke-dasharray="4 4"/>
+      <circle cx="160" cy="40" r="16"/><circle cx="160" cy="80" r="14"/><circle cx="120" cy="60" r="10"/>
+      <path d="m128 56 20-12M128 64l20 12"/>
+    </svg>
+  </header>
+
+  <!-- Pestañas en pantallas angostas -->
+  <div class="acr-mobile-tabs" role="tablist" [attr.aria-label]="'actualizacionCorrelativa.mobileTabsAria' | translate">
+    <button type="button" role="tab" [class.active]="mobileTab() === 'cno'" [attr.aria-selected]="mobileTab() === 'cno'" (click)="mobileTab.set('cno')">
+      CNO <span *ngIf="cno.selectedCount() > 0" class="acr-tab-count">{{ cno.selectedCount() }}</span>
+    </button>
+    <button type="button" role="tab" [class.active]="mobileTab() === 'cuoc'" [attr.aria-selected]="mobileTab() === 'cuoc'" (click)="mobileTab.set('cuoc')">
+      CUOC <span *ngIf="cuoc.selectedCount() > 0" class="acr-tab-count">{{ cuoc.selectedCount() }}</span>
+    </button>
+  </div>
+
+  <!-- Paneles CNO y CUOC -->
+  <div class="acr-panels">
+    <app-catalog-panel class="acr-slot" [class.inactive]="mobileTab() !== 'cno'" [panel]="cno" side="cno"></app-catalog-panel>
+    <app-catalog-panel class="acr-slot" [class.inactive]="mobileTab() !== 'cuoc'" [panel]="cuoc" side="cuoc"></app-catalog-panel>
+  </div>
+
+  <!-- Barra de selección: fija abajo mientras haya algo seleccionado -->
+  <div *ngIf="hasSelection()" class="ui-card acr-bar" role="region" [attr.aria-label]="'actualizacionCorrelativa.selectionAria' | translate">
+    <div class="acr-bar-sides">
+      <div class="acr-bar-side">
+        <span class="acr-bar-ok" [class.off]="cno.selectedCount() === 0" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div>
+          <p class="acr-bar-title">{{ 'actualizacionCorrelativa.cnoSelected' | translate }} <strong>{{ cno.selectedCount() }}</strong></p>
+          <p class="acr-bar-codes">{{ cno.selectedCount() > 0 ? '(' + summary(cno.codes()) + ')' : ('actualizacionCorrelativa.pickCno' | translate) }}</p>
+        </div>
+      </div>
+      <span class="acr-bar-link" aria-hidden="true">↔</span>
+      <div class="acr-bar-side">
+        <span class="acr-bar-ok" [class.off]="cuoc.selectedCount() === 0" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <div>
+          <p class="acr-bar-title">{{ 'actualizacionCorrelativa.cuocSelected' | translate }} <strong>{{ cuoc.selectedCount() }}</strong> {{ 'actualizacionCorrelativa.ofLimit' | translate: { count: cuoc.limit } }}</p>
+          <p class="acr-bar-codes">{{ cuoc.selectedCount() > 0 ? '(' + summary(cuoc.codes()) + ')' : ('actualizacionCorrelativa.pickCuoc' | translate) }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="acr-bar-actions">
+      <span *ngIf="editingCno() as code" class="ui-badge ui-badge-info">{{ 'actualizacionCorrelativa.editing' | translate: { code: code } }}</span>
+      <button type="button" class="ui-btn ui-btn-secondary" (click)="cancelSelection()">{{ 'common.cancel' | translate }}</button>
+      <button type="button" class="ui-btn ui-btn-primary" [disabled]="!canRelate() || saving()" (click)="openConfirm()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        {{ (editingCno() ? 'actualizacionCorrelativa.saveChanges' : 'actualizacionCorrelativa.relate') | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Relaciones existentes -->
+  <section class="ui-card acr-relations" aria-labelledby="acr-relations-title">
+    <header class="acr-relations-head">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      </div>
+      <div class="acr-relations-titles">
+        <h2 id="acr-relations-title" class="ui-card-title">{{ 'actualizacionCorrelativa.relationsTitle' | translate }}</h2>
+        <p class="ui-card-desc">{{ 'actualizacionCorrelativa.relationsSubtitle' | translate }}</p>
+      </div>
+      <button *ngIf="!searching() && relations().length > visibleLimit" type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="showAll.set(!showAll())">
+        {{ showAll() ? ('actualizacionCorrelativa.showLess' | translate) : ('actualizacionCorrelativa.showAll' | translate: { count: format(relations().length) }) }}
+      </button>
+    </header>
+
+    <div *ngIf="relations().length > 0" class="ui-input-icon acr-relations-search">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      <input class="ui-input" type="search" autocomplete="off" [placeholder]="'actualizacionCorrelativa.relationsSearch' | translate"
+             [attr.aria-label]="'actualizacionCorrelativa.relationsSearchAria' | translate" [ngModel]="relationSearch()" (ngModelChange)="relationSearch.set($event)">
+    </div>
+
+    <p *ngIf="relationsLoading()" class="ui-hint" role="status">{{ 'actualizacionCorrelativa.relationsLoading' | translate }}</p>
+
+    <div *ngIf="!relationsLoading() && relationsError()" class="ui-alert ui-alert-error" role="alert">
+      <p>{{ 'actualizacionCorrelativa.relationsError' | translate }}</p>
+      <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="loadRelations()">{{ 'actualizacionCorrelativa.retry' | translate }}</button>
+    </div>
+
+    <ng-container *ngIf="!relationsLoading() && !relationsError()">
+      <div *ngIf="visibleRelations().length === 0" class="ui-empty">
+        <ng-container *ngIf="searching(); else noRelations">
+          <strong>{{ 'actualizacionCorrelativa.noMatches' | translate: { term: relationSearch() } }}</strong>
+          <p>{{ 'actualizacionCorrelativa.noMatchesHint' | translate }}</p>
+          <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="clearRelationSearch()">{{ 'actualizacionCorrelativa.clearSearch' | translate }}</button>
+        </ng-container>
+        <ng-template #noRelations>
+          <strong>{{ 'actualizacionCorrelativa.noRelations' | translate }}</strong>
+          <p>{{ 'actualizacionCorrelativa.noRelationsHint' | translate }}</p>
+        </ng-template>
+      </div>
+
+      <div *ngIf="visibleRelations().length > 0" class="acr-grid">
+        <article *ngFor="let relation of visibleRelations(); trackBy: trackRelation" class="acr-rel">
+          <header class="acr-rel-head">
+            <span class="acr-rel-id">{{ 'actualizacionCorrelativa.relationId' | translate: { code: relation.cno.code } }}</span>
+            <span class="ui-badge ui-badge-ok">{{ 'actualizacionCorrelativa.cuocCount' | translate: { count: relation.cuoc.length } }}</span>
+          </header>
+          <div class="acr-rel-body">
+            <div class="acr-rel-side">
+              <span class="acr-rel-label">CNO</span>
+              <div class="acr-rel-codes"><span class="acr-code">{{ relation.cno.code }}</span></div>
+              <p class="acr-rel-names" [title]="relation.cno.name">{{ relation.cno.name }}</p>
+            </div>
+            <span class="acr-rel-arrow" aria-hidden="true">↔</span>
+            <div class="acr-rel-side">
+              <span class="acr-rel-label">CUOC</span>
+              <div class="acr-rel-codes">
+                <span class="acr-code">{{ relation.cuoc[0].code }}</span>
+                <span *ngIf="relation.cuoc.length > 1" class="acr-code acr-code-more">+{{ relation.cuoc.length - 1 }}</span>
+              </div>
+              <p class="acr-rel-names" [title]="names(relation.cuoc)">{{ names(relation.cuoc) }}</p>
+            </div>
+          </div>
+          <footer class="acr-rel-actions">
+            <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="openDetail(relation)">{{ 'actualizacionCorrelativa.viewDetail' | translate }}</button>
+            <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="edit(relation)">{{ 'actualizacionCorrelativa.edit' | translate }}</button>
+          </footer>
+        </article>
+      </div>
+    </ng-container>
+  </section>
+</section>
+
+<!-- Confirmar la relación -->
+<div *ngIf="confirmOpen()" class="ui-modal-backdrop" (click)="closeConfirm()">
+  <section class="ui-modal acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-confirm-title" tabindex="-1" appDialog (dialogEscape)="closeConfirm()"
+           (click)="$event.stopPropagation()">
+    <header class="ui-modal-header acr-modal-header">
+      <h2 id="acr-confirm-title">{{ (editingCno() ? 'actualizacionCorrelativa.saveChanges' : 'actualizacionCorrelativa.createRelation') | translate }}</h2>
+      <button type="button" class="ui-icon-btn" [disabled]="saving()" [attr.aria-label]="'common.close' | translate" (click)="closeConfirm()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="ui-modal-body">
+      <p>{{ 'actualizacionCorrelativa.aboutToRelate' | translate }}</p>
+      <div class="acr-modal-cols">
+        <div class="acr-modal-box">
+          <span class="acr-rel-label">CNO</span>
+          <ul class="acr-list"><li *ngFor="let item of cno.items()"><span class="acr-code">{{ item.code }}</span> {{ item.name }}</li></ul>
+        </div>
+        <div class="acr-modal-box">
+          <span class="acr-rel-label">CUOC</span>
+          <ul class="acr-list"><li *ngFor="let item of cuoc.items()"><span class="acr-code">{{ item.code }}</span> {{ item.name }}</li></ul>
+        </div>
+      </div>
+      <p class="acr-question">{{ (editingCno() ? 'actualizacionCorrelativa.confirmSave' : 'actualizacionCorrelativa.confirmCreate') | translate }}</p>
+    </div>
+    <footer class="ui-modal-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" [disabled]="saving()" (click)="closeConfirm()">{{ 'common.cancel' | translate }}</button>
+      <button type="button" class="ui-btn ui-btn-primary" [disabled]="saving()" (click)="confirmRelation()">
+        {{ (saving() ? 'actualizacionCorrelativa.saving' : editingCno() ? 'actualizacionCorrelativa.saveChanges' : 'actualizacionCorrelativa.createRelation') | translate }}
+      </button>
+    </footer>
+  </section>
+</div>
+
+<!-- Detalle de una relación -->
+<div *ngIf="detail() as relation" class="ui-modal-backdrop" (click)="closeDetail()">
+  <section class="ui-modal acr-modal" role="dialog" aria-modal="true" aria-labelledby="acr-detail-title" tabindex="-1" appDialog (dialogEscape)="closeDetail()"
+           (click)="$event.stopPropagation()">
+    <header class="ui-modal-header acr-modal-header">
+      <h2 id="acr-detail-title">{{ 'actualizacionCorrelativa.relationId' | translate: { code: relation.cno.code } }}</h2>
+      <button type="button" class="ui-icon-btn" [attr.aria-label]="'common.close' | translate" (click)="closeDetail()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+    <div class="ui-modal-body">
+      <div class="acr-modal-cols">
+        <div class="acr-modal-box">
+          <span class="acr-rel-label">CNO</span>
+          <ul class="acr-list"><li><span class="acr-code">{{ relation.cno.code }}</span> {{ relation.cno.name }}</li></ul>
+        </div>
+        <div class="acr-modal-box">
+          <span class="acr-rel-label">CUOC ({{ relation.cuoc.length }})</span>
+          <ul class="acr-list"><li *ngFor="let item of relation.cuoc"><span class="acr-code">{{ item.code }}</span> {{ item.name }}</li></ul>
+        </div>
+      </div>
+    </div>
+    <footer class="ui-modal-actions">
+      <button type="button" class="ui-btn ui-btn-secondary" (click)="closeDetail()">{{ 'common.close' | translate }}</button>
+      <button type="button" class="ui-btn ui-btn-primary" (click)="edit(relation)">{{ 'actualizacionCorrelativa.edit' | translate }}</button>
+    </footer>
+  </section>
+</div>
+
+<!-- Cargar Excel -->
+<app-carga-correlativa *ngIf="uploadOpen()" (closed)="uploadOpen.set(false)" (uploaded)="onUploaded()"></app-carga-correlativa>

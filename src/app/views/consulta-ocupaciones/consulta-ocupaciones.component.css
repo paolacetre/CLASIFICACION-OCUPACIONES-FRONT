@@ -1,0 +1,433 @@
+/* Consulta de ocupaciones (CNO y CUOC): solo lo específico de esta pantalla; el resto son las piezas compartidas de ui.css. */
+
+.co-header {
+  flex-wrap: wrap;
+  margin-bottom: 0;
+}
+
+.co-header .ui-card-header-main {
+  flex: 1 1 320px;
+}
+
+/* ---------- Tarjeta «Filtros de búsqueda» ---------- */
+.co-filter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px 20px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: var(--neutral-50);
+}
+
+.co-filter-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+}
+
+.co-filter-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.co-filter-titles {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.co-filter-titles .ui-card-title,
+.co-filter-titles .ui-card-desc {
+  margin: 0;
+}
+
+/* Cuadrícula de columnas iguales: todos los selectores miden lo mismo (también los de la última fila); la búsqueda ocupa dos columnas. */
+.co-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  align-items: end;
+  gap: 14px;
+}
+
+.co-filter-search {
+  grid-column: span 2;
+}
+
+/* El campo de búsqueda va en blanco con borde, como los selectores: sobre el fondo gris de la tarjeta se perdía. */
+.co-filter-search .ui-input-icon > .ui-input {
+  background-color: #fff;
+  border-color: var(--neutral-100);
+}
+
+.co-filter-search .ui-input-icon > .ui-input:focus {
+  border-color: var(--accent-color);
+}
+
+.co-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.co-filter-field-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.co-apply {
+  justify-self: start;
+}
+
+/* Hay selecciones sin aplicar: el botón lo marca con un anillo. */
+.co-apply-pending {
+  box-shadow: 0 0 0 3px var(--accent-color-soft, rgba(73, 176, 9, 0.25));
+}
+
+.co-prompt {
+  background: transparent;
+}
+
+.co-prompt > p {
+  max-width: 560px;
+}
+
+.co-tip {
+  max-width: 640px;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.co-status-line {
+  margin: 0 0 12px;
+}
+
+.co-status-line strong {
+  color: var(--ui-text);
+  font-weight: var(--fw-semibold);
+}
+
+/* Botón para borrar el texto buscado, dentro del campo. */
+.co-search-input {
+  padding-right: 48px;
+}
+
+.co-search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ---------- Resultados ---------- */
+.co-results tbody tr {
+  cursor: pointer;
+}
+
+/* Ocupación inactiva: atenuada, con su etiqueta junto al nombre. */
+.co-results tbody tr.co-row-inactive td {
+  color: var(--neutral-400);
+}
+
+.co-row-status {
+  margin-left: 8px;
+}
+
+/* Encabezado que ordena: se ve como el texto del encabezado, no como un botón. */
+.co-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.co-sort.active {
+  color: var(--ui-text);
+}
+
+.co-sort-icon {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--neutral-400);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.co-sort-icon .on {
+  stroke: var(--accent-color-hover);
+}
+
+/* Nombre de la ocupación: abre su perfil. */
+.co-row-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.co-row-link:hover {
+  color: var(--accent-color-hover);
+  text-decoration: underline;
+}
+
+.co-sort:focus-visible,
+.co-row-link:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------- Perfil de la ocupación ---------- */
+.co-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.co-detail-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.co-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.co-detail-heading {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.co-detail-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 4px;
+  color: var(--ui-text);
+}
+
+.co-detail-code {
+  color: var(--accent-color-hover);
+}
+
+.co-detail-meta,
+.co-general-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin: 0;
+}
+
+.co-general-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.co-detail-meta dd,
+.co-general-meta dd {
+  margin: 4px 0 0;
+  color: var(--ui-text);
+}
+
+.co-detail-stats,
+.co-general-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+/* Tarjeta del perfil: abre su pestaña. */
+.co-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 16px 20px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.co-stat:hover {
+  border-color: var(--accent-color);
+}
+
+.co-stat:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* «+3 inact.»: lo inactivo que solo ven Administrador y Analista. */
+.co-inactive-count {
+  margin-left: 6px;
+  color: var(--state-warn-fg);
+  font-size: 0.85em;
+  font-weight: var(--fw-semibold);
+}
+
+.co-stat-value {
+  color: var(--ui-text);
+  font-size: var(--fs-subtitle);
+  font-weight: var(--fw-semibold);
+}
+
+.co-stat-label {
+  color: var(--neutral-700);
+}
+
+/* Pestañas del perfil: sin mayúsculas, como el resto de textos de la vista. */
+.co-tab {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.ui-tabs {
+  margin-bottom: 0;
+}
+
+:host-context(.shell.dark-mode) .co-status-line strong,
+:host-context(.shell.dark-mode) .co-sort.active,
+:host-context(.shell.dark-mode) .co-row-link,
+:host-context(.shell.dark-mode) .co-detail-title,
+:host-context(.shell.dark-mode) .co-detail-meta dd,
+:host-context(.shell.dark-mode) .co-general-meta dd,
+:host-context(.shell.dark-mode) .co-stat-value {
+  color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .co-stat-label {
+  color: #D4D4D4;
+}
+
+:host-context(.shell.dark-mode) .co-detail-code,
+:host-context(.shell.dark-mode) .co-row-link:hover,
+:host-context(.shell.dark-mode) .co-sort-icon .on {
+  color: var(--accent-color);
+  stroke: var(--accent-color);
+}
+
+@media (max-width: 640px) {
+  .co-filter-search {
+    grid-column: auto;
+  }
+}
+
+:host-context(.shell.dark-mode) .co-filter-search .ui-input-icon > .ui-input {
+  background-color: var(--dark-surface);
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .co-filter-card {
+  border-color: #525252;
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .co-results tbody tr.co-row-inactive td {
+  color: #A3A3A3;
+}
+
+/* CNO tiene nueve columnas (con Nivel): un poco menos de aire a los lados para que la tabla quepa en el ancho máximo de la página. */
+.ui-table-responsive .co-results.has-level th,
+.ui-table-responsive .co-results.has-level td {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Componentes del perfil: Código | texto (| fecha de registro en denominaciones). */
+.co-list-head,
+.co-item {
+  display: grid;
+  grid-template-columns: minmax(90px, 140px) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+
+.co-list-head.with-date,
+.co-item.with-date {
+  grid-template-columns: minmax(90px, 140px) minmax(0, 1fr) minmax(90px, 120px);
+}
+
+.co-list-head {
+  padding: 0 14px 6px;
+  color: var(--neutral-700);
+  font-size: 0.85em;
+  font-weight: var(--fw-semibold);
+  text-transform: uppercase;
+}
+
+.co-item {
+  padding: 10px 14px;
+}
+
+.co-item-code {
+  justify-self: start;
+}
+
+.co-item-inactive {
+  color: var(--neutral-400);
+}
+
+.co-list-note {
+  margin: 0 0 10px;
+}
+
+/* Desplegable de funciones o denominaciones inactivas. */
+.co-inactive {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.co-inactive-toggle {
+  align-self: flex-start;
+}
+
+.co-inactive-caret {
+  transition: transform 0.2s ease;
+}
+
+.co-inactive-caret.open {
+  transform: rotate(180deg);
+}
+
+/* Columnas del Excel: casillas en dos columnas. */
+.co-export-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.co-export-column {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+:host-context(.shell.dark-mode) .co-list-head {
+  color: #D4D4D4;
+}
+

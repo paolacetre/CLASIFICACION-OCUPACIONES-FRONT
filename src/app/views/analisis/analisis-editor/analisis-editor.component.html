@@ -1,0 +1,184 @@
+﻿<div class="editor-bar">
+  <button type="button" class="ui-btn ui-btn-danger ui-btn-sm" [disabled]="disabled" (click)="remove.emit()">
+    <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    {{ 'analisis.remove' | translate }}
+  </button>
+</div>
+
+<dl class="editor-identity">
+  <div>
+    <dt class="ui-label">{{ 'analisis.code' | translate }}</dt>
+    <dd>{{ occupation.code }}</dd>
+  </div>
+  <div>
+    <dt class="ui-label">{{ 'analisis.status' | translate }}</dt>
+    <dd><span class="ui-badge" [ngClass]="occupation.status === 'Activo' ? 'ui-badge-ok' : 'ui-badge-neutral'">{{ occupation.status }}</span></dd>
+  </div>
+</dl>
+
+<h3 class="ui-section-title editor-section">{{ 'analisis.infoTitle' | translate }}</h3>
+
+<div class="ui-field">
+  <label class="ui-label" [for]="id('name')">{{ 'analisis.fieldName' | translate }} <span class="editor-required" aria-hidden="true">*</span></label>
+  <input class="ui-input" type="text" [id]="id('name')" [name]="id('name')" required [attr.aria-invalid]="missing('name')" [(ngModel)]="occupation.name">
+  <p *ngIf="missing('name')" class="editor-error">{{ 'analisis.required' | translate }}</p>
+</div>
+
+<div class="ui-grid-2">
+  <div class="ui-field">
+    <label class="ui-label" [for]="id('level')">{{ (occupation.catalog === 'CUOC' ? 'analisis.fieldLevelCuoc' : 'analisis.fieldLevel') | translate }} <span class="editor-required" aria-hidden="true">*</span></label>
+    <app-filter-combobox [inputId]="id('level')" [options]="levelChoices" [value]="occupation.level" [allLabel]="'analisis.choose' | translate" [searchable]="levelChoices.length > 8"
+                         [searchPlaceholder]="'analisis.optionSearch' | translate" [emptyText]="'analisis.optionEmpty' | translate" (valueChange)="occupation.level = $event"></app-filter-combobox>
+    <p *ngIf="missing('level')" class="editor-error">{{ 'analisis.required' | translate }}</p>
+  </div>
+  <div class="ui-field">
+    <label class="ui-label" [for]="id('area')">{{ (occupation.catalog === 'CUOC' ? 'analisis.fieldAreaCuoc' : 'analisis.fieldArea') | translate }} <span class="editor-required" aria-hidden="true">*</span></label>
+    <app-filter-combobox [inputId]="id('area')" [options]="areaChoices" [value]="occupation.area" [allLabel]="'analisis.choose' | translate" [searchable]="areaChoices.length > 8"
+                         [searchPlaceholder]="'analisis.optionSearch' | translate" [emptyText]="'analisis.optionEmpty' | translate" (valueChange)="occupation.area = $event"></app-filter-combobox>
+    <p *ngIf="missing('area')" class="editor-error">{{ 'analisis.required' | translate }}</p>
+  </div>
+</div>
+
+<!-- Nivel que no está en el catálogo: se crea como copia que solo se usa en Análisis -->
+<button type="button" class="editor-link" aria-haspopup="dialog" (click)="openNewLevel()">+ {{ 'analisis.newLevel' | translate }}</button>
+
+<div class="ui-field">
+  <div class="editor-label-row">
+    <label class="ui-label" [for]="id('description')">{{ 'analisis.fieldDescription' | translate }} <span class="editor-required" aria-hidden="true">*</span></label>
+    <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="expandedField = 'description'">
+      <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg>
+      {{ 'analisis.expand' | translate }}
+    </button>
+  </div>
+  <textarea class="ui-textarea" rows="5" [id]="id('description')" [name]="id('description')" required [attr.aria-invalid]="missing('description')"
+            [(ngModel)]="occupation.description"></textarea>
+  <p *ngIf="missing('description')" class="editor-error">{{ 'analisis.required' | translate }}</p>
+  <p class="ui-hint editor-count">{{ occupation.description.length }} {{ 'analisis.characters' | translate }}</p>
+</div>
+
+<div class="ui-tabs editor-tabs" role="tablist" [attr.aria-label]="'analisis.editorTabsAria' | translate">
+  <button *ngFor="let tab of tabs" type="button" class="ui-tab editor-tab" role="tab" [id]="id('tab-' + tab.id)" [class.active]="activeTab === tab.id"
+          [attr.aria-selected]="activeTab === tab.id" [attr.aria-controls]="id('panel')" [title]="tab.titleKey | translate" (click)="activeTab = tab.id">
+    {{ tab.labelKey | translate }}
+  </button>
+</div>
+
+<div [id]="id('panel')" role="tabpanel" [attr.aria-labelledby]="id('tab-' + activeTab)">
+  <!-- General: información adicional -->
+  <details *ngIf="activeTab === 'general'" class="editor-details">
+    <summary>{{ 'analisis.additionalInfo' | translate }}</summary>
+    <div class="ui-field editor-extra">
+      <div class="editor-label-row">
+        <label class="ui-label" [for]="id('traceability')">{{ 'analisis.traceability' | translate }}</label>
+        <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="expandedField = 'traceability'">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7"/></svg>
+          {{ 'analisis.expand' | translate }}
+        </button>
+      </div>
+      <textarea class="ui-textarea" rows="5" [id]="id('traceability')" [name]="id('traceability')" [(ngModel)]="occupation.traceability"></textarea>
+    </div>
+  </details>
+
+  <!-- Funciones, Habilidades, Conocimientos, Denominaciones y Relacionadas: cada componente se despliega para editar su texto -->
+  <ng-container *ngIf="listKey">
+    <div class="editor-list-head">
+      <h4 class="ui-overline">{{ activeTitleKey | translate }}</h4>
+      <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" (click)="addItem()">+ {{ 'analisis.addItem' | translate }}</button>
+    </div>
+    <ul class="editor-items editor-scroll">
+      <li *ngFor="let item of items; let index = index" class="editor-item" [class.open]="expandedItem === item.code">
+        <div class="editor-item-head">
+          <span class="ui-badge ui-badge-neutral">{{ item.code }}</span>
+          <span class="editor-item-text">{{ item.text || ('analisis.emptyItem' | translate) }}</span>
+          <button type="button" class="ui-icon-btn" [attr.aria-expanded]="expandedItem === item.code" [title]="'analisis.editItem' | translate"
+                  [attr.aria-label]="('analisis.editItem' | translate) + ' ' + item.code" (click)="toggleItem(item.code)">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="expandedItem === item.code ? 'm6 15 6-6 6 6' : 'm6 9 6 6 6-6'"/></svg>
+          </button>
+          <button type="button" class="ui-icon-btn" [title]="'analisis.deleteItem' | translate" [attr.aria-label]="('analisis.deleteItem' | translate) + ' ' + item.code"
+                  (click)="removeItem(index)">
+            <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+          </button>
+        </div>
+        <textarea *ngIf="expandedItem === item.code" class="ui-textarea" rows="3" [name]="id(item.code)" [attr.aria-label]="item.code" [(ngModel)]="item.text"></textarea>
+      </li>
+    </ul>
+    <p *ngIf="!items.length" class="ui-hint">{{ 'analisis.noItems' | translate }}</p>
+  </ng-container>
+
+</div>
+
+<!-- "Ampliar": la descripción o la trazabilidad en un cuadro grande -->
+<div class="ui-modal-backdrop" *ngIf="expandedField as field" (click)="expandedField = null">
+  <section class="ui-modal ui-modal-wide" role="dialog" aria-modal="true" [attr.aria-labelledby]="id('expanded-title')" tabindex="-1"
+           appDialog (dialogEscape)="expandedField = null" (click)="$event.stopPropagation()">
+    <header class="ui-modal-header">
+      <h2 [id]="id('expanded-title')">{{ (field === 'description' ? 'analisis.fieldDescription' : 'analisis.traceability') | translate }} · {{ occupation.code }}</h2>
+    </header>
+    <div class="ui-modal-body">
+      <textarea class="ui-textarea" rows="14" [name]="id('expanded')" [attr.aria-labelledby]="id('expanded-title')" [(ngModel)]="occupation[field]"></textarea>
+      <p class="ui-hint editor-count">{{ occupation[field].length }} {{ 'analisis.characters' | translate }}</p>
+    </div>
+    <footer class="ui-modal-actions">
+      <button type="button" class="ui-btn ui-btn-primary" (click)="expandedField = null">{{ 'common.close' | translate }}</button>
+    </footer>
+  </section>
+</div>
+
+<!-- "+ Nuevo nivel para Análisis" -->
+<div class="ui-modal-backdrop" *ngIf="newLevel as level" (click)="closeNewLevel()">
+  <section class="ui-modal ui-modal-wide" role="dialog" aria-modal="true" [attr.aria-labelledby]="id('new-level-title')" tabindex="-1"
+           appDialog (dialogEscape)="closeNewLevel()" (click)="$event.stopPropagation()">
+    <header class="ui-modal-header">
+      <div class="ui-modal-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 12.5 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+      </div>
+      <div class="editor-level-heading">
+        <h2 [id]="id('new-level-title')">{{ 'analisis.levelTitle' | translate }}</h2>
+        <p>{{ 'analisis.levelRequiredNote' | translate }}</p>
+      </div>
+      <button type="button" class="ui-icon-btn" [title]="'common.close' | translate" [attr.aria-label]="'common.close' | translate" (click)="closeNewLevel()">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </header>
+
+    <form class="ui-modal-body" (submit)="saveLevel(); $event.preventDefault()">
+      <div class="ui-alert ui-alert-success">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <p>{{ 'analisis.levelCopyNote' | translate: { catalog: occupation.catalog } }}</p>
+      </div>
+
+      <h3 class="ui-overline editor-level-section">{{ 'analisis.levelData' | translate }}</h3>
+      <div class="ui-grid-2">
+        <div class="ui-field">
+          <label class="ui-label" [for]="id('new-level-code')">{{ 'analisis.code' | translate }}</label>
+          <input class="ui-input" type="text" [id]="id('new-level-code')" [name]="id('new-level-code')" disabled [value]="'analisis.levelCodePending' | translate"
+                 [attr.aria-describedby]="id('new-level-code-hint')">
+          <p class="ui-hint" [id]="id('new-level-code-hint')">{{ 'analisis.levelCodeHint' | translate }}</p>
+        </div>
+        <div class="ui-field">
+          <label class="ui-label" [for]="id('new-level-name')">{{ 'analisis.levelName' | translate }} <span class="editor-required" aria-hidden="true">*</span></label>
+          <input class="ui-input" type="text" [id]="id('new-level-name')" [name]="id('new-level-name')" required maxlength="120" [attr.aria-invalid]="!!newLevelError"
+                 [attr.aria-describedby]="id('new-level-name-hint')" [(ngModel)]="level.name" (ngModelChange)="newLevelError = null">
+          <p *ngIf="newLevelError" class="editor-error">{{ (newLevelError === 'taken' ? 'analisis.levelNameTaken' : 'analisis.required') | translate }}</p>
+          <p class="ui-hint" [id]="id('new-level-name-hint')">{{ 'analisis.levelNameHint' | translate }}</p>
+        </div>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" [for]="id('new-level-description')">{{ 'analisis.fieldDescription' | translate }}</label>
+        <textarea class="ui-textarea" rows="4" [id]="id('new-level-description')" [name]="id('new-level-description')" [maxlength]="levelDescriptionMax"
+                  [attr.aria-describedby]="id('new-level-description-hint')" [(ngModel)]="level.description"></textarea>
+        <div class="editor-label-row">
+          <p class="ui-hint" [id]="id('new-level-description-hint')">{{ 'analisis.levelDescriptionHint' | translate }}</p>
+          <p class="ui-hint">{{ level.description.length }} / {{ levelDescriptionMax }}</p>
+        </div>
+      </div>
+
+      <footer class="ui-modal-actions editor-level-actions">
+        <button type="button" class="ui-btn ui-btn-secondary" [disabled]="savingLevel" (click)="closeNewLevel()">{{ 'common.cancel' | translate }}</button>
+        <button type="submit" class="ui-btn ui-btn-primary" [disabled]="savingLevel">
+          {{ (savingLevel ? 'analisis.saving' : 'analisis.levelSave') | translate }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

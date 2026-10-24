@@ -1,0 +1,457 @@
+/* Instrumento 3: solo lo específico de la vista; campos, botones, etiquetas y tablas son los de ui.css. */
+:host {
+  display: block;
+  container-type: inline-size;
+
+  /* Tonos del formato: azul para lo que se lee, amarillo para las notas y naranja para el aviso. */
+  --i3-tint: rgba(31, 172, 227, 0.14);
+  --i3-tint-border: rgba(31, 172, 227, 0.35);
+  --i3-ink: #0b6a92;
+  --i3-note-bg: #fff9e6;
+  --i3-note-border: #f2dc8c;
+  --i3-note-ink: #6b5200;
+}
+
+.i3-header-main {
+  margin-bottom: 0;
+}
+
+.i3-header .ui-page-title {
+  color: var(--i3-ink);
+}
+
+.i3-header b {
+  font-weight: var(--fw-semibold);
+}
+
+/* ---------- Formulario: una sola tarjeta, con franjas de borde a borde ---------- */
+.i3-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 18px;
+  overflow: hidden;
+}
+
+.i3-form > * {
+  margin: 0 18px;
+}
+
+/* "Favor diligenciar las celdas sombreadas en gris" */
+.i3-form > .i3-strip {
+  margin: 0;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--i3-note-border);
+  background: var(--i3-note-bg);
+  color: var(--i3-note-ink);
+  font-style: italic;
+}
+
+/* ---------- Datos generales ---------- */
+.i3-general {
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.i3-general-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--neutral-100);
+  background: var(--neutral-50);
+}
+
+.i3-general-head h2 {
+  margin: 0;
+  color: var(--ui-text);
+  font-size: var(--fs-body) !important;
+}
+
+.i3-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 14px;
+  padding: 14px;
+}
+
+.i3-label {
+  color: var(--i3-ink);
+  font-size: calc(13px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.i3-required {
+  margin-left: 4px;
+  color: var(--state-error-fg);
+}
+
+.ui-input.invalid,
+.ui-select.invalid,
+.ui-textarea.invalid {
+  border-color: var(--state-error-fg);
+  box-shadow: 0 0 0 3px rgba(232, 28, 28, 0.12);
+}
+
+/* Los campos del formato son rectos, como casillas. */
+.i3-form .ui-input,
+.i3-form .ui-select,
+.i3-form .ui-textarea {
+  border-width: 1px;
+  border-radius: var(--border-radius);
+}
+
+/* ---------- Enlaces de referencia ---------- */
+.i3-references p {
+  margin: 0 0 8px;
+  color: var(--ui-text);
+  font-size: calc(14px * var(--type-scale));
+}
+
+.i3-references ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: calc(14px * var(--type-scale));
+}
+
+.i3-references li + li::before {
+  content: '•';
+  margin-right: 10px;
+  color: var(--neutral-400);
+}
+
+.i3-references a {
+  color: var(--i3-ink);
+  text-decoration: underline;
+}
+
+.i3-references a:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* "Por favor lea atentamente las casillas…" */
+.i3-orange {
+  padding: 10px 16px;
+  border: 1px solid #f5b971;
+  border-radius: var(--border-radius);
+  background: #fff1e0;
+  color: #9a4a00;
+  font-size: calc(14px * var(--type-scale));
+}
+
+/* ---------- Secciones ---------- */
+.i3-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.i3-section {
+  border: 1px solid var(--i3-tint-border);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+/* Título | lo que se pide (y, en las tres primeras, la casilla a la derecha). */
+.i3-srow {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+}
+
+.i3-srow-ctrl {
+  grid-template-columns: 190px minmax(0, 1fr) clamp(300px, 34%, 620px);
+}
+
+.i3-srow-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin: 0;
+  padding: 14px;
+  border-right: 1px solid var(--i3-tint-border);
+  background: #fff;
+  color: var(--i3-ink);
+  font-size: calc(14px * var(--type-scale)) !important;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.i3-srow-desc {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 14px;
+  background: var(--i3-tint);
+  color: var(--i3-ink);
+  font-size: calc(13px * var(--type-scale));
+  line-height: 1.45;
+}
+
+.i3-srow-control {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-left: 1px solid var(--i3-tint-border);
+  background: #fff;
+}
+
+.i3-scontent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-top: 1px solid var(--i3-tint-border);
+  background: #fff;
+}
+
+.i3-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.i3-item > .ui-input,
+.i3-item > .ui-textarea {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Papelera roja de cada casilla. */
+.i3-remove {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #f5b5b5;
+  border-radius: var(--border-radius);
+  background: var(--state-error-bg);
+  color: var(--state-error-fg);
+  cursor: pointer;
+}
+
+.i3-remove:hover:not(:disabled) {
+  background: #ffd6d6;
+}
+
+.i3-remove:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.i3-remove:focus-visible,
+.i3-add:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.i3-remove .ui-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* "+ Agregar…" a todo el ancho, con borde punteado. */
+.i3-add {
+  width: 100%;
+  padding: 10px;
+  border: 1px dashed var(--i3-tint-border);
+  border-radius: var(--border-radius);
+  background: var(--i3-tint);
+  color: var(--i3-ink);
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  text-align: center;
+  cursor: pointer;
+}
+
+.i3-add:hover:not(:disabled) {
+  background: rgba(31, 172, 227, 0.22);
+}
+
+.i3-add:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Notas amarillas ("Otras… ¿Cuáles?"). */
+.i3-note {
+  display: block;
+  margin: 2px 0 0;
+  padding: 8px 12px;
+  border: 1px solid var(--i3-note-border);
+  border-radius: var(--border-radius);
+  background: var(--i3-note-bg);
+  color: var(--i3-note-ink);
+  font-size: calc(13px * var(--type-scale));
+  line-height: 1.4;
+}
+
+/* ---------- Habilidades y conocimientos: dos columnas de casillas ---------- */
+.i3-chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.i3-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 12px;
+  border: 1px solid var(--i3-tint-border);
+  border-radius: 6px;
+  background: var(--i3-tint);
+  color: var(--ui-text);
+  font-size: calc(14px * var(--type-scale));
+  cursor: pointer;
+}
+
+.i3-chip input {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  accent-color: var(--i3-ink);
+}
+
+.i3-chip.on {
+  border-color: var(--i3-ink);
+  background: rgba(31, 172, 227, 0.26);
+  font-weight: var(--fw-semibold);
+}
+
+.i3-chip:focus-within {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* ---------- Acciones ---------- */
+.i3-form > .i3-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin: 2px 0 0;
+  padding: 16px 18px 0;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.i3-actions-note {
+  margin: 0;
+  color: var(--state-error-fg);
+}
+
+.i3-actions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* ---------- Pantallas angostas (según el ancho que deja el menú) ---------- */
+@container (max-width: 980px) {
+  /* La casilla de las tres primeras secciones baja debajo de la guía. */
+  .i3-srow-ctrl {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+
+  .i3-srow-control {
+    grid-column: 1 / -1;
+    border-left: 0;
+    border-top: 1px solid var(--i3-tint-border);
+  }
+}
+
+@container (max-width: 620px) {
+  .i3-form > * {
+    margin: 0 12px;
+  }
+
+  .i3-grid,
+  .i3-chips {
+    grid-template-columns: 1fr;
+  }
+
+  .i3-srow,
+  .i3-srow-ctrl {
+    grid-template-columns: 1fr;
+  }
+
+  .i3-srow-label {
+    border-right: 0;
+    border-bottom: 1px solid var(--i3-tint-border);
+    justify-content: flex-start;
+  }
+
+  .i3-actions-buttons,
+  .i3-actions-buttons .ui-btn {
+    width: 100%;
+  }
+
+  .i3-references ul {
+    flex-direction: column;
+  }
+
+  .i3-references li + li::before {
+    content: none;
+  }
+}
+
+/* ---------- Modo oscuro ---------- */
+:host-context(.shell.dark-mode) {
+  --i3-tint: rgba(31, 172, 227, 0.14);
+  --i3-tint-border: rgba(31, 172, 227, 0.4);
+  --i3-ink: #7fd3f5;
+  --i3-note-bg: rgba(253, 195, 0, 0.12);
+  --i3-note-border: rgba(253, 195, 0, 0.4);
+  --i3-note-ink: #f4dc8a;
+}
+
+:host-context(.shell.dark-mode) .i3-general,
+:host-context(.shell.dark-mode) .i3-general-head,
+:host-context(.shell.dark-mode) .i3-form > .i3-actions {
+  border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .i3-general-head {
+  background: var(--dark-recessed);
+}
+
+:host-context(.shell.dark-mode) .i3-srow-label,
+:host-context(.shell.dark-mode) .i3-srow-control,
+:host-context(.shell.dark-mode) .i3-scontent {
+  background: var(--dark-surface);
+}
+
+:host-context(.shell.dark-mode) .i3-orange {
+  background: rgba(245, 137, 0, 0.14);
+  border-color: rgba(245, 185, 113, 0.5);
+  color: #ffc98a;
+}
+
+:host-context(.shell.dark-mode) .i3-remove {
+  background: rgba(232, 28, 28, 0.16);
+  border-color: rgba(232, 28, 28, 0.5);
+  color: #ff8f8f;
+}
+
+:host-context(.shell.dark-mode) .i3-actions-note {
+  color: #ff8f8f;
+}
+
+/* ---------- Alto contraste ---------- */
+:host-context([data-high-contrast='true']) {
+  --i3-tint-border: var(--hc-border);
+  --i3-ink: var(--hc-fg);
+  --i3-note-border: var(--hc-border);
+  --i3-note-ink: var(--hc-fg);
+}
