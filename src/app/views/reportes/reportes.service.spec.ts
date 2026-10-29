@@ -6,19 +6,26 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ReportRecord, classify, coincidenceScore, evaluate } from './reportes.model';
+import { ReportRecord, classify, coincidenceScore, evaluate, gradeCounts } from './reportes.model';
 import { ReportesService } from './reportes.service';
 
-describe('Reportes: reglas de la versión desplegada', () => {
-  const states = (...values: Array<'aplica' | 'parcial' | 'requiere_ajuste' | 'no_aplica' | 'sin_dato'>) => values.map((state) => ({ state }));
+describe('Reportes: reglas del reporte', () => {
+  const states = (...values: Array<'aplica' | 'propuesta_mejora' | 'requiere_ajuste' | 'no_aplica' | 'sin_dato'>) => values.map((state) => ({ state }));
 
-  it('evaluates like evaluarCriterios', () => {
-    expect(evaluate(states('aplica', 'aplica'))).toBe('aprobado');
-    expect(evaluate(states('aplica', 'parcial'))).toBe('con_mejoras');
-    expect(evaluate(states('aplica', 'requiere_ajuste'))).toBe('con_mejoras');
-    expect(evaluate(states('aplica', 'no_aplica', 'parcial'))).toBe('parcial');
-    expect(evaluate(states('no_aplica', 'parcial'))).toBe('no_aprobado');
+  it('gives the result with the three real grades, like the verdict of the expert validation', () => {
+    expect(evaluate(states('aplica', 'aplica'))).toBe('aplica');
+    expect(evaluate(states('aplica', 'propuesta_mejora'))).toBe('propuesta_mejora');
+    // «Requiere ajuste» (de validaciones guardadas antes) cuenta como propuesta de mejora.
+    expect(evaluate(states('aplica', 'requiere_ajuste'))).toBe('propuesta_mejora');
+    // Con algún No aplica, el resultado es No aplica (es lo que hace que se pidan ajustes).
+    expect(evaluate(states('aplica', 'no_aplica', 'propuesta_mejora'))).toBe('no_aplica');
+    expect(evaluate(states('no_aplica'))).toBe('no_aplica');
     expect(evaluate(states('sin_dato'))).toBe('sin_evaluacion');
+    expect(gradeCounts(states('aplica', 'no_aplica', 'aplica', 'propuesta_mejora'))).toEqual([
+      { state: 'aplica', count: 2 },
+      { state: 'propuesta_mejora', count: 1 },
+      { state: 'no_aplica', count: 1 }
+    ]);
   });
 
   it('classifies by the share of «Aplica» and scores coincidence', () => {
@@ -26,7 +33,7 @@ describe('Reportes: reglas de la versión desplegada', () => {
     expect(classify(states('aplica', 'no_aplica'))).toBe('media');
     expect(classify(states('aplica', 'no_aplica', 'no_aplica', 'no_aplica'))).toBe('baja');
     expect(classify([])).toBe('sin_clasificar');
-    expect(coincidenceScore(states('aplica', 'parcial', 'no_aplica', 'requiere_ajuste'))).toBe(47.5);
+    expect(coincidenceScore(states('aplica', 'propuesta_mejora', 'no_aplica', 'requiere_ajuste'))).toBe(47.5);
   });
 });
 
@@ -105,12 +112,13 @@ describe('ReportesService', () => {
     expect(cno.criteria.map((item) => [item.family, item.n, item.state])).toEqual([
       ['name', 0, 'aplica'],
       ['area', 0, 'aplica'],
-      ['functions', 1, 'parcial'],
+      // «Con propuesta de mejora» se muestra como tal (ya no como «Parcial»).
+      ['functions', 1, 'propuesta_mejora'],
       ['functions', 2, 'aplica']
     ]);
-    expect(cno.evaluation).toBe('con_mejoras');
-    expect([cuoc.code, cuoc.catalog, cuoc.evaluation]).toEqual(['11110', 'CUOC', 'no_aprobado']);
-    expect(records[1].evaluation).toBe('parcial');
+    expect(cno.evaluation).toBe('propuesta_mejora');
+    expect([cuoc.code, cuoc.catalog, cuoc.evaluation]).toEqual(['11110', 'CUOC', 'no_aplica']);
+    expect(records[1].evaluation).toBe('no_aplica');
     expect(records[1].observations).toBe('Bien');
   });
 });

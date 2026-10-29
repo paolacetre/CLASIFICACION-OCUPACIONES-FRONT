@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { DialogDirective } from '../../../shared/dialog/dialog.directive';
 import { TranslationService } from '../../../shared/i18n/translation.service';
+import { ComboOption, FilterComboboxComponent } from '../../../shared/ui/filter-combobox.component';
 import {
   FileColumn,
   FileReview,
@@ -43,7 +44,7 @@ type Screen = 'form' | 'loading' | 'done' | 'error';
 @Component({
   selector: 'app-carga-cno',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClassTranslatePipe, DialogDirective],
+  imports: [CommonModule, FormsModule, ClassTranslatePipe, DialogDirective, FilterComboboxComponent],
   templateUrl: './carga-cno.component.html',
   styleUrl: './carga-cno.component.css'
 })
@@ -302,11 +303,11 @@ export class CargaCnoComponent {
   }
 
   /** Campos del sistema a los que se puede asignar una columna que no corresponde. */
-  get assignableFields(): { key: string; name: string }[] {
+  get assignableFields(): ComboOption[] {
     const review = this.review;
     if (!review) return [];
     const taken = new Set(review.allColumns.filter((column) => column.mapped).map((column) => column.mappedTo));
-    return review.columns.filter((column) => !taken.has(column.key)).map((column) => ({ key: column.key, name: column.name }));
+    return review.columns.filter((column) => !taken.has(column.key)).map((column) => ({ value: column.key, label: column.name }));
   }
 
   /** La asignación de esa columna la hizo quien carga (en «Configurar»). */

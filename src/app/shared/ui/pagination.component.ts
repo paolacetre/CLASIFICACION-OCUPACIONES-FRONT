@@ -2,6 +2,7 @@ import { NgFor } from '@angular/common';
 import { Component, computed, inject, input, output } from '@angular/core';
 import { TranslatePipe } from '../i18n/translate.pipe';
 import { TranslationService } from '../i18n/translation.service';
+import { ComboOption, FilterComboboxComponent } from './filter-combobox.component';
 import { PAGE_SIZES, pageCountOf, visiblePages } from './list';
 
 /**
@@ -20,7 +21,7 @@ import { PAGE_SIZES, pageCountOf, visiblePages } from './list';
 @Component({
   selector: 'nav[app-pagination]',
   standalone: true,
-  imports: [NgFor, TranslatePipe],
+  imports: [NgFor, TranslatePipe, FilterComboboxComponent],
   host: { class: 'ui-pagination', '[attr.aria-label]': 'label()' },
   template: `
     <span>{{ summaryKey() | translate: { from: rangeStart(), to: rangeEnd(), total: totalLabel() } }}</span>
@@ -35,10 +36,8 @@ import { PAGE_SIZES, pageCountOf, visiblePages } from './list';
               [attr.aria-label]="'common.next' | translate" (click)="go(page() + 1)">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
       </button>
-      <select class="ui-select ui-page-size" name="pageSize" [attr.aria-label]="sizeLabelKey() | translate"
-              (change)="changeSize($event)">
-        <option *ngFor="let size of pageSizes()" [value]="size" [selected]="size === pageSize()">{{ 'common.perPage' | translate: { count: size } }}</option>
-      </select>
+      <app-filter-combobox class="ui-page-size" [options]="sizeOptions()" [value]="'' + pageSize()" [showAll]="false"
+                           [ariaLabel]="sizeLabelKey() | translate" (valueChange)="pageSizeChange.emit(+$event)"></app-filter-combobox>
     </div>
   `
 })
@@ -78,7 +77,8 @@ export class PaginationComponent {
     if (target !== this.page()) this.pageChange.emit(target);
   }
 
-  changeSize(event: Event): void {
-    this.pageSizeChange.emit(Number((event.target as HTMLSelectElement).value));
+  /** «8 por página», «16 por página»…, en el idioma guardado. */
+  sizeOptions(): ComboOption[] {
+    return this.pageSizes().map((size) => ({ value: String(size), label: this.translation.translate('common.perPage', { count: size }) }));
   }
 }

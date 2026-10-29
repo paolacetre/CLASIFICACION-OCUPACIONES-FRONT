@@ -30,7 +30,7 @@ describe('AnalisisComponent', () => {
 
   /** Agrega una ocupación como lo hace el botón "Agregar" del buscador y espera a que los campos se llenen. */
   function add(catalog: AnalysisCatalog, code: string): void {
-    component.add({ catalog, code, name: '' });
+    component.add({ catalog, code, name: '', area: '' });
     refresh();
   }
 
@@ -98,6 +98,9 @@ describe('AnalisisComponent', () => {
     component.searchText = '211';
     component.onSearchChange();
     refresh(SEARCH_DEBOUNCE_MS);
+
+    // Debajo del nombre, la clasificación y el área a la que pertenece.
+    expect(compiled.querySelector('.analisis-result-meta')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(/^CNO · \S/);
 
     // Clic sobre el nombre (no sobre "Agregar"): la fila completa es el botón.
     (compiled.querySelectorAll('.analisis-result-name')[1] as HTMLElement).click();

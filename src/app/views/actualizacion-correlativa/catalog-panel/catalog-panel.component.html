@@ -33,17 +33,13 @@
   <div *ngIf="panel.filtersOpen()" class="cp-filters">
     <div class="ui-field">
       <label class="ui-label" [for]="side + '-area'">{{ 'actualizacionCorrelativa.area.' + side | translate }}</label>
-      <select class="ui-select" [id]="side + '-area'" [ngModel]="panel.area()" (ngModelChange)="panel.setArea($event)">
-        <option value="">{{ 'actualizacionCorrelativa.allAreas' | translate }}</option>
-        <option *ngFor="let area of panel.areas()" [value]="area">{{ area }}</option>
-      </select>
+      <app-filter-combobox [inputId]="side + '-area'" [options]="areaOptions()" [value]="panel.area()" [allLabel]="'actualizacionCorrelativa.allAreas' | translate"
+                           (valueChange)="panel.setArea($event)"></app-filter-combobox>
     </div>
     <div class="ui-field">
       <label class="ui-label" [for]="side + '-status'">{{ 'actualizacionCorrelativa.status' | translate }}</label>
-      <select class="ui-select" [id]="side + '-status'" [ngModel]="panel.status()" (ngModelChange)="panel.setStatus($event)">
-        <option value="">{{ 'actualizacionCorrelativa.allStatuses' | translate }}</option>
-        <option *ngFor="let status of statuses" [value]="status">{{ 'actualizacionCorrelativa.status.' + status | translate }}</option>
-      </select>
+      <app-filter-combobox [inputId]="side + '-status'" [options]="statusOptions()" [value]="panel.status()" [allLabel]="'actualizacionCorrelativa.allStatuses' | translate"
+                           (valueChange)="chooseStatus($event)"></app-filter-combobox>
     </div>
     <div class="cp-filters-actions">
       <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="panel.clearFilters()">{{ 'actualizacionCorrelativa.clear' | translate }}</button>
@@ -57,11 +53,14 @@
       {{ 'actualizacionCorrelativa.total' | translate: { count: format(panel.total()) } }}
     </span>
     <span class="ui-badge ui-badge-neutral">
-      {{ (panel.limit === 1 ? 'actualizacionCorrelativa.maxOne' : 'actualizacionCorrelativa.maxMany') | translate: { count: panel.limit } }}
+      {{ (panel.maxSelection === 1 ? 'actualizacionCorrelativa.maxOne' : 'actualizacionCorrelativa.maxMany') | translate: { count: panel.maxSelection } }}
     </span>
   </div>
 
-  <p *ngIf="panel.limitWarning()" class="ui-alert ui-alert-warn cp-limit" role="status">
+  <p *ngIf="panel.overLimit()" class="ui-alert ui-alert-warn cp-limit" role="status">
+    {{ 'actualizacionCorrelativa.overLimit' | translate: { count: panel.selectedCount(), limit: panel.maxSelection } }}
+  </p>
+  <p *ngIf="panel.limitWarning() && !panel.overLimit()" class="ui-alert ui-alert-warn cp-limit" role="status">
     {{ 'actualizacionCorrelativa.limitReached' | translate: { count: panel.limit } }}
   </p>
 

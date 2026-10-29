@@ -66,7 +66,7 @@ describe('Instrumento2Component', () => {
     expect(text('.ui-badge', rows()[1].querySelector('td:nth-child(7)')!)).toBe('Pendiente de envío');
     expect(text('.ui-pagination > span')).toBe('Mostrando 1 a 2 de 2 comparativas');
     expect(text('.ui-page-btn.active')).toBe('1');
-    expect(text('.ui-page-size option')).toBe('8 por página');
+    expect(text('.ui-page-size .fc-value')).toBe('8 por página');
   });
 
   it('should change tab from an indicator or a tab, and only let send what is pending', () => {
@@ -124,13 +124,23 @@ describe('Instrumento2Component', () => {
     rows()[1].click();
     refresh();
     expect(rows()[1].classList.contains('open')).toBeTrue();
-    expect(text('.i2-occupations .ui-overline')).toBe('2 ocupaciones en este instrumento');
+    // Como la versión desplegada, el detalle se abre justo debajo de su fila, no al final de la tabla.
+    expect(rows()[1].nextElementSibling?.classList.contains('i2-detail-row')).toBeTrue();
+    expect(compiled.querySelectorAll('.i2-detail-row').length).toBe(1);
+    expect(text('.i2-occupations-label')).toBe('2 ocupaciones en este instrumento:');
     expect(texts('.i2-chip-code')).toEqual(['2111', '21110']);
     expect(text('.i2-detail-name')).toBe('Físicos y astrónomos');
     expect(texts('.i2-info dd')).toEqual(['Pendiente de envío', 'admin@sena.edu.co', '22/09/2026', 'Nivel 1', 'Ciencias Naturales']);
-    expect(texts('.i2-sections .i2-tab')).toEqual(['Información general', 'Descripción', 'Funciones 2', 'Denominaciones 1', 'Habilidades 0', 'Conocimientos 1', 'Ocupaciones relacionadas 0', 'Trazabilidad']);
+    expect(texts('.i2-sections .i2-tab')).toEqual(['Información general', 'Funciones 2', 'Denominaciones 1', 'Habilidades 0', 'Conocimientos 1', 'Ocupaciones relacionadas 0', 'Trazabilidad']);
+    // Datos básicos en dos columnas de «etiqueta … valor», con la fecha de inactividad.
+    expect(texts('.i2-rows dt')).toEqual([
+      'Código', 'Nombre', 'Nivel de cualificación', 'Área de desempeño', 'Fecha de registro', 'Fecha de inactividad', 'Estado', 'Analista', 'Trazabilidad'
+    ]);
     expect(texts('.i2-stats li')).toEqual(['2 Funciones', '1 Denominaciones', '0 Habilidades', '1 Conocimientos']);
-    expect(text('.i2-notice')).toContain('Para realizar cambios, regrese al módulo de Análisis.');
+    // La descripción y la observación del analista van en el resumen.
+    expect(text('.i2-observation .i2-text')).toBe('Revisar el nivel de cualificación.');
+    expect(text('.i2-detail-head .ui-btn-outline')).toBe('Editar en Comparativa');
+    expect(text('.i2-notice')).toBe('Para corregir algo usa «Editar en Comparativa»: al guardar, los cambios vuelven directamente aquí.');
     // Solo lectura: nada que escribir.
     expect(compiled.querySelector('.i2-detail input, .i2-detail textarea')).toBeNull();
 
@@ -140,9 +150,6 @@ describe('Instrumento2Component', () => {
     button('Habilidades', compiled.querySelector('.i2-sections')!).click();
     fixture.detectChanges();
     expect(text('.i2-detail-body .ui-hint')).toBe('Sin registros en esta sección.');
-    button('Descripción', compiled.querySelector('.i2-sections')!).click();
-    fixture.detectChanges();
-    expect(text('.i2-observation .i2-text')).toBe('Revisar el nivel de cualificación.');
 
     // Otra ocupación del mismo instrumento: vuelve a la sección general.
     (compiled.querySelectorAll('.i2-chip')[1] as HTMLButtonElement).click();
@@ -205,9 +212,41 @@ describe('Instrumento2Component', () => {
     expect(compiled.querySelector('.i2-send-modal')).toBeNull();
     expect(texts('.i2-kpi strong')).toEqual(['1', '2', '1', '4', '5']);
     expect(rows().length).toBe(1);
-    // El detalle abierto muestra su nuevo estado y ya no deja enviar.
+    // La enviada salió de «Pendientes»: su detalle, que se abre bajo su fila, se cierra con ella.
+    expect(component.openId).toBeNull();
+    expect(compiled.querySelector('.i2-detail')).toBeNull();
+    // En «Todas» aparece con su nuevo estado y su detalle ya no deja enviar.
+    component.setTab('all');
+    refresh();
+    const sentRow = rows().find((row) => row.textContent?.includes('En validación experta'))!;
+    sentRow.click();
+    refresh(MOCK_LATENCY_MS);
     expect(texts('.i2-info dd')[0]).toBe('En validación experta');
     expect(button('Enviar a experto', compiled.querySelector('.i2-detail')!).disabled).toBeTrue();
+    expect(text('.i2-notice')).toContain('ya salió a validación experta');
+  }));
+
+  it('should list every expert the server returns, with name and email, and select them all at once', fakeAsync(() => {
+    // Como la versión desplegada, con cinco expertos (datos de prueba).
+    const service = TestBed.inject(Instrumento2Service) as unknown as FakeInstrumento2Service;
+    service.availableExperts = [
+      { id: 21, name: 'Ana Prueba', email: 'ana.prueba@sena.edu.co' },
+      { id: 22, name: 'Beatriz Prueba', email: 'beatriz.prueba@sena.edu.co' },
+      { id: 23, name: 'Carlos Prueba', email: 'carlos.prueba@sena.edu.co' },
+      { id: 24, name: 'Experto Sena', email: 'experto@sena.edu.co' },
+      { id: 25, name: 'Lucía Prueba', email: 'lucia.prueba@sena.edu.co' }
+    ];
+    component.requestSend([4]);
+    refresh();
+    const modal = compiled.querySelector('.i2-send-modal') as HTMLElement;
+    expect(texts('.i2-send-expert-text span', modal)).toEqual(['Ana Prueba', 'Beatriz Prueba', 'Carlos Prueba', 'Experto Sena', 'Lucía Prueba']);
+    expect(texts('.i2-send-expert-text small', modal)).toEqual(service.availableExperts.map((expert) => expert.email));
+    expect(text('.i2-send-all', modal)).toBe('Seleccionar todos (5)');
+
+    (modal.querySelector('.i2-send-all input') as HTMLInputElement).click();
+    refresh();
+    expect(component.allExpertsChosen).toBeTrue();
+    expect(Array.from(modal.querySelectorAll<HTMLInputElement>('.i2-send-expert input')).every((input) => input.checked)).toBeTrue();
   }));
 
   it('should close the send dialog without sending', fakeAsync(() => {

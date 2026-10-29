@@ -3,6 +3,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { MOCK_LATENCY_MS } from '../../../shared/api/mock-api';
 import { clearTestSession, startTestSession } from '../../../shared/auth/session.testing';
+import { comboChoices, comboPick } from '../../../shared/ui/filter-combobox.testing';
 import { todayIso } from '../actualizacion-cno.model';
 import { ActualizacionCnoService } from '../actualizacion-cno.service';
 import { FakeActualizacionCnoService } from '../actualizacion-cno.testing';
@@ -39,7 +40,7 @@ describe('OcupacionWizardComponent', () => {
   const type = (selector: string, value: string) => {
     const input = compiled.querySelector(selector) as HTMLInputElement;
     input.value = value;
-    input.dispatchEvent(new Event(input.tagName === 'SELECT' ? 'change' : 'input'));
+    input.dispatchEvent(new Event('input'));
   };
   /** Abre la lista de un buscador y elige la opción con ese texto. */
   const pick = (placeholder: string, label: string) => {
@@ -55,8 +56,8 @@ describe('OcupacionWizardComponent', () => {
   function fillBasic(code = '1254'): void {
     type('#ow-code', code);
     type('#ow-name', 'Analistas de datos');
-    type('#ow-area', '1');
-    type('#ow-level', '2');
+    comboPick(fixture, 'ow-area', '1');
+    comboPick(fixture, 'ow-level', '2');
     type('#ow-traceability', 'Resolución 001');
     type('#ow-description', 'Analizan datos para apoyar decisiones.');
     fixture.detectChanges();
@@ -70,8 +71,8 @@ describe('OcupacionWizardComponent', () => {
     expect(text('.ow-status strong')).toBe('Activo');
     expect(text('.ow-pending')).toBe('Faltan 6 campos por completar');
     // Como la versión desplegada: "código · nombre".
-    expect(texts('#ow-area option')).toEqual(['Selecciona un área', '0 · Dirección y Gerencia', '1 · Finanzas y Administración', '3 · Salud']);
-    expect(texts('#ow-level option')[2]).toBe('1 · Nivel 1 (A) - Profesionales');
+    expect(comboChoices(fixture, 'ow-area')).toEqual(['Selecciona un área', '0 · Dirección y Gerencia', '1 · Finanzas y Administración', '3 · Salud']);
+    expect(comboChoices(fixture, 'ow-level')[2]).toBe('1 · Nivel 1 (A) - Profesionales');
   });
 
   it('should explain what is missing and not advance until the step is complete', () => {

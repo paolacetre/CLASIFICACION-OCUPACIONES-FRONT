@@ -28,10 +28,27 @@ describe('ReportesComponent', () => {
     fixture.debugElement.query((node) => node.componentInstance instanceof type)?.componentInstance as T | undefined;
 
   it('shows the indicators and the full report with its 17 columns', fakeAsync(() => {
-    expect(Array.from(el.querySelectorAll('.rp-kpi-count')).map((node) => node.textContent?.trim())).toEqual(['1', '0', '1', '0']);
+    // Los indicadores van con las tres calificaciones reales (ya no Aprobados / Con mejoras / Parciales / No aprobados).
+    expect(Array.from(el.querySelectorAll('.rp-kpi-label')).map((node) => node.textContent?.trim())).toEqual(['Aplica', 'Con propuesta de mejora', 'No aplica']);
+    expect(Array.from(el.querySelectorAll('.rp-kpi-count')).map((node) => node.textContent?.trim())).toEqual(['1', '0', '1']);
+    // «Estado de evaluación» muestra solo el resultado final; los conteos por calificación van en las fichas.
+    const firstRow = el.querySelectorAll('.rp-table tbody tr')[0];
+    expect(firstRow.querySelector('.rp-result')?.textContent?.trim()).toBe('No aplica');
+    expect(firstRow.querySelector('.rp-grade-count')).toBeNull();
     expect(el.querySelector('.rp-count-pill')?.textContent).toContain('2 registros');
     expect(el.querySelectorAll('.rp-table thead th').length).toBe(17);
+    // El contador de la pestaña es el de registros (antes mostraba las 17 columnas y se confundía).
+    expect(el.querySelector('.rp-view-tab')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Reporte completo2');
+    expect(el.querySelector('.rp-view-tab .rp-badge-count')?.textContent).toBe('2');
     expect(el.querySelector('.rp-table tbody tr .rp-chip')?.textContent).toContain('2126');
+
+    comp.view = 'cards';
+    fixture.detectChanges();
+    expect(Array.from(el.querySelectorAll('.rp-grade-count')).slice(0, 3).map((node) => node.textContent?.trim())).toEqual([
+      '3 Aplica',
+      '1 Con propuesta de mejora',
+      '2 No aplica'
+    ]);
   }));
 
   it('filters by department and by coincidence, and searches by occupation', fakeAsync(() => {
@@ -43,7 +60,7 @@ describe('ReportesComponent', () => {
 
     comp.openFilters();
     comp.clearFilters();
-    comp.draftFilters.coincidence = 'parcial';
+    comp.draftFilters.coincidence = 'propuesta_mejora';
     comp.applyFilters();
     expect(comp.filtered.map((record) => record.group)).toEqual([6]);
 

@@ -6,6 +6,7 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { TranslatePipe } from '../../shared/i18n/translate.pipe';
 import { TranslationService } from '../../shared/i18n/translation.service';
 import { DialogDirective } from '../../shared/dialog/dialog.directive';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../shared/ui/filter-combobox.component';
 import { SessionStore } from '../../shared/auth/session.store';
 import { backendRoleOf } from '../../shared/session';
 import {
@@ -52,6 +53,17 @@ export interface RoleSection {
   active: number;
   inactive: number;
 }
+
+/** Indicadores de la cabecera de la lista. */
+type UsersKpi = 'total' | 'active' | 'inactive' | 'excel';
+
+/** Íconos de los indicadores (trazos SVG). */
+const KPI_ICONS: Record<UsersKpi, string> = {
+  total: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  active: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3',
+  inactive: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM4.93 4.93l14.14 14.14',
+  excel: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M9 13l6 6M15 13l-6 6'
+};
 
 /** Errores del servicio y el texto que los explica. */
 const ERROR_KEYS: Record<string, string> = {
@@ -101,7 +113,7 @@ class UserConfirmation {
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DialogDirective],
+  imports: [CommonModule, FormsModule, TranslatePipe, DialogDirective, FilterComboboxComponent],
   templateUrl: './usuarios.component.html',
   styleUrl: './usuarios.component.css'
 })
@@ -125,6 +137,7 @@ export class UsuariosComponent {
 
   /** Roles que se pueden asignar (los del backend). */
   readonly assignableRoles = USER_ROLES;
+  readonly roleOptions = comboOptions(USER_ROLES, (role) => role);
   readonly roles = ['Todos', ...USER_ROLES];
   readonly statuses = ['Todos', 'Activo', 'Inactivo'] as const;
   readonly origins = ['Todos', 'Manual', 'Excel'] as const;
@@ -227,6 +240,57 @@ export class UsuariosComponent {
 
   countBy(field: 'role' | 'status' | 'origin', value: string) {
     return this.users.filter((user) => user[field] === value).length;
+  }
+
+  /** Indicadores de arriba: total, activos, inactivos e importados de Excel. */
+  get kpis(): Array<{ key: UsersKpi; labelKey: string; count: number; icon: string }> {
+    return [
+      { key: 'total', labelKey: 'usuarios.kpiTotal', count: this.users.length, icon: KPI_ICONS.total },
+      { key: 'active', labelKey: 'usuarios.kpiActive', count: this.countBy('status', 'Activo'), icon: KPI_ICONS.active },
+      { key: 'inactive', labelKey: 'usuarios.kpiInactive', count: this.countBy('status', 'Inactivo'), icon: KPI_ICONS.inactive },
+      { key: 'excel', labelKey: 'usuarios.kpiExcel', count: this.countBy('origin', 'Excel'), icon: KPI_ICONS.excel }
+    ];
+  }
+
+  /** El indicador que corresponde a los filtros puestos («Usuarios» cuando no hay ninguno). */
+  isKpiActive(key: UsersKpi): boolean {
+    switch (key) {
+      case 'total':
+        return !this.hasActiveFilters;
+      case 'active':
+        return this.selectedStatus === 'Activo';
+      case 'inactive':
+        return this.selectedStatus === 'Inactivo';
+      case 'excel':
+        return this.selectedOrigin === 'Excel';
+    }
+  }
+
+  /** Clic en un indicador: filtra por lo que cuenta (otro clic lo quita); «Usuarios» quita todos los filtros. */
+  applyKpi(key: UsersKpi): void {
+    if (key === 'total') {
+      this.searchTerm = '';
+      this.selectedRole = 'Todos';
+      this.selectedStatus = 'Todos';
+      this.selectedOrigin = 'Todos';
+    } else if (key === 'excel') {
+      this.setOrigin('Excel');
+    } else {
+      this.setStatus(key === 'active' ? 'Activo' : 'Inactivo');
+    }
+  }
+
+  /** Opciones de los desplegables de filtro, cada una con cuántos usuarios tiene («Analista (1)»). */
+  roleFilterOptions(): ComboOption[] {
+    return USER_ROLES.map((role) => ({ value: role, label: `${role} (${this.countBy('role', role)})` }));
+  }
+
+  originFilterOptions(): ComboOption[] {
+    return (['Manual', 'Excel'] as const).map((origin) => ({ value: origin, label: `${this.originLabel(origin)} (${this.countBy('origin', origin)})` }));
+  }
+
+  statusFilterOptions(): ComboOption[] {
+    return (['Activo', 'Inactivo'] as const).map((status) => ({ value: status, label: `${this.statusLabel(status)} (${this.countBy('status', status)})` }));
   }
 
   /** Texto de un botón de filtro por rol: el nombre del rol, o "Todos". */

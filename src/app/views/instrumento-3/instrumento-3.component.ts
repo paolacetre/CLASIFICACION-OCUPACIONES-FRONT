@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, Injector, OnInit, afterNextRender, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { TranslatePipe } from '../../shared/i18n/translate.pipe';
 import { TranslationService } from '../../shared/i18n/translation.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog.component';
-import { AREAS, KNOWLEDGE, LEVELS, REFERENCE_LINKS, SECTORS, SKILLS } from './instrumento-3.catalogs';
-import { Informant, Proposal, ProposalDraft, RequiredField, SelectOption, applyInformant, createEmptyDraft, missingFields } from './instrumento-3.model';
+import { FilterComboboxComponent } from '../../shared/ui/filter-combobox.component';
+import { REFERENCE_LINKS, SECTORS } from './instrumento-3.catalogs';
+import { Informant, Instrument3Catalogs, Proposal, ProposalDraft, RequiredField, SelectOption, applyInformant, createEmptyDraft, missingFields } from './instrumento-3.model';
 import { INVALID_PROPOSAL, Instrumento3Service, PROPOSAL_LOCKED, SAVED_NOT_SENT, SavedNotSentError } from './instrumento-3.service';
 
 export * from './instrumento-3.model';
@@ -17,6 +18,9 @@ export type ItemList = 'functions' | 'denominations' | 'relatedOccupations';
 
 /** Listas de opciones que se marcan. */
 export type ChoiceList = 'skills' | 'knowledge';
+
+/** Habilidades y conocimientos que no están en el catálogo: un campo por cada «+ Agregar». */
+export type OtherList = 'otherSkills' | 'otherKnowledge';
 
 /**
  * Vista "Instrumento 3" del proyecto (Diligenciamiento): el formulario de
@@ -28,7 +32,7 @@ export type ChoiceList = 'skills' | 'knowledge';
 @Component({
   selector: 'app-instrumento-3',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, ConfirmDialogComponent, FilterComboboxComponent],
   templateUrl: './instrumento-3.component.html',
   styleUrl: './instrumento-3.component.css'
 })
@@ -36,11 +40,15 @@ export class Instrumento3Component implements OnInit {
   private readonly instrumento3Service = inject(Instrumento3Service);
   private readonly toastService = inject(ToastService);
   private readonly translationService = inject(TranslationService);
+  private readonly injector = inject(Injector);
 
   readonly sectors = SECTORS;
-  readonly areas = AREAS;
-  readonly levels = LEVELS;
   readonly referenceLinks = REFERENCE_LINKS;
+
+  /** Área, nivel, habilidades y conocimientos del catálogo CNO del servidor (se piden al abrir la vista). */
+  catalogs: Instrument3Catalogs = { areas: [], levels: [], skills: [], knowledge: [] };
+  catalogsLoading = true;
+  catalogsError = false;
 
   /** Departamentos y sus municipios: el catálogo es grande y se carga aparte al abrir la vista. */
   departments: SelectOption[] = [];
@@ -59,13 +67,23 @@ export class Instrumento3Component implements OnInit {
   confirmSend = false;
 
   /**
-   * Llena los datos generales con el perfil del analista que recuerda el servidor y carga aparte el catálogo de departamentos y
-   * municipios.
+   * Llena los datos generales con el perfil del analista que recuerda el servidor, pide el catálogo de áreas, niveles,
+   * habilidades y conocimientos, y carga aparte el de departamentos y municipios.
    */
   ngOnInit(): void {
     this.instrumento3Service.informant().subscribe((informant) => {
       this.informant = informant;
       this.draft = applyInformant(this.draft, informant);
+    });
+    this.instrumento3Service.catalogs().subscribe({
+      next: (catalogs) => {
+        this.catalogs = catalogs;
+        this.catalogsLoading = false;
+      },
+      error: () => {
+        this.catalogsLoading = false;
+        this.catalogsError = true;
+      }
     });
     void import('./geografia').then(({ DEPARTAMENTOS, MUNICIPIOS_POR_DEPARTAMENTO }) => {
       this.departments = DEPARTAMENTOS;
@@ -77,9 +95,12 @@ export class Instrumento3Component implements OnInit {
     return this.municipalitiesByDepartment[this.draft.department] ?? [];
   }
 
-  /** Al cambiar de departamento, el municipio elegido deja de valer. */
-  onDepartmentChange(): void {
-    this.draft.municipality = '';
+  /** Al cambiar de departamento, el municipio elegido deja de valer (volver a elegir el mismo lo conserva). */
+  chooseDepartment(department: string): void {
+    if (department !== this.draft.department) {
+      this.draft.department = department;
+      this.draft.municipality = '';
+    }
   }
 
   /** Campos obligatorios que faltan para enviar. */
@@ -108,7 +129,19 @@ export class Instrumento3Component implements OnInit {
   }
 
   choices(list: ChoiceList): string[] {
-    return list === 'skills' ? SKILLS : KNOWLEDGE;
+    return this.catalogs[list];
+  }
+
+  /** «+ Agregar»: abre un campo nuevo para una habilidad o un conocimiento que no está en el catálogo y lo deja listo para escribir. */
+  addOther(list: OtherList): void {
+    this.draft[list] = [...this.draft[list], ''];
+    const index = this.draft[list].length - 1;
+    // Con eventos agrupados, Angular pinta después de un `setTimeout`: hay que esperar a que el campo exista.
+    afterNextRender(() => document.getElementById(`i3-${list}-${index}`)?.focus(), { injector: this.injector });
+  }
+
+  removeOther(list: OtherList, index: number): void {
+    this.draft[list] = this.draft[list].filter((_, position) => position !== index);
   }
 
   isChosen(list: ChoiceList, option: string): boolean {
@@ -180,8 +213,8 @@ export class Instrumento3Component implements OnInit {
 
   /** Los datos generales recién guardados son los que el servidor recordará para la siguiente propuesta. */
   private rememberInformant(saved: Proposal): void {
-    const { fullName, email, phone, department, municipality, organization, position, profession, sector } = saved;
-    this.informant = { fullName, email, phone, department, municipality, organization, position, profession, sector };
+    const { fullName, email, phone, department, municipality, organization, position, sector } = saved;
+    this.informant = { fullName, email, phone, department, municipality, organization, position, sector };
   }
 
   /** Bloquea los botones mientras el servidor responde y explica el error. */

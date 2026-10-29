@@ -2,8 +2,35 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { MOCK_LATENCY_MS, clone, mockResponse } from '../../shared/api/mock-api';
 import { SESSION } from '../../shared/session';
-import { Informant, Proposal, ProposalDraft, createEmptyDraft, isEditable, isValidEmail } from './instrumento-3.model';
+import { Informant, Instrument3Catalogs, Proposal, ProposalDraft, createEmptyDraft, isEditable, isValidEmail } from './instrumento-3.model';
 import { INVALID_PROPOSAL, Instrumento3Service, PROPOSAL_LOCKED, PROPOSAL_NOT_FOUND, SavedNotSentError } from './instrumento-3.service';
+
+/** Catálogo de prueba con el formato que arma el servicio (las diez áreas y los cuatro niveles CNO, y una muestra del resto). */
+export function createTestCatalogs(): Instrument3Catalogs {
+  const options = (labels: string[]) => labels.map((label) => ({ value: label, label }));
+  return {
+    areas: options([
+      '0. Dirección y Gerencia',
+      '1. Finanzas y Administración',
+      '2. Ciencias Naturales, Aplicadas y Relacionadas',
+      '3. Salud',
+      '4. Ciencias Sociales, Educación, Gobierno y Religión',
+      '5. Arte, Cultura, Esparcimiento y Deporte',
+      '6. Ventas y Servicios',
+      '7. Explotación primaria y extractiva',
+      '8. Operación de Equipos, Transporte y Oficios',
+      '9. Procesamiento, Fabricación y Ensamble'
+    ]),
+    levels: options([
+      'Nivel 1 (A) - Profesionales, Dirección y Gerencia',
+      'Nivel 2 (B) - Tecnicos y supervisores',
+      'Nivel 3,4 (C) - Auxiliares y operativos',
+      'Nivel 6 (D) - Obreros y ayudantes'
+    ]),
+    skills: ['Comunicación asertiva', 'Liderazgo', 'Orientación al Servicio', 'Pensamiento crítico', 'Trabajo en equipo'],
+    knowledge: ['Administración y gerencia', 'Matemáticas', 'Primeros auxilios básicos', 'Servicio al cliente']
+  };
+}
 
 /** Propuestas de prueba: un borrador, una guardada y una que ya tiene el experto. */
 export function createTestProposals(): Proposal[] {
@@ -15,17 +42,16 @@ export function createTestProposals(): Proposal[] {
     municipality: '05001',
     organization: 'SENA',
     position: 'Analista',
-    profession: 'Economista',
     sector: 'salud',
-    area: '3',
-    level: 'nivel2',
+    area: '3. Salud',
+    level: 'Nivel 2 (B) - Tecnicos y supervisores',
     description: 'Apoya la atención de pacientes en servicios de salud.',
     functions: ['Recibir a los pacientes', 'Registrar la atención'],
     denominations: ['Auxiliar de atención en salud'],
     relatedOccupations: ['3311 - Auxiliares de enfermería'],
-    skills: ['Trabajo en equipo', 'Orientación al servicio'],
+    skills: ['Trabajo en equipo', 'Orientación al Servicio'],
     knowledge: ['Servicio al cliente'],
-    otherKnowledge: 'Primeros auxilios'
+    otherKnowledge: ['Primeros auxilios']
   };
   return [
     { ...base, id: 1, state: 'ENVIADO_EXPERTO', analyst: 'analista@sena.edu.co', occupationName: 'Gestores de telesalud' },
@@ -49,6 +75,13 @@ export class FakeInstrumento3Service implements Pick<Instrumento3Service, keyof 
 
   informant(): Observable<Informant | null> {
     return mockResponse(() => clone(this.remembered));
+  }
+
+  /** Catálogo que "el servidor" entrega; las pruebas lo revisan. */
+  readonly catalogsData = createTestCatalogs();
+
+  catalogs(): Observable<Instrument3Catalogs> {
+    return mockResponse(() => clone(this.catalogsData));
   }
 
   /** Lo guardado hasta ahora (solo para comprobarlo en las pruebas; el servicio real no lista). */

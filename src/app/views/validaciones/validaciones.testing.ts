@@ -25,6 +25,8 @@ export function createTestRecords(): ReviewRecord[] {
 /** Ítem como lo arma el servicio desde el snapshot: `<copia>::<campo>` («funcion_2» si el campo se repite). */
 const item = (occupation: string, section: ReviewItem['section'], n: number, key: string, value: string, numberedItem = true, criterion = 5): ReviewItem => {
   const field = numberedItem ? `${key}_${n}` : key;
+  // «F-2126.01 - Planificar…»: el código va aparte, como lo entrega el snapshot.
+  const [, code = '', text = value] = /^(\S+) - (.*)$/.exec(value) ?? [];
   return {
     id: `${occupation}::${field}`,
     field,
@@ -34,6 +36,8 @@ const item = (occupation: string, section: ReviewItem['section'], n: number, key
     n: numberedItem ? n : undefined,
     criterion,
     value,
+    code,
+    text,
     inactive: false
   };
 };
@@ -51,8 +55,8 @@ export function createTestOccupations(): ReviewOccupation[] {
       items: [
         item('2126', 'info', 1, 'name', 'Agroecólogos', false, 1),
         item('2126', 'info', 2, 'description', 'Estudian los agroecosistemas.', false, 4),
-        item('2126', 'functions', 1, 'function', 'Diseñar sistemas de producción sostenibles.'),
-        item('2126', 'functions', 2, 'function', 'Asesorar a productores.'),
+        item('2126', 'functions', 1, 'function', 'F-2126.01 - Diseñar sistemas de producción sostenibles.'),
+        item('2126', 'functions', 2, 'function', 'F-2126.02 - Asesorar a productores.'),
         item('2126', 'skills', 1, 'skill', 'Pensamiento crítico.')
       ]
     },

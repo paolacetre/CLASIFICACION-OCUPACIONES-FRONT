@@ -3,39 +3,348 @@
   width: 100%;
 }
 
-.users-view-wrapper {
-  max-width: 1280px;
-  margin: 0 auto;
-}
-
-.page-heading {
+/* ---------- Vista principal: una tarjeta con encabezado, indicadores, filtros y la lista (piezas ui- como el resto de la app) ---------- */
+.users-card {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 24px;
+  flex-direction: column;
+  gap: 18px;
+  container: users-card / inline-size;
 }
 
-.eyebrow {
-  font-size: var(--fs-body);
-  letter-spacing: 1.4px;
-  font-weight: var(--fw-regular);
-  color: #525252;
-  margin: 0 0 8px;
+.users-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--neutral-100);
 }
 
-.page-heading h1 {
-  font-size: var(--fs-title);
-  line-height: 1.05;
-  margin: 0 0 8px;
-  letter-spacing: -0.8px;
+.users-header-text {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.users-eyebrow {
+  margin: 0 0 2px;
+  color: var(--accent-color-hover);
+  font-size: calc(12px * var(--type-scale));
   font-weight: var(--fw-semibold);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
-.subtitle {
-  color: #525252;
+.users-header-text .ui-page-title {
   margin: 0;
-  font-size: var(--fs-body);
 }
+
+.users-header-text .ui-page-subtitle {
+  margin: 4px 0 0;
+}
+
+.users-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.users-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+  font-size: calc(14px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+
+.users-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* «Importar Excel» es un <label> con el archivo dentro: se ve como los demás botones. */
+.import-button {
+  cursor: pointer;
+}
+
+.import-button:focus-within {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.import-button.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Indicadores: número grande arriba y lo que cuenta debajo; el que coincide con el filtro queda resaltado. */
+.users-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.users-kpi {
+  --kpi-fg: var(--accent-color-hover);
+  --kpi-bg: var(--accent-color-soft);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.users-kpi:hover {
+  border-color: var(--kpi-fg);
+}
+
+.users-kpi.active {
+  border-color: var(--kpi-fg);
+  box-shadow: 0 0 0 1px var(--kpi-fg) inset;
+}
+
+.users-kpi:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+.users-kpi-active {
+  --kpi-fg: var(--state-ok-fg);
+  --kpi-bg: var(--state-ok-bg);
+}
+
+.users-kpi-inactive {
+  --kpi-fg: var(--state-error-fg);
+  --kpi-bg: var(--state-error-bg);
+}
+
+.users-kpi-excel {
+  --kpi-fg: #0c7fb0;
+  --kpi-bg: color-mix(in srgb, var(--brand-blue) 12%, #fff);
+}
+
+.users-kpi-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--kpi-bg);
+  color: var(--kpi-fg);
+}
+
+.users-kpi-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.users-kpi-count {
+  color: var(--ui-text);
+  font-size: calc(26px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  line-height: 1.1;
+}
+
+.users-kpi-label {
+  color: var(--neutral-700);
+  font-size: calc(14px * var(--type-scale));
+}
+
+/* Búsqueda ancha y los tres filtros en la misma fila. */
+.users-filters {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(160px, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+
+.users-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: -6px;
+}
+
+.users-results .ui-hint {
+  margin: 0;
+}
+
+/* ---------- Lista: una tabla, encabezado una vez y un grupo por rol ---------- */
+.users-table-wrap {
+  background: #fff;
+}
+
+.users-table th {
+  padding: 12px 18px;
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.6px;
+}
+
+.users-table td {
+  padding: 10px 18px;
+}
+
+.users-table th:nth-child(1) { width: 46%; }
+.users-table th:nth-child(2) { width: 16%; }
+.users-table th:nth-child(3) { width: 12%; }
+
+.users-table .col-actions {
+  text-align: right;
+}
+
+/* Fila de grupo: el rol con sus contadores, sobre los usuarios de ese rol. */
+.users-table .role-row th {
+  padding: 10px 18px;
+  border-top: 1px solid var(--neutral-100);
+  background: color-mix(in srgb, var(--accent-color) 6%, #fff);
+  color: var(--ui-text);
+  font-size: inherit;
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+}
+
+.users-table .role-section:first-of-type .role-row th {
+  border-top: 0;
+}
+
+.users-table .role-row:hover th,
+.users-table .role-row:hover td {
+  background: color-mix(in srgb, var(--accent-color) 6%, #fff);
+}
+
+.role-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.role-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--accent-color-hover);
+  font-size: calc(15px * var(--type-scale)) !important;
+}
+
+.role-title svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.role-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+/* En fichas (tabla angosta) las acciones van a la izquierda, junto a su etiqueta. */
+@container (max-width: 45em) {
+  .users-table .col-actions {
+    text-align: left;
+  }
+}
+
+/* La celda ya tiene su relleno: el usuario no suma otro (filas más bajas). */
+.users-table .user-cell {
+  padding: 2px 0;
+}
+
+.user-row:focus-within td {
+  background: rgba(39, 53, 72, 0.04);
+}
+
+/* Pantallas angostas: los indicadores en dos columnas y los filtros uno debajo del otro. */
+@container users-card (max-width: 900px) {
+  .users-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .users-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .users-search {
+    grid-column: 1 / -1;
+  }
+
+  .users-header-actions {
+    justify-content: flex-start;
+  }
+}
+
+@container users-card (max-width: 560px) {
+  .users-kpis,
+  .users-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .users-header-actions > * {
+    flex: 1 1 auto;
+  }
+}
+
+:host-context(.shell.dark-mode) .users-kpi,
+:host-context(.shell.dark-mode) .users-table-wrap {
+  border-color: #525252;
+  background: var(--dark-surface);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .users-kpi-count {
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .users-kpi-label,
+:host-context(.shell.dark-mode) .role-stats {
+  color: #d4d4d4;
+}
+
+:host-context(.shell.dark-mode) .users-table .role-row th,
+:host-context(.shell.dark-mode) .users-table .role-row:hover th {
+  border-color: #525252;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) .role-title {
+  color: var(--accent-color);
+}
+
 
 .primary-button {
   border: 0;
@@ -54,361 +363,6 @@
   background: var(--accent-color-hover, var(--accent-color-hover));
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
   transform: translateY(-1px);
-}
-
-.add-icon {
-  font-size: var(--fs-subtitle);
-  line-height: 0;
-  vertical-align: -1px;
-  margin-right: 3px;
-  font-weight: var(--fw-semibold);
-}
-
-/* Overview & Filters */
-.overview-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 20px;
-  margin-bottom: 26px;
-  align-items: start;
-}
-
-.filter-card {
-  background: #fff;
-  border: 1px solid #D4D4D4;
-  border-radius: var(--border-radius);
-  padding: 18px;
-  box-shadow: 0 4px 18px rgba(39, 53, 72, 0.05);
-}
-
-.search-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-box {
-  flex: 1;
-  height: 42px;
-  border-radius: var(--border-radius);
-  background: #F1F1F1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 14px;
-  color: #525252;
-  border: 1.5px solid transparent;
-  transition: all 0.18s ease;
-}
-
-.search-box:focus-within {
-  background: #fff;
-  border-color: var(--accent-color);
-  outline: 3px solid var(--accent-color-soft, rgba(73, 176, 9, 0.2));
-}
-
-.search-box svg {
-  width: 17px;
-  height: 17px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.search-box input {
-  border: 0;
-  outline: 0;
-  background: transparent;
-  width: 100%;
-  font-size: var(--fs-body);
-  color: #001631;
-}
-
-.clear-search,
-.ghost-button {
-  border: 0;
-  background: #F1F1F1;
-  color: #001631;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-weight: var(--fw-regular);
-  font-size: var(--fs-body);
-  cursor: pointer;
-  transition: background-color 0.18s ease;
-}
-
-.clear-search:hover,
-.ghost-button:hover {
-  background: #F1F1F1;
-}
-
-.active-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-}
-
-.filter-tag-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--accent-color-soft);
-  color: var(--accent-color-hover);
-  border: 1px solid var(--accent-color-soft);
-  border-radius: 999px;
-  padding: 5px 12px;
-  font-size: var(--fs-body);
-  font-weight: var(--fw-regular);
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.filter-tag-btn:hover {
-  background: var(--accent-color-soft);
-  border-color: var(--accent-color);
-}
-
-.tag-close {
-  font-size: var(--fs-body);
-  line-height: 1;
-  font-weight: var(--fw-regular);
-  color: var(--accent-color-hover);
-  margin-left: 2px;
-}
-
-.filter-groups {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.filter-group-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.filter-section-title {
-  color: #525252;
-  font-size: var(--fs-body);
-  letter-spacing: 1.2px;
-  font-weight: var(--fw-regular);
-  padding-left: 2px;
-}
-
-.filter-group {
-  background: #F1F1F1;
-  border: 0;
-  border-radius: var(--border-radius);
-  margin: 0;
-  min-width: 0;
-  padding: 8px;
-}
-
-.filter-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid #D4D4D4;
-  color: #525252;
-  font-size: var(--fs-body);
-  font-weight: var(--fw-regular);
-}
-
-.segmented {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.segmented button {
-  border: 1px solid transparent;
-  background: #F1F1F1;
-  border-radius: var(--border-radius);
-  padding: 8px 8px;
-  font-weight: var(--fw-regular);
-  color: #001631;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--fs-body);
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.count-pill {
-  background: rgba(0, 0, 0, 0.06);
-  border-radius: 999px;
-  padding: 2px 6px;
-  font-size: var(--fs-body);
-  font-weight: var(--fw-regular);
-  color: #525252;
-}
-
-.segmented button.active {
-  background: var(--accent-color-soft);
-  color: #303030;
-  border-color: var(--accent-color);
-  font-weight: var(--fw-regular);
-}
-
-.segmented button.active .count-pill {
-  background: #303030;
-  color: #fff;
-}
-
-.segmented button:not(.active):hover {
-  background: #F1F1F1;
-  color: #001631;
-}
-
-/* Results Card */
-.results-card {
-  background: linear-gradient(145deg, var(--accent-color-soft) 0%, var(--accent-color-soft) 100%);
-  border: 1px solid var(--accent-color-soft);
-  border-radius: var(--border-radius);
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 4px 18px rgba(39, 53, 72, 0.04);
-  box-sizing: border-box;
-}
-
-.results-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.results-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--border-radius);
-  background: var(--accent-color-soft);
-  color: var(--accent-color-hover);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.results-icon svg {
-  width: 20px;
-  height: 20px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.results-card .eyebrow.light {
-  margin: 0 0 2px;
-  color: #525252;
-  font-size: var(--fs-body);
-  letter-spacing: 1.4px;
-}
-
-.result-copy {
-  margin: 0;
-  color: #001631;
-  font-size: var(--fs-body);
-  line-height: 1.3;
-}
-
-.results-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--accent-color-soft);
-}
-
-.results-count {
-  font-size: var(--fs-title);
-  line-height: 1;
-  color: #303030;
-  font-weight: var(--fw-semibold);
-}
-
-.results-badge {
-  display: inline-flex;
-  align-items: center;
-  background: var(--accent-color-soft);
-  color: #303030;
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: var(--fs-body);
-  font-weight: var(--fw-regular);
-}
-
-.results-badge.filtered {
-  background: #FFF9E6;
-  color: #D97706;
-}
-
-/* Users Table */
-.users-table {
-  background: #fff;
-  border: 1px solid #D4D4D4;
-  border-radius: var(--border-radius);
-  overflow: hidden;
-  box-shadow: 0 8px 22px rgba(37, 49, 68, 0.06);
-}
-
-.users-table table {
-  border-collapse: collapse;
-  table-layout: fixed;
-  width: 100%;
-}
-
-.table-head {
-  background: #FFFFFF;
-  color: #525252;
-  font-size: var(--fs-body);
-  letter-spacing: 1.5px;
-  font-weight: var(--fw-regular);
-  border-bottom: 1px solid #D4D4D4;
-  text-transform: uppercase;
-}
-
-.table-head th,
-.user-row td {
-  padding: 0 18px;
-  text-align: left;
-}
-
-.table-head th {
-  height: 52px;
-}
-
-.table-head th:last-child,
-.user-row td:last-child {
-  text-align: center;
-}
-
-.user-row td {
-  height: 84px;
-  border-bottom: 1px solid #D4D4D4;
-}
-
-.user-row:hover {
-  background: rgba(39, 53, 72, 0.02);
-}
-
-/* Foco dentro de la fila: mismo realce suave que el hover (sin pintar toda la
-   fila de verde); el foco visible lo marca el propio botón (ver .row-actions). */
-.user-row:focus-within {
-  background: rgba(39, 53, 72, 0.04);
 }
 
 .user-cell {
@@ -721,8 +675,7 @@
   margin-left: 4px;
 }
 
-.field-item input,
-.field-item select {
+.field-item input {
   background: #FFFFFF;
   border: 1.5px solid #D4D4D4;
   border-radius: var(--border-radius);
@@ -736,8 +689,7 @@
   transition: all 0.18s ease;
 }
 
-.field-item input:focus,
-.field-item select:focus {
+.field-item input:focus {
   background: #fff;
   border-color: var(--accent-color);
   outline: 3px solid var(--accent-color-soft, rgba(73, 176, 9, 0.2));
@@ -1019,15 +971,13 @@
   color: #fff;
 }
 
-:host-context(.shell.dark-mode) .field-item input,
-:host-context(.shell.dark-mode) .field-item select {
+:host-context(.shell.dark-mode) .field-item input {
   background: var(--dark-recessed);
   border-color: #525252;
   color: #F1F1F1;
 }
 
-:host-context(.shell.dark-mode) .field-item input:focus,
-:host-context(.shell.dark-mode) .field-item select:focus {
+:host-context(.shell.dark-mode) .field-item input:focus {
   background: var(--dark-surface);
   border-color: var(--accent-color);
 }
@@ -1195,61 +1145,6 @@
 }
 
 @media (max-width: 900px) {
-  .overview-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .page-heading {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 18px;
-  }
-
-  .table-head {
-    display: none;
-  }
-
-  .users-table {
-    overflow: visible;
-  }
-
-  .user-row {
-    display: block;
-    padding: 18px;
-  }
-
-  
-
-  
-
-  .user-row td {
-    display: block;
-    height: auto;
-    padding: 5px 0;
-    width: auto !important;
-  }
-
-  .user-cell {
-    padding: 0;
-  }
-
-  .row-actions {
-    justify-self: start;
-    max-width: none;
-  }
-
-  .search-box {
-    height: 42px;
-  }
-
-  .segmented {
-    grid-template-columns: 1fr;
-  }
-
-  .results-card {
-    min-height: 0;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
   }
@@ -1273,78 +1168,9 @@
 }
 
 
-/* Los seis roles del backend no caben en tres columnas fijas ni en media tarjeta: el rol ocupa todo el ancho y el estado va debajo. */
-.filter-groups {
-  grid-template-columns: 1fr;
-}
-
-.segmented-roles {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-}
-
-.filter-group-container:last-child .segmented {
-  max-width: 480px;
-}
-
 .form-note {
   display: block;
   margin: 14px 0 0;
-}
-
-/* ---------- Tabla agrupada por rol ---------- */
-.role-section {
-  margin-bottom: 20px;
-}
-
-.role-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px 16px;
-  padding: 14px 18px;
-  border-bottom: 1px solid #D4D4D4;
-}
-
-.role-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  color: #001631;
-}
-
-.role-title svg {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.role-stats {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  color: #525252;
-  font-size: calc(14px * var(--type-scale));
-}
-
-.role-section th:nth-child(1) { width: 44%; }
-.role-section th:nth-child(2) { width: 16%; }
-.role-section th:nth-child(3) { width: 14%; }
-.role-section th:nth-child(4) { width: 26%; }
-
-.role-section .user-row td {
-  height: 72px;
-}
-
-.role-section .user-row:last-child td {
-  border-bottom: 0;
 }
 
 .user-name {
@@ -1540,31 +1366,6 @@
   white-space: nowrap;
 }
 
-@media (max-width: 900px) {
-  .role-section .user-row td[data-label]::before {
-    content: attr(data-label) ': ';
-    color: #8F8F8F;
-    font-size: calc(13px * var(--type-scale));
-  }
-
-  .role-section .user-row {
-    border-bottom: 1px solid #D4D4D4;
-  }
-
-  .role-section .user-row:last-child {
-    border-bottom: 0;
-  }
-
-  .role-section .user-row td {
-    height: auto;
-    border-bottom: 0;
-  }
-
-  .actions-cell {
-    margin-top: 6px;
-  }
-}
-
 @media (max-width: 560px) {
   .details-grid {
     grid-template-columns: 1fr;
@@ -1610,50 +1411,6 @@
 :host-context(.shell.dark-mode) .row-actions .view-btn:hover,
 :host-context(.shell.dark-mode) .row-actions .role-btn:hover {
   background: var(--dark-surface-hover);
-}
-
-/* ---------- Encabezado: total, importar Excel y agregar ---------- */
-.heading-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-}
-
-.registered-count {
-  color: #525252;
-  font-size: calc(14px * var(--type-scale));
-}
-
-.import-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.import-button svg {
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.import-button:focus-within {
-  outline: 3px solid var(--accent-color);
-  outline-offset: 2px;
-}
-
-.import-button.is-disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.segmented-origins {
-  max-width: 640px;
 }
 
 .import-errors {

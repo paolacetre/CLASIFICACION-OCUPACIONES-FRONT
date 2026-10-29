@@ -1,156 +1,139 @@
-<section class="users-view-wrapper">
-  <header class="page-heading">
-    <div>
-      <p class="eyebrow">{{ 'usuarios.eyebrow' | translate }}</p>
-      <h1>{{ 'usuarios.title' | translate }}</h1>
-      <p class="subtitle">{{ 'usuarios.subtitle' | translate }}</p>
-    </div>
-    <div class="heading-actions">
-      <span class="registered-count">{{ 'usuarios.registeredCount' | translate:{ count: users.length } }}</span>
-      <button type="button" class="secondary-button" [disabled]="isDownloadingTemplate" [title]="'usuarios.templateHint' | translate" (click)="downloadTemplate()">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
-        <span>{{ (isDownloadingTemplate ? 'usuarios.downloadingTemplate' : 'usuarios.templateButton') | translate }}</span>
-      </button>
-      <label class="secondary-button import-button" [class.is-disabled]="isImporting" [title]="'usuarios.importHint' | translate">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
-        <span>{{ (isImporting ? 'usuarios.importing' : 'usuarios.importButton') | translate }}</span>
-        <input type="file" class="sr-only" accept=".xlsx,.xls" [disabled]="isImporting" (change)="onImportFile($event)">
-      </label>
-      <button class="primary-button" type="button" (click)="startCreate()"><span class="add-icon">+</span> {{ 'usuarios.addButton' | translate }}</button>
-    </div>
-  </header>
-
-  <div class="overview-grid">
-    <section class="filter-card" [attr.aria-label]="'usuarios.filtersAriaLabel' | translate">
-      <form role="search" class="search-row" (submit)="$event.preventDefault()">
-        <label class="search-box" for="user-search">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-          <input id="user-search" [(ngModel)]="searchTerm" name="searchTerm" [placeholder]="'usuarios.searchPlaceholder' | translate" [attr.aria-label]="'usuarios.searchAriaLabel' | translate">
+<section class="ui-page ui-stack users-page">
+  <div class="ui-card users-card">
+    <!-- Encabezado: título, total registrado, plantilla, importar y agregar -->
+    <header class="users-header">
+      <div class="ui-card-icon" aria-hidden="true">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="users-header-text">
+        <p class="users-eyebrow">{{ 'usuarios.eyebrow' | translate }}</p>
+        <h1 class="ui-page-title">{{ 'usuarios.title' | translate }}</h1>
+        <p class="ui-page-subtitle">{{ 'usuarios.subtitle' | translate }}</p>
+      </div>
+      <div class="users-header-actions">
+        <span class="users-count-pill"><span class="users-dot" aria-hidden="true"></span>{{ 'usuarios.registeredCount' | translate:{ count: users.length } }}</span>
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="isDownloadingTemplate" [title]="'usuarios.templateHint' | translate" (click)="downloadTemplate()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg>
+          {{ (isDownloadingTemplate ? 'usuarios.downloadingTemplate' : 'usuarios.templateButton') | translate }}
+        </button>
+        <label class="ui-btn ui-btn-outline import-button" [class.is-disabled]="isImporting" [title]="'usuarios.importHint' | translate">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5M12 3v12"/></svg>
+          {{ (isImporting ? 'usuarios.importing' : 'usuarios.importButton') | translate }}
+          <input type="file" class="sr-only" accept=".xlsx,.xls" [disabled]="isImporting" (change)="onImportFile($event)">
         </label>
-        <button *ngIf="searchTerm.trim()" class="clear-search" type="button" (click)="searchTerm = ''" [attr.aria-label]="'usuarios.clearSearchAria' | translate">{{ 'usuarios.clear' | translate }}</button>
-      </form>
-
-      <div class="active-filters" *ngIf="hasActiveFilters" aria-live="polite">
-        <button type="button" class="filter-tag-btn" *ngIf="searchTerm.trim()" (click)="searchTerm = ''" [title]="'usuarios.removeSearchFilter' | translate" [attr.aria-label]="'usuarios.removeSearchFilter' | translate">{{ 'usuarios.searchFilterLabel' | translate:{ term: searchTerm.trim() } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
-        <button type="button" class="filter-tag-btn" *ngIf="selectedRole !== 'Todos'" (click)="setRole('Todos')" [title]="'usuarios.removeRoleFilter' | translate" [attr.aria-label]="'usuarios.removeRoleFilter' | translate">{{ 'usuarios.roleFilterLabel' | translate:{ role: selectedRole } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
-        <button type="button" class="filter-tag-btn" *ngIf="selectedOrigin !== 'Todos'" (click)="setOrigin('Todos')" [title]="'usuarios.removeOriginFilter' | translate" [attr.aria-label]="'usuarios.removeOriginFilter' | translate">{{ 'usuarios.originFilterLabel' | translate:{ origin: originLabel(selectedOrigin) } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
-        <button type="button" class="filter-tag-btn" *ngIf="selectedStatus !== 'Todos'" (click)="setStatus('Todos')" [title]="'usuarios.removeStatusFilter' | translate" [attr.aria-label]="'usuarios.removeStatusFilter' | translate">{{ 'usuarios.statusFilterLabel' | translate:{ status: statusLabel(selectedStatus) } }} <span class="tag-close" aria-hidden="true">&times;</span></button>
-      </div>
-
-      <div class="filter-groups">
-        <div class="filter-group-container">
-          <span class="filter-section-title">{{ 'usuarios.roleSectionTitle' | translate }}</span>
-          <fieldset class="filter-group">
-            <legend class="sr-only">{{ 'usuarios.filterByRole' | translate }}</legend>
-            <div class="segmented segmented-roles">
-              <button *ngFor="let role of roles" type="button" [class.active]="selectedRole === role" [attr.aria-pressed]="selectedRole === role" (click)="setRole(role)">
-                <span>{{ roleFilterLabel(role) }}</span>
-                <span class="count-pill">{{ role === 'Todos' ? users.length : countBy('role', role) }}</span>
-              </button>
-            </div>
-          </fieldset>
-        </div>
-
-        <div class="filter-group-container">
-          <span class="filter-section-title">{{ 'usuarios.originSectionTitle' | translate }}</span>
-          <fieldset class="filter-group">
-            <legend class="sr-only">{{ 'usuarios.filterByOrigin' | translate }}</legend>
-            <div class="segmented segmented-origins">
-              <button *ngFor="let origin of origins" type="button" [class.active]="selectedOrigin === origin" [attr.aria-pressed]="selectedOrigin === origin" (click)="setOrigin(origin)">
-                <span>{{ originLabel(origin) }}</span>
-                <span class="count-pill">{{ origin === 'Todos' ? users.length : countBy('origin', origin) }}</span>
-              </button>
-            </div>
-          </fieldset>
-        </div>
-
-        <div class="filter-group-container">
-          <span class="filter-section-title">{{ 'usuarios.statusSectionTitle' | translate }}</span>
-          <fieldset class="filter-group">
-            <legend class="sr-only">{{ 'usuarios.filterByStatus' | translate }}</legend>
-            <div class="segmented">
-              <button *ngFor="let status of statuses" type="button" [class.active]="selectedStatus === status" [attr.aria-pressed]="selectedStatus === status" (click)="setStatus(status)">
-                <span>{{ statusLabel(status) }}</span>
-                <span class="count-pill">{{ status === 'Todos' ? users.length : countBy('status', status) }}</span>
-              </button>
-            </div>
-          </fieldset>
-        </div>
-      </div>
-
-      <footer class="filter-footer" *ngIf="hasActiveFilters">
-        <span>{{ 'usuarios.activeFiltersCount' | translate:{ count: filtersCount, s: filtersCount > 1 ? 's' : '' } }}</span>
-        <button type="button" class="ghost-button" (click)="clearFilters()">{{ 'usuarios.resetFilters' | translate }}</button>
-      </footer>
-    </section>
-
-    <aside class="results-card">
-      <div class="results-top">
-        <div class="results-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <div>
-          <p class="eyebrow light">{{ 'usuarios.totalUsersEyebrow' | translate }}</p>
-          <p class="result-copy">
-            {{ hasActiveFilters ? ('usuarios.resultsFound' | translate:{ shown: filteredUsers.length, total: users.length }) : ('usuarios.allUsersRegistered' | translate) }}
-          </p>
-        </div>
-      </div>
-      <div class="results-main">
-        <strong class="results-count">{{ filteredUsers.length }}</strong>
-        <span class="results-badge" *ngIf="hasActiveFilters" [class.filtered]="filteredUsers.length !== users.length">
-          {{ filteredUsers.length === 0 ? ('usuarios.noMatches' | translate) : ('usuarios.filteredCount' | translate:{ count: filteredUsers.length, s: filteredUsers.length > 1 ? 's' : '' }) }}
-        </span>
-      </div>
-    </aside>
-  </div>
-
-  <!-- Un bloque por rol, con sus contadores -->
-  <section class="users-table role-section" *ngFor="let section of roleSections; trackBy: trackSectionByRole" [attr.aria-label]="roleGroupLabel(section.role)">
-    <header class="role-head">
-      <h2 class="role-title">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 10 4.1-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
-        {{ roleGroupLabel(section.role) }}
-      </h2>
-      <div class="role-stats">
-        <span class="stat-total">{{ 'usuarios.sectionUsers' | translate:{ count: section.users.length } }}</span>
-        <span class="ui-badge ui-badge-info">{{ 'usuarios.sectionActive' | translate:{ count: section.active } }}</span>
-        <span class="ui-badge ui-badge-error">{{ 'usuarios.sectionInactive' | translate:{ count: section.inactive } }}</span>
+        <button class="ui-btn ui-btn-primary" type="button" (click)="startCreate()">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          {{ 'usuarios.addButton' | translate }}
+        </button>
       </div>
     </header>
-    <table>
-      <caption class="sr-only">{{ roleGroupLabel(section.role) }}</caption>
-      <thead class="table-head"><tr><th scope="col">{{ 'usuarios.colUser' | translate }}</th><th scope="col">{{ 'usuarios.colRegistered' | translate }}</th><th scope="col">{{ 'usuarios.colPermissions' | translate }}</th><th scope="col">{{ 'usuarios.colActions' | translate }}</th></tr></thead>
-      <tbody>
-        <tr class="user-row" [class.is-inactive]="user.status === 'Inactivo'" *ngFor="let user of section.users; trackBy: trackUserById">
-          <td><div class="user-cell"><div class="avatar" aria-hidden="true">{{ user.initials }}</div><div class="user-name"><strong>{{ user.name }}</strong><small>{{ user.email }}</small></div></div></td>
-          <td class="cell-registered" [attr.data-label]="'usuarios.colRegistered' | translate">{{ user.date || '—' }}</td>
-          <td class="cell-permissions" [attr.data-label]="'usuarios.colPermissions' | translate">{{ permissionCount(user.role) }}</td>
-          <td>
-            <div class="actions-cell">
-              <div class="row-actions">
-                <button class="view-btn" type="button" [title]="'usuarios.viewDetailsTitle' | translate" [attr.aria-label]="'usuarios.viewDetailsAria' | translate:{ name: user.name }" (click)="openDetails(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
-                <button class="edit-btn" type="button" [title]="'usuarios.editTitle' | translate" [disabled]="isUserPending(user)" [attr.aria-label]="'usuarios.editAria' | translate:{ name: user.name }" (click)="startEdit(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.7 4.7L8 20l11-11-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></svg></button>
-                <button class="role-btn" type="button" [title]="(isOwnAccount(user) ? 'usuarios.ownRoleLocked' : 'usuarios.rolePermissionsTitle') | translate" [disabled]="isUserPending(user) || isOwnAccount(user)" [attr.aria-label]="(isOwnAccount(user) ? 'usuarios.ownRoleLocked' : 'usuarios.rolePermissionsAria') | translate:{ name: user.name }" (click)="openRoleDialog(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4"/><circle cx="18" cy="16" r="2.5"/><path d="M18 12v1.500M18 18.500V20M21.5 16H20M16 16h-1.5"/></svg></button>
-              </div>
-              <button class="ui-switch status-switch" type="button" role="switch" [class.on]="user.status === 'Activo'" [attr.aria-checked]="user.status === 'Activo'"
-                      [title]="(isOwnAccount(user) ? 'usuarios.ownAccountLocked' : 'usuarios.toggleStatusTitle') | translate"
-                      [disabled]="isUserPending(user) || isOwnAccount(user)"
-                      [attr.aria-label]="(isOwnAccount(user) ? 'usuarios.ownAccountLocked' : user.status === 'Activo' ? 'usuarios.deactivateAria' : 'usuarios.activateAria') | translate:{ name: user.name }"
-                      (click)="requestStatusChange(user)"></button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
 
-  <section class="users-table" *ngIf="!filteredUsers.length" [attr.aria-label]="'usuarios.tableAriaLabel' | translate">
-    <table>
-      <tbody *ngIf="isCompletelyEmpty"><tr><td class="empty-state" colspan="4"><strong>{{ 'usuarios.emptyTitle' | translate }}</strong><p>{{ 'usuarios.emptyDesc' | translate }}</p><button class="ghost-button" type="button" (click)="startCreate()">{{ 'usuarios.addButton' | translate }}</button></td></tr></tbody>
-      <tbody *ngIf="isFilteredEmpty"><tr><td class="empty-state" colspan="4"><strong>{{ 'usuarios.filteredEmptyTitle' | translate }}</strong><p>{{ 'usuarios.filteredEmptyDesc' | translate }}</p><button class="ghost-button" type="button" (click)="clearFilters()">{{ 'usuarios.viewAll' | translate }}</button></td></tr></tbody>
-    </table>
-  </section>
+    <!-- Indicadores: el número grande y lo que cuenta; un clic filtra por eso (otro clic lo quita) -->
+    <div class="users-kpis">
+      <button *ngFor="let kpi of kpis" type="button" class="users-kpi" [ngClass]="'users-kpi-' + kpi.key" [class.active]="isKpiActive(kpi.key)"
+              [attr.aria-pressed]="isKpiActive(kpi.key)" (click)="applyKpi(kpi.key)">
+        <span class="users-kpi-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24"><path [attr.d]="kpi.icon"/></svg></span>
+        <span class="users-kpi-text">
+          <strong class="users-kpi-count">{{ kpi.count }}</strong>
+          <span class="users-kpi-label">{{ kpi.labelKey | translate }}</span>
+        </span>
+      </button>
+    </div>
+
+    <!-- Búsqueda y filtros en una sola fila -->
+    <form class="users-filters" role="search" [attr.aria-label]="'usuarios.filtersAriaLabel' | translate" (submit)="$event.preventDefault()">
+      <div class="ui-field users-search">
+        <label class="ui-label" for="user-search">{{ 'usuarios.searchLabel' | translate }}</label>
+        <div class="ui-input-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input class="ui-input" id="user-search" type="search" autocomplete="off" [(ngModel)]="searchTerm" name="searchTerm"
+                 [placeholder]="'usuarios.searchPlaceholder' | translate" [attr.aria-label]="'usuarios.searchAriaLabel' | translate">
+        </div>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="filter-role">{{ 'usuarios.roleFilterTitle' | translate }}</label>
+        <app-filter-combobox inputId="filter-role" [options]="roleFilterOptions()" [value]="selectedRole === 'Todos' ? '' : selectedRole"
+                             [allLabel]="'usuarios.allRoles' | translate" (valueChange)="selectedRole = $event || 'Todos'"></app-filter-combobox>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="filter-origin">{{ 'usuarios.originFilterTitle' | translate }}</label>
+        <app-filter-combobox inputId="filter-origin" [options]="originFilterOptions()" [value]="selectedOrigin === 'Todos' ? '' : selectedOrigin"
+                             [allLabel]="'usuarios.allOrigins' | translate" (valueChange)="selectedOrigin = $event || 'Todos'"></app-filter-combobox>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="filter-status">{{ 'usuarios.statusFilterTitle' | translate }}</label>
+        <app-filter-combobox inputId="filter-status" [options]="statusFilterOptions()" [value]="selectedStatus === 'Todos' ? '' : selectedStatus"
+                             [allLabel]="'usuarios.allStatuses' | translate" (valueChange)="selectedStatus = $event || 'Todos'"></app-filter-combobox>
+      </div>
+    </form>
+    <div class="users-results" aria-live="polite">
+      <span class="ui-hint">{{ hasActiveFilters ? ('usuarios.resultsFound' | translate:{ shown: filteredUsers.length, total: users.length }) : ('usuarios.allUsersShown' | translate:{ count: users.length }) }}</span>
+      <button *ngIf="hasActiveFilters" type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="clearFilters()">{{ 'usuarios.resetFilters' | translate }}</button>
+    </div>
+
+    <!-- Lista: una sola tabla (encabezado una vez) con un grupo por rol y sus contadores -->
+    <div *ngIf="filteredUsers.length" class="ui-table-wrap ui-table-responsive users-table-wrap">
+      <table class="ui-table users-table">
+        <caption class="sr-only">{{ 'usuarios.tableAriaLabel' | translate }}</caption>
+        <thead class="table-head">
+          <tr>
+            <th scope="col">{{ 'usuarios.colUser' | translate }}</th>
+            <th scope="col">{{ 'usuarios.colRegistered' | translate }}</th>
+            <th scope="col">{{ 'usuarios.colPermissions' | translate }}</th>
+            <th scope="col" class="col-actions">{{ 'usuarios.colActions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody *ngFor="let section of roleSections; trackBy: trackSectionByRole" class="role-section" [attr.aria-label]="roleGroupLabel(section.role)">
+          <tr class="role-row">
+            <th colspan="4" scope="rowgroup">
+              <div class="role-head">
+                <h2 class="role-title">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.9 8.4 7 10 4.1-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+                  {{ roleGroupLabel(section.role) }}
+                </h2>
+                <div class="role-stats">
+                  <span class="stat-total">{{ (section.users.length === 1 ? 'usuarios.sectionUsersOne' : 'usuarios.sectionUsers') | translate:{ count: section.users.length } }}</span>
+                  <span class="ui-badge ui-badge-ok">{{ (section.active === 1 ? 'usuarios.sectionActiveOne' : 'usuarios.sectionActive') | translate:{ count: section.active } }}</span>
+                  <span class="ui-badge" [ngClass]="section.inactive ? 'ui-badge-error' : 'ui-badge-neutral'">{{ (section.inactive === 1 ? 'usuarios.sectionInactiveOne' : 'usuarios.sectionInactive') | translate:{ count: section.inactive } }}</span>
+                </div>
+              </div>
+            </th>
+          </tr>
+          <tr class="user-row" [class.is-inactive]="user.status === 'Inactivo'" *ngFor="let user of section.users; trackBy: trackUserById">
+            <td><div class="user-cell"><div class="avatar" aria-hidden="true">{{ user.initials }}</div><div class="user-name"><strong>{{ user.name }}</strong><small>{{ user.email }}</small></div></div></td>
+            <td class="cell-registered" [attr.data-label]="'usuarios.colRegistered' | translate">{{ user.date || '—' }}</td>
+            <td class="cell-permissions" [attr.data-label]="'usuarios.colPermissions' | translate">{{ permissionCount(user.role) }}</td>
+            <td class="col-actions" [attr.data-label]="'usuarios.colActions' | translate">
+              <div class="actions-cell">
+                <div class="row-actions">
+                  <button class="view-btn" type="button" [title]="'usuarios.viewDetailsTitle' | translate" [attr.aria-label]="'usuarios.viewDetailsAria' | translate:{ name: user.name }" (click)="openDetails(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                  <button class="edit-btn" type="button" [title]="'usuarios.editTitle' | translate" [disabled]="isUserPending(user)" [attr.aria-label]="'usuarios.editAria' | translate:{ name: user.name }" (click)="startEdit(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16-.7 4.7L8 20l11-11-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></svg></button>
+                  <button class="role-btn" type="button" [title]="(isOwnAccount(user) ? 'usuarios.ownRoleLocked' : 'usuarios.rolePermissionsTitle') | translate" [disabled]="isUserPending(user) || isOwnAccount(user)" [attr.aria-label]="(isOwnAccount(user) ? 'usuarios.ownRoleLocked' : 'usuarios.rolePermissionsAria') | translate:{ name: user.name }" (click)="openRoleDialog(user)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 0 1 4-4h4"/><circle cx="18" cy="16" r="2.5"/><path d="M18 12v1.500M18 18.500V20M21.5 16H20M16 16h-1.5"/></svg></button>
+                </div>
+                <button class="ui-switch status-switch" type="button" role="switch" [class.on]="user.status === 'Activo'" [attr.aria-checked]="user.status === 'Activo'"
+                        [title]="(isOwnAccount(user) ? 'usuarios.ownAccountLocked' : 'usuarios.toggleStatusTitle') | translate"
+                        [disabled]="isUserPending(user) || isOwnAccount(user)"
+                        [attr.aria-label]="(isOwnAccount(user) ? 'usuarios.ownAccountLocked' : user.status === 'Activo' ? 'usuarios.deactivateAria' : 'usuarios.activateAria') | translate:{ name: user.name }"
+                        (click)="requestStatusChange(user)"></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sin usuarios, o ninguno con esos filtros -->
+    <div *ngIf="isCompletelyEmpty" class="ui-empty empty-state">
+      <strong>{{ 'usuarios.emptyTitle' | translate }}</strong>
+      <p>{{ 'usuarios.emptyDesc' | translate }}</p>
+      <button class="ui-btn ui-btn-primary" type="button" (click)="startCreate()">{{ 'usuarios.addButton' | translate }}</button>
+    </div>
+    <div *ngIf="isFilteredEmpty" class="ui-empty empty-state">
+      <strong>{{ 'usuarios.filteredEmptyTitle' | translate }}</strong>
+      <p>{{ 'usuarios.filteredEmptyDesc' | translate }}</p>
+      <button class="ui-btn ui-btn-outline" type="button" (click)="clearFilters()">{{ 'usuarios.viewAll' | translate }}</button>
+    </div>
+  </div>
 
   <!-- Modal Formulario -->
   <div class="dialog-backdrop" *ngIf="showForm" (click)="closeForm()">
@@ -189,9 +172,7 @@
           </div>
           <div class="field-item" *ngIf="editingUserId === null">
             <label for="form-role">{{ 'usuarios.fieldRole' | translate }}</label>
-            <select id="form-role" name="role" [(ngModel)]="formUser.role" [disabled]="isFormPending">
-              <option *ngFor="let role of assignableRoles" [value]="role">{{ role }}</option>
-            </select>
+            <app-filter-combobox inputId="form-role" name="role" [options]="roleOptions" [showAll]="false" [(ngModel)]="formUser.role" [disabled]="isFormPending"></app-filter-combobox>
             <span class="field-hint">{{ roleDescription(formUser.role) }}</span>
           </div>
         </div>

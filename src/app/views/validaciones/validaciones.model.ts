@@ -96,6 +96,10 @@ export interface ReviewItem {
   criterion: number;
   /** Lo que envió el analista (con su código delante en las listas: «F-2126.01 - …»). */
   value: string;
+  /** Código del elemento en las listas («F-412», «0111»); vacío si no tiene. */
+  code: string;
+  /** Texto del elemento sin el código. */
+  text: string;
   /** Función o denominación que estaba inactiva en la copia cuando se envió. */
   inactive: boolean;
 }
@@ -151,8 +155,14 @@ export const REQUIRED_INFORMANT_FIELDS: readonly (keyof Informant)[] = ['fullNam
 /** Calificación de un ítem (vacía mientras no se califica). */
 export type Grade = '' | 'aplica' | 'no_aplica' | 'requiere_ajuste' | 'propuesta_mejora';
 
-/** Opciones de calificación de un ítem. */
-export const GRADES: readonly Exclude<Grade, ''>[] = ['aplica', 'no_aplica', 'requiere_ajuste', 'propuesta_mejora'];
+/**
+ * Opciones de calificación que se ofrecen (Paola, 2026-10-28: Aplica, No aplica y Con propuesta de mejora). «Requiere
+ * ajuste» sigue siendo un valor válido del servidor: solo se muestra en un ítem que ya lo tenía guardado.
+ */
+export const GRADES: readonly Exclude<Grade, ''>[] = ['aplica', 'no_aplica', 'propuesta_mejora'];
+
+/** Máximo de los textos libres del experto: comentarios, observaciones y propuestas de área y descripción (el servidor los guarda como `text`). */
+export const TEXT_MAX_LENGTH = 1000;
 
 /** «Requiere ajuste» y «Propuesta de mejora» piden el detalle; «No aplica» admite un motivo opcional. */
 export function detailRequired(grade: Grade): boolean {

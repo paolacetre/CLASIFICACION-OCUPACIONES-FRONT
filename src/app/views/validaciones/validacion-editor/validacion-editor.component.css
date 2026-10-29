@@ -464,6 +464,115 @@
   overflow-wrap: anywhere;
 }
 
+/* ---------- Secciones de lista: un recuadro por criterio («5. Funciones») con sus elementos numerados ---------- */
+/*
+ * Tonos de la referencia de Paola (2026-10-28), sacados de los colores del sistema para que sigan a Configuración:
+ * círculo ≈ #60a20e, «5. FUNCIONES» ≈ #469b00, franja ≈ #6ab61f, código ≈ #035822, etiquetas ≈ #364353,
+ * texto ≈ #505767, contador ≈ #838a99 y celdas de calificar ≈ #f6faf2.
+ */
+:host {
+  --vx-green: color-mix(in srgb, var(--accent-color), var(--state-ok-fg));
+  --vx-green-strong: color-mix(in srgb, var(--state-ok-fg) 70%, var(--accent-color));
+  --vx-green-stripe: color-mix(in srgb, var(--accent-color) 80%, var(--state-ok-fg));
+  --vx-green-dark: color-mix(in srgb, var(--state-ok-fg), var(--primary-color));
+  --vx-ink: color-mix(in srgb, var(--ui-text) 80%, #fff);
+  --vx-muted: color-mix(in srgb, var(--ui-text) 66%, #fff);
+  --vx-faint: color-mix(in srgb, var(--ui-text) 48%, #fff);
+  --vx-cell: color-mix(in srgb, var(--accent-color) 7%, #fff);
+}
+
+.vx-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
+  background: #fff;
+}
+
+/* La franja va pegada al borde izquierdo del recuadro, como en la referencia. */
+.vx-group-title {
+  margin: 0 0 0 -10px;
+  padding: 10px 16px;
+  border-left: 4px solid var(--vx-green-stripe);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  background: color-mix(in srgb, var(--accent-color) 10%, #fff);
+  color: var(--vx-green-strong);
+  font-size: calc(14px * var(--type-scale)) !important;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* Elemento: más ancho a la izquierda (número, código y texto) y las dos celdas de calificar a la derecha. */
+.vx-item-list {
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.42fr) minmax(230px, 0.62fr);
+}
+
+.vx-item-list .vx-item-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+/* El círculo es verde mientras no se califica y luego toma el color de la calificación. */
+.vx-item-number {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--grade-color);
+  color: #fff;
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+}
+
+.vx-item-none .vx-item-number {
+  background: var(--vx-green);
+}
+
+.vx-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-top: 3px;
+}
+
+.vx-item-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.vx-item-code {
+  margin: 0;
+  color: var(--vx-green-dark);
+  font-size: calc(15px * var(--type-scale)) !important;
+  line-height: 1.3;
+}
+
+.vx-item-text {
+  margin: 0;
+  color: var(--vx-muted);
+  font-size: calc(14px * var(--type-scale));
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+/* «(opcional)» junto a «COMENTARIO», sin mayúsculas ni negrita. */
+.vx-optional {
+  color: var(--vx-ink);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .vx-item-option,
 .vx-item-comment {
   display: flex;
@@ -471,62 +580,36 @@
   gap: 6px;
   padding: 12px 14px;
   border-left: 1px solid var(--neutral-100);
-  background: color-mix(in srgb, var(--accent-color) 5%, #fff);
+  background: var(--vx-cell);
+}
+
+.vx-item-list .vx-item-option,
+.vx-item-list .vx-item-comment {
+  gap: 5px;
+  padding: 10px 14px;
 }
 
 .vx-item-head {
-  color: var(--neutral-700);
+  color: var(--vx-ink);
   font-size: calc(12px * var(--type-scale));
   font-weight: var(--fw-semibold);
   letter-spacing: 0.6px;
   text-transform: uppercase;
 }
 
-/* El desplegable toma el color de la calificación elegida (fondo suave, texto y borde del color). */
-.vx-item-option .ui-select {
-  border-color: var(--grade-color);
-  background-color: var(--grade-bg, #fff);
-  color: var(--grade-color);
-  font-weight: var(--fw-semibold);
-}
-
-.vx-item-none .vx-item-option .ui-select {
-  border-color: var(--neutral-100);
-  background-color: #fff;
-  color: var(--ui-text);
-  font-weight: var(--fw-regular);
-}
-
-/* Las opciones de la lista llevan su color (los navegadores que lo permiten lo muestran). */
-.vx-item-option option {
-  background: #fff;
-  color: var(--ui-text);
-  font-weight: var(--fw-regular);
-}
-
-.vx-item-option .vx-option-aplica {
-  color: var(--state-ok-fg);
-  font-weight: var(--fw-semibold);
-}
-
-.vx-item-option .vx-option-no_aplica {
-  color: var(--state-error-fg);
-  font-weight: var(--fw-semibold);
-}
-
-.vx-item-option .vx-option-requiere_ajuste {
-  color: var(--state-warn-fg);
-  font-weight: var(--fw-semibold);
-}
-
-.vx-item-option .vx-option-propuesta_mejora {
-  color: #0c7fb0;
-  font-weight: var(--fw-semibold);
+.vx-item-list .vx-item-head {
+  font-size: calc(11px * var(--type-scale));
 }
 
 .vx-item-comment .ui-textarea {
   min-height: 64px;
   resize: vertical;
+}
+
+.vx-item-list .vx-item-comment .ui-textarea {
+  min-height: 46px;
+  padding: 8px 12px;
+  font-size: calc(14px * var(--type-scale));
 }
 
 .vx-item-comment .ui-form-error {
@@ -543,6 +626,25 @@
 
 .vx-observations {
   margin-top: 4px;
+}
+
+/* Bajo el texto, en pequeño: el máximo a la izquierda y lo escrito a la derecha. */
+.vx-limit {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  color: var(--vx-faint);
+  font-size: calc(12px * var(--type-scale));
+}
+
+.vx-limit-count {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+:host-context(.shell.dark-mode) .vx-limit {
+  color: #a3a3a3;
 }
 
 /* ---------- Pie ---------- */
@@ -693,12 +795,6 @@
   --grade-bg: rgba(31, 172, 227, 0.18);
 }
 
-:host-context(.shell.dark-mode) .vx-item-none .vx-item-option .ui-select,
-:host-context(.shell.dark-mode) .vx-item-option option {
-  background-color: var(--dark-recessed);
-  color: #f1f1f1;
-}
-
 :host-context(.shell.dark-mode) .vx-occupation-name,
 :host-context(.shell.dark-mode) .vx-header-text p,
 :host-context(.shell.dark-mode) .vx-item-label,
@@ -709,8 +805,39 @@
 }
 
 :host-context(.shell.dark-mode) .vx-item-value,
+:host-context(.shell.dark-mode) .vx-item-text,
 :host-context(.shell.dark-mode) .vx-section {
   color: #f1f1f1;
+}
+
+:host-context(.shell.dark-mode) {
+  --vx-green-strong: var(--accent-color);
+  --vx-green-dark: var(--accent-color);
+  --vx-ink: #d4d4d4;
+  --vx-muted: #e5e5e5;
+  --vx-faint: #a3a3a3;
+}
+
+:host-context(.shell.dark-mode) .vx-group {
+  border-color: #3d5470;
+  background: var(--dark-surface);
+}
+
+:host-context(.shell.dark-mode) .vx-group-title {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .vx-item-code {
+  color: var(--accent-color);
+}
+
+:host-context(.shell.dark-mode) .vx-item-number {
+  color: #0b1a2b;
+}
+
+:host-context(.shell.dark-mode) .vx-optional {
+  color: #a3a3a3;
 }
 
 :host-context(.shell.dark-mode) .vx-section:hover,

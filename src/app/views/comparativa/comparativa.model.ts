@@ -52,6 +52,13 @@ export interface OccupationChange extends OccupationDraft {
 /** Listas de una ocupación, en el orden de las pestañas. */
 export const OCCUPATION_LISTS: readonly AnalysisListKey[] = ['functions', 'denominations', 'skills', 'knowledge', 'related'];
 
+/**
+ * Listas cuyo texto no se reescribe al editar (se quitan o se agregan del catálogo): el servidor enlaza cada
+ * habilidad y cada conocimiento con el catálogo por su nombre exacto, y un texto cambiado crearía uno nuevo en
+ * el catálogo oficial.
+ */
+export const CATALOG_TEXT_LISTS: readonly AnalysisListKey[] = ['skills', 'knowledge'];
+
 /** Borrador de una ocupación con sus valores actuales (copia: editarlo no toca lo guardado). */
 export function toDraft(occupation: AnalysisOccupation): OccupationDraft {
   const draft = { name: occupation.name, level: occupation.level, area: occupation.area, description: occupation.description } as OccupationDraft;

@@ -232,37 +232,32 @@
   font-weight: var(--fw-semibold);
 }
 
-.rp-result-aprobado {
+.rp-result-aplica {
   background: var(--state-ok-bg);
   color: var(--state-ok-fg);
 }
 
-.rp-result-con_mejoras {
-  background: var(--accent-color-soft);
-  color: var(--accent-color-hover);
+.rp-result-propuesta_mejora {
+  background: color-mix(in srgb, var(--brand-blue) 12%, #fff);
+  color: #0c7fb0;
 }
 
-.rp-result-parcial {
-  background: var(--state-warn-bg);
-  color: var(--state-warn-fg);
-}
-
-.rp-result-no_aprobado {
+.rp-result-no_aplica {
   background: var(--state-error-bg);
   color: var(--state-error-fg);
 }
 
-/* Aplica verde, Parcial (con propuesta de mejora) ámbar, Requiere ajuste naranja, No aplica rojo. */
+/* Aplica verde, Con propuesta de mejora azul (como en Validación experta), Requiere ajuste naranja (solo las guardadas antes), No aplica rojo. */
 .rp-tag-aplica {
   border-color: color-mix(in srgb, var(--state-ok-fg) 35%, transparent);
   background: var(--state-ok-bg);
   color: var(--state-ok-fg);
 }
 
-.rp-tag-parcial {
-  border-color: color-mix(in srgb, var(--state-warn-accent) 60%, transparent);
-  background: var(--state-warn-bg);
-  color: #a16207;
+.rp-tag-propuesta_mejora {
+  border-color: color-mix(in srgb, var(--brand-blue) 45%, transparent);
+  background: color-mix(in srgb, var(--brand-blue) 12%, #fff);
+  color: #0c7fb0;
 }
 
 .rp-tag-requiere_ajuste {
@@ -282,9 +277,9 @@
   color: #8fd86a;
 }
 
-:host-context(.shell.dark-mode) .rp-tag-parcial {
-  background: rgba(253, 195, 0, 0.16);
-  color: #fcd34d;
+:host-context(.shell.dark-mode) .rp-tag-propuesta_mejora {
+  background: rgba(31, 172, 227, 0.18);
+  color: #7dd3fc;
 }
 
 :host-context(.shell.dark-mode) .rp-tag-requiere_ajuste {

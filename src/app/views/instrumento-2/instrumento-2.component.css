@@ -151,8 +151,17 @@
   outline-offset: -3px;
 }
 
-.i2-row.open td {
+.i2-row.open > td {
   background: var(--accent-color-soft);
+}
+
+/* El detalle se abre en una fila propia, justo debajo de la abierta: una franja del mismo verde con el detalle en
+   una tarjeta, como la versión desplegada. */
+.i2-table > tbody > .i2-detail-row > td,
+.i2-table > tbody > .i2-detail-row:hover > td {
+  padding: 4px 16px 18px;
+  background: var(--accent-color-soft);
+  cursor: default;
 }
 
 /* Como la versión desplegada, la bandeja usa todo el ancho de la pantalla (sin el máximo de .ui-page). */
@@ -173,28 +182,29 @@
 
 /* Solo en modo tabla: en fichas (por debajo de -lg) manda el apilado de ui.css. */
 @container (width > 71.875em) {
-  .i2-table th,
-  .i2-table td {
+  .i2-table > thead > tr > th,
+  .i2-table > tbody > .i2-row > td {
     width: 1%;
     padding-left: 10px;
     padding-right: 10px;
     white-space: nowrap;
   }
 
-  .i2-table .i2-col-names {
+  /* Mismo nivel de selector que la regla de arriba, para ganarle: si no, la columna de nombres quedaba al 1 %. */
+  .i2-table > tbody > .i2-row > .i2-col-names {
     width: 100%;
     max-width: 0;
   }
 }
 
 /* Títulos de columna compactos (como la versión desplegada): «CLASIFICACIÓN» no ensancha su columna. */
-.i2-table th {
+.i2-table > thead > tr > th {
   font-size: calc(12px * var(--type-scale));
   letter-spacing: 0.3px;
 }
 
 /* Botones de la fila más compactos, como la versión desplegada. */
-.i2-table .i2-actions .ui-btn {
+.i2-row .i2-actions .ui-btn {
   padding: 5px 9px;
   font-size: calc(13px * var(--type-scale));
 }
@@ -320,15 +330,50 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 20px 22px;
+  font-size: calc(14px * var(--type-scale));
+  white-space: normal;
+  /* Todo el ancho de su celda también cuando la bandeja pasa a fichas (ahí la celda es flex), y sin heredar el
+     «anywhere» de las fichas, que partía palabras. */
+  width: 100%;
+  overflow-wrap: break-word;
+  /* Lo de adentro se acomoda al ancho del detalle (no al de la pantalla): con el menú abierto o la letra grande
+     el detalle es más angosto y sus columnas se apilan en vez de apretarse. */
+  container: i2-detail / inline-size;
 }
 
+/* «Ocultar detalle»: enlace verde, como la versión desplegada. */
 .i2-detail-close {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-color-hover);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+
+.i2-detail-close:hover {
+  text-decoration: underline;
+}
+
+.i2-detail-close:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 .i2-occupations {
   display: grid;
   gap: 8px;
+}
+
+.i2-occupations-label {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
 }
 
 .i2-chips {
@@ -383,82 +428,144 @@
 .i2-detail-name {
   margin: 0;
   color: var(--ui-text);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
+/* Estado, analista, fecha, nivel y área en una línea, sin cajas, entre dos líneas finas. */
 .i2-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 36px;
   margin: 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--neutral-100);
+  border-bottom: 1px solid var(--neutral-100);
 }
 
 .i2-info > div {
-  padding: 10px 14px;
-  border: 1px solid var(--neutral-100);
-  border-radius: var(--border-radius);
-  background: var(--neutral-50);
   min-width: 0;
 }
 
-.i2-info dt,
+.i2-info dt {
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
 .i2-rows dt {
   color: var(--neutral-700);
-  font-size: calc(13px * var(--type-scale));
 }
 
 .i2-info dd {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   color: var(--ui-text);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .i2-sections {
   margin-top: 4px;
 }
 
+/* «Datos básicos» y «Resumen» uno debajo del otro, y lado a lado solo si el detalle es ancho. */
 .i2-general {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
 
+@container i2-detail (width >= 68.75em) {
+  .i2-general {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+}
+
 .i2-box {
-  padding: 16px;
+  padding: 16px 18px;
   border: 1px solid var(--neutral-100);
   border-radius: var(--border-radius);
   min-width: 0;
+  container: i2-box / inline-size;
 }
 
 .i2-box-title {
-  margin-top: 0;
+  margin: 0 0 10px;
+  color: var(--ui-text);
+  font-size: var(--fs-body) !important;
+  font-weight: var(--fw-semibold);
 }
 
+/* Datos básicos: «etiqueta … valor» con una línea fina entre filas. Una columna, y dos (como la versión desplegada)
+   solo si el recuadro tiene espacio: cada valor conserva al menos la mitad de su fila y no se parten palabras. */
 .i2-rows {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 28px;
   margin: 0;
+}
+
+@container i2-box (width >= 46em) {
+  .i2-rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Recuadro muy angosto (celular): la etiqueta arriba y el valor debajo. */
+@container i2-box (width < 26em) {
+  .i2-rows > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+
+  .i2-rows dd {
+    text-align: left;
+  }
 }
 
 .i2-rows > div {
   display: grid;
-  grid-template-columns: minmax(120px, 38%) minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  align-items: baseline;
+  gap: 16px;
+  min-width: 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--neutral-100);
 }
 
 .i2-rows dd {
   margin: 0;
   color: var(--ui-text);
-  overflow-wrap: anywhere;
+  text-align: right;
+  overflow-wrap: break-word;
+  min-width: 0;
+}
+
+/* Resumen: ícono, nombre con su clasificación debajo y el nivel a la derecha. */
+.i2-summary-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.i2-summary-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--border-radius);
+  background: var(--state-ok-bg);
+  color: var(--accent-color-hover);
 }
 
 .i2-summary-name {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 8px;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
   color: var(--ui-text);
 }
 
@@ -466,27 +573,49 @@
   font-weight: var(--fw-semibold);
 }
 
+.i2-summary-name span {
+  color: var(--neutral-700);
+  font-size: calc(13px * var(--type-scale));
+}
+
+.i2-summary-level {
+  max-width: 220px;
+  padding: 2px 10px;
+  border: 1px solid var(--neutral-100);
+  border-radius: 999px;
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+  font-size: calc(12px * var(--type-scale));
+}
+
 .i2-text {
   margin: 0;
   color: var(--ui-text);
   line-height: 1.55;
   white-space: pre-line;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .i2-text.empty {
   color: var(--neutral-400);
 }
 
+/* Totales en cajitas, como la versión desplegada. */
 .i2-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
-  margin: 14px 0 0;
+  gap: 8px;
+  margin: 16px 0 0;
   padding: 0;
   color: var(--neutral-700);
-  font-size: calc(14px * var(--type-scale));
+  font-size: calc(13px * var(--type-scale));
   list-style: none;
+}
+
+.i2-stats li {
+  padding: 6px 12px;
+  border: 1px solid var(--neutral-100);
+  border-radius: var(--border-radius);
 }
 
 .i2-stats strong {
@@ -509,8 +638,28 @@
   white-space: nowrap;
 }
 
+/* Nota al pie: verde si se puede corregir en Comparativa, gris si ya salió a validación experta. */
 .i2-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--border-radius);
+  background: var(--state-ok-bg);
+  color: var(--state-ok-fg);
+}
+
+.i2-notice.locked {
+  background: var(--neutral-50);
+  color: var(--neutral-700);
+}
+
+.i2-notice .ui-icon {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
 }
 
 /* ---------- Pantallas angostas (según el ancho que deja el menú) ---------- */
@@ -535,10 +684,6 @@
 }
 
 @container (max-width: 760px) {
-  .i2-general {
-    grid-template-columns: 1fr;
-  }
-
   .i2-send-selected {
     margin-left: 0;
     width: 100%;
@@ -548,10 +693,6 @@
     padding: 9px 8px;
   }
 
-  .i2-rows > div {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
 
   .i2-chip {
     border-radius: 14px;
@@ -575,9 +716,6 @@
 }
 
 :host-context(.shell.dark-mode) .i2-kpi-icon,
-:host-context(.shell.dark-mode) .i2-info > div {
-  background: var(--dark-recessed);
-}
 
 :host-context(.shell.dark-mode) .i2-kpi-body small,
 :host-context(.shell.dark-mode) .i2-tab,
@@ -592,8 +730,17 @@
 
 :host-context(.shell.dark-mode) .i2-tabs,
 :host-context(.shell.dark-mode) .i2-box,
-:host-context(.shell.dark-mode) .i2-info > div {
+:host-context(.shell.dark-mode) .i2-info,
+:host-context(.shell.dark-mode) .i2-rows > div,
+:host-context(.shell.dark-mode) .i2-stats li,
+:host-context(.shell.dark-mode) .i2-summary-level {
   border-color: #525252;
+}
+
+:host-context(.shell.dark-mode) .i2-summary-level,
+:host-context(.shell.dark-mode) .i2-notice.locked {
+  background: var(--dark-recessed);
+  color: #d4d4d4;
 }
 
 :host-context(.shell.dark-mode) .i2-catalog {

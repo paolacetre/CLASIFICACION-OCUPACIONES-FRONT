@@ -32,13 +32,16 @@ interface CorrelativaDto {
   observacion: string | null;
 }
 
-/** Fila de `GET /api/correlativa/ocupaciones`. */
+/** Fila de `GET /api/correlativa/ocupaciones` (las descripciones las toma el servidor de cada catálogo). */
 interface CorrelativaOcupacionDto {
   codigo: number;
   codOcupacionCno: string;
   nombOcupacionCno: string | null;
+  descOcupacionCno?: string | null;
   codOcupacionCuoc: string;
   nombOcupacionCuoc: string | null;
+  descOcupacionCuoc?: string | null;
+  observacion?: string | null;
 }
 
 /** Fila de `GET /api/correlativa/conocimientos`. */
@@ -73,8 +76,11 @@ function toOccupation(dto: CorrelativaOcupacionDto): OccupationCorrelation {
     id: dto.codigo,
     cnoOccupationCode: dto.codOcupacionCno,
     name: text(dto.nombOcupacionCno),
+    cnoDescription: text(dto.descOcupacionCno),
     cuocOccupationCode: dto.codOcupacionCuoc,
-    cuocName: text(dto.nombOcupacionCuoc)
+    cuocName: text(dto.nombOcupacionCuoc),
+    cuocDescription: text(dto.descOcupacionCuoc),
+    observation: text(dto.observacion)
   };
 }
 

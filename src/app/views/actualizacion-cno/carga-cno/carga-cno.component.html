@@ -143,10 +143,8 @@
                     <button *ngIf="column.mapped && isManual(column)" type="button" class="ui-btn ui-btn-ghost ui-btn-sm" (click)="unassign(column.header)">{{ 'cargaCno.unassign' | ctranslate }}</button>
                   </div>
                   <div *ngIf="configuring === column.header" class="cc-configure">
-                    <select class="ui-select" [name]="'cc-field-' + column.header" [attr.aria-label]="'cargaCno.assignAria' | ctranslate: { header: column.header }" [(ngModel)]="configuringField">
-                      <option value="">{{ 'cargaCno.chooseField' | ctranslate }}</option>
-                      <option *ngFor="let field of assignableFields" [value]="field.key">{{ field.name }}</option>
-                    </select>
+                    <app-filter-combobox [name]="'cc-field-' + column.header" [ariaLabel]="'cargaCno.assignAria' | ctranslate: { header: column.header }" [options]="assignableFields"
+                                         [allLabel]="'cargaCno.chooseField' | ctranslate" [(ngModel)]="configuringField"></app-filter-combobox>
                     <button type="button" class="ui-btn ui-btn-secondary ui-btn-sm" (click)="toggleConfigure(column.header)">{{ 'common.cancel' | ctranslate }}</button>
                     <button type="button" class="ui-btn ui-btn-primary ui-btn-sm" [disabled]="!configuringField" (click)="assign(column.header)">{{ 'cargaCno.assign' | ctranslate: { header: column.header } }}</button>
                   </div>

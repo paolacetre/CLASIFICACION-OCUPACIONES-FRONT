@@ -76,19 +76,14 @@
               </div>
               <div class="ui-field">
                 <label class="ui-label" for="vx-department">{{ 'validaciones.field.department' | translate }}</label>
-                <select class="ui-select" id="vx-department" [disabled]="!editable" [(ngModel)]="informant.department" (ngModelChange)="onDepartmentChange()">
-                  <option value="">{{ 'validaciones.field.pickDepartment' | translate }}</option>
-                  <option *ngIf="informant.department && !departments.length" [value]="informant.department">{{ informant.department }}</option>
-                  <option *ngFor="let item of departments" [value]="item.label">{{ item.label }}</option>
-                </select>
+                <app-filter-combobox inputId="vx-department" [options]="placeOptions('department')" [allLabel]="'validaciones.field.pickDepartment' | translate"
+                                     [disabled]="!editable" [(ngModel)]="informant.department" (ngModelChange)="onDepartmentChange()"></app-filter-combobox>
               </div>
               <div class="ui-field">
                 <label class="ui-label" for="vx-municipality">{{ 'validaciones.field.municipality' | translate }}</label>
-                <select class="ui-select" id="vx-municipality" [disabled]="!editable || !informant.department" [(ngModel)]="informant.municipality" (ngModelChange)="markDirty()">
-                  <option value="">{{ (informant.department ? 'validaciones.field.pickMunicipality' : 'validaciones.field.pickDepartmentFirst') | translate }}</option>
-                  <option *ngIf="informant.municipality && !municipalities.length" [value]="informant.municipality">{{ informant.municipality }}</option>
-                  <option *ngFor="let item of municipalities" [value]="item.label">{{ item.label }}</option>
-                </select>
+                <app-filter-combobox inputId="vx-municipality" [options]="placeOptions('municipality')"
+                                     [allLabel]="(informant.department ? 'validaciones.field.pickMunicipality' : 'validaciones.field.pickDepartmentFirst') | translate"
+                                     [disabled]="!editable || !informant.department" [(ngModel)]="informant.municipality" (ngModelChange)="markDirty()"></app-filter-combobox>
               </div>
               <div *ngFor="let field of extraFields" class="ui-field">
                 <label class="ui-label" [for]="'vx-' + field">{{ 'validaciones.field.' + field | translate }}</label>
@@ -100,7 +95,8 @@
           <div class="ui-field vx-observations">
             <label class="ui-label" for="vx-observations">{{ 'validaciones.field.observations' | translate }}</label>
             <textarea class="ui-textarea" id="vx-observations" rows="4" [disabled]="!editable" [placeholder]="'validaciones.field.observationsHint' | translate"
-                      [(ngModel)]="observations" (ngModelChange)="markDirty()"></textarea>
+                      [maxlength]="textMax" aria-describedby="vx-observations-count" [(ngModel)]="observations" (ngModelChange)="markDirty()"></textarea>
+            <ng-container *ngTemplateOutlet="counter; context: { $implicit: observations, id: 'vx-observations-count' }"></ng-container>
           </div>
         </ng-container>
 
@@ -133,8 +129,11 @@
                     {{ 'validaciones.item.area' | translate }}
                     <span *ngIf="current.adjustable" class="vx-editable">{{ 'validaciones.editor.editable' | translate }}</span>
                   </label>
-                  <textarea *ngIf="current.adjustable; else areaReadonly" class="ui-textarea" id="vx-info-area" rows="2" [disabled]="!editable"
-                            [(ngModel)]="adjustment.area" (ngModelChange)="markDirty()"></textarea>
+                  <ng-container *ngIf="current.adjustable; else areaReadonly">
+                    <textarea class="ui-textarea" id="vx-info-area" rows="2" [disabled]="!editable" [maxlength]="textMax" aria-describedby="vx-info-area-count"
+                              [(ngModel)]="adjustment.area" (ngModelChange)="markDirty()"></textarea>
+                    <ng-container *ngTemplateOutlet="counter; context: { $implicit: adjustment.area, id: 'vx-info-area-count' }"></ng-container>
+                  </ng-container>
                   <ng-template #areaReadonly><textarea class="ui-textarea" id="vx-info-area" rows="2" readonly [value]="current.area"></textarea></ng-template>
                 </div>
                 <div class="ui-field vx-info-full">
@@ -142,8 +141,11 @@
                     {{ 'validaciones.item.description' | translate }}
                     <span *ngIf="current.adjustable" class="vx-editable">{{ 'validaciones.editor.editable' | translate }}</span>
                   </label>
-                  <textarea *ngIf="current.adjustable; else descriptionReadonly" class="ui-textarea" id="vx-info-description" rows="4" [disabled]="!editable"
-                            [(ngModel)]="adjustment.description" (ngModelChange)="markDirty()"></textarea>
+                  <ng-container *ngIf="current.adjustable; else descriptionReadonly">
+                    <textarea class="ui-textarea" id="vx-info-description" rows="4" [disabled]="!editable" [maxlength]="textMax" aria-describedby="vx-info-description-count"
+                              [(ngModel)]="adjustment.description" (ngModelChange)="markDirty()"></textarea>
+                    <ng-container *ngTemplateOutlet="counter; context: { $implicit: adjustment.description, id: 'vx-info-description-count' }"></ng-container>
+                  </ng-container>
                   <ng-template #descriptionReadonly><textarea class="ui-textarea" id="vx-info-description" rows="4" readonly [value]="current.description"></textarea></ng-template>
                 </div>
               </div>
@@ -156,37 +158,46 @@
             <p>{{ 'validaciones.editor.emptySectionHint' | translate }}</p>
           </div>
 
-          <article *ngFor="let item of sectionItems; let i = index; trackBy: trackItem" class="vx-item" [ngClass]="'vx-item-' + (gradeOf(item).grade || 'none')" [attr.data-item]="item.id">
-            <div class="vx-item-main">
-              <h4 class="vx-item-title">{{ itemTitle(item) }} <span *ngIf="item.inactive" class="ui-badge ui-badge-warn">{{ 'validaciones.editor.inactive' | translate }}</span></h4>
-              <p class="vx-item-value">{{ item.value || '—' }}</p>
-            </div>
+          <!-- Información de la ocupación: una fila por dato («1. Nombre», «2. Área de desempeño»…) -->
+          <ng-container *ngIf="section === 'info'; else listSection">
+            <article *ngFor="let item of sectionItems; trackBy: trackItem" class="vx-item" [ngClass]="'vx-item-' + (gradeOf(item).grade || 'none')" [attr.data-item]="item.id">
+              <div class="vx-item-main">
+                <h4 class="vx-item-title">{{ itemTitle(item) }} <span *ngIf="item.inactive" class="ui-badge ui-badge-warn">{{ 'validaciones.editor.inactive' | translate }}</span></h4>
+                <p class="vx-item-value">{{ item.value || '—' }}</p>
+              </div>
+              <ng-container *ngTemplateOutlet="gradeCells; context: { $implicit: item }"></ng-container>
+            </article>
+          </ng-container>
 
-            <div class="vx-item-option">
-              <label class="vx-item-head" [for]="'vx-grade-' + item.id">{{ 'validaciones.editor.option' | translate }}</label>
-              <select class="ui-select" [id]="'vx-grade-' + item.id" [disabled]="!editable" [ngModel]="gradeOf(item).grade" (ngModelChange)="setGrade(item, $event)">
-                <option value="">{{ 'validaciones.editor.pickOption' | translate }}</option>
-                <option *ngFor="let grade of grades" [value]="grade" [ngClass]="'vx-option-' + grade">{{ 'validaciones.grade.' + grade | translate }}</option>
-              </select>
-            </div>
-
-            <div class="vx-item-comment">
-              <label class="vx-item-head" [for]="'vx-detail-' + item.id">
-                {{ 'validaciones.editor.comment' | translate }}<span *ngIf="detailRequiredFor(item)" class="vx-required" aria-hidden="true"> *</span>
-              </label>
-              <textarea class="ui-textarea" [id]="'vx-detail-' + item.id" rows="2" [disabled]="!editable" [class.invalid]="showDetailError(item)"
-                        [placeholder]="(detailRequiredFor(item) ? 'validaciones.detail.' + gradeOf(item).grade : 'validaciones.editor.commentOptional') | translate"
-                        [attr.aria-invalid]="showDetailError(item)" [ngModel]="gradeOf(item).detail" (ngModelChange)="setDetail(item, $event)"></textarea>
-              <p *ngIf="showDetailError(item)" class="ui-form-error">{{ 'validaciones.editor.detailRequired' | translate }}</p>
-            </div>
-          </article>
+          <!-- Funciones, habilidades, conocimientos, denominaciones y relacionadas: un recuadro por criterio («5. Funciones»)
+               y en él cada elemento numerado, con su código en verde y el texto debajo -->
+          <ng-template #listSection>
+            <section *ngFor="let group of sectionGroups; trackBy: trackGroup" class="vx-group">
+              <h4 class="vx-group-title">{{ group.title }}</h4>
+              <article *ngFor="let item of group.items; let i = index; trackBy: trackItem" class="vx-item vx-item-list" [ngClass]="'vx-item-' + (gradeOf(item).grade || 'none')"
+                       [attr.data-item]="item.id">
+                <div class="vx-item-main">
+                  <span class="vx-item-number" aria-hidden="true">{{ i + 1 }}</span>
+                  <div class="vx-item-body">
+                    <div *ngIf="item.code || item.inactive" class="vx-item-code-row">
+                      <h5 *ngIf="item.code" class="vx-item-code">{{ item.code }}</h5>
+                      <span *ngIf="item.inactive" class="ui-badge ui-badge-warn">{{ 'validaciones.editor.inactive' | translate }}</span>
+                    </div>
+                    <p class="vx-item-text">{{ item.text || '—' }}</p>
+                  </div>
+                </div>
+                <ng-container *ngTemplateOutlet="gradeCells; context: { $implicit: item }"></ng-container>
+              </article>
+            </section>
+          </ng-template>
           </section>
 
           <!-- Observaciones generales: un solo campo, visible al final de cada sección (como la referencia) -->
           <div class="ui-field vx-observations">
             <label class="ui-label" for="vx-observations-section">{{ 'validaciones.field.observations' | translate }}</label>
             <textarea class="ui-textarea" id="vx-observations-section" rows="3" [disabled]="!editable" [placeholder]="'validaciones.field.observationsHint' | translate"
-                      [(ngModel)]="observations" (ngModelChange)="markDirty()"></textarea>
+                      [maxlength]="textMax" aria-describedby="vx-observations-section-count" [(ngModel)]="observations" (ngModelChange)="markDirty()"></textarea>
+            <ng-container *ngTemplateOutlet="counter; context: { $implicit: observations, id: 'vx-observations-section-count' }"></ng-container>
           </div>
         </ng-container>
       </div>
@@ -206,9 +217,13 @@
       <p *ngIf="feedback" class="vx-feedback" role="status">{{ feedback }}</p>
       <div *ngIf="review && editable" class="vx-footer-actions">
         <span *ngIf="pending > 0" class="vx-pending">{{ 'validaciones.editor.pendingBadge' | translate: { count: pending } }}</span>
-        <button type="button" class="ui-btn ui-btn-outline" [disabled]="saving" (click)="saveProgress()">
-          {{ (saving ? 'validaciones.editor.saving' : 'validaciones.editor.saveProgress') | translate }}
+        <!-- Un solo botón: guarda solo (guardado automático) y también a mano; dice si hay algo pendiente. -->
+        <button type="button" class="ui-btn ui-btn-outline" [disabled]="saving" [title]="'validaciones.editor.autoSaveHint' | translate"
+                aria-describedby="vx-autosave-hint" (click)="saveProgress()">
+          <svg *ngIf="!saving && upToDate" class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          {{ (saving ? 'validaciones.editor.saving' : upToDate ? 'validaciones.editor.saved' : 'validaciones.editor.saveProgress') | translate }}
         </button>
+        <span id="vx-autosave-hint" class="sr-only">{{ 'validaciones.editor.autoSaveHint' | translate }}</span>
         <button type="button" class="ui-btn ui-btn-primary" [disabled]="saving" (click)="requestSend()">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
           {{ 'validaciones.editor.send' | translate }}
@@ -236,3 +251,33 @@
   variant="warn"
   (confirm)="confirmClose()" (cancel)="confirmCloseOpen = false">
 </app-confirm-dialog>
+
+<!-- «Opción» y «Comentario» de un ítem (las dos celdas de la derecha de su fila). -->
+<ng-template #gradeCells let-item>
+  <div class="vx-item-option">
+    <label class="vx-item-head" [for]="'vx-grade-' + item.id">{{ 'validaciones.editor.option' | translate }}</label>
+    <app-filter-combobox class="ui-combo-sm" [inputId]="'vx-grade-' + item.id" [options]="gradeOptions(item)" [allLabel]="'validaciones.editor.pickOption' | translate"
+                         [disabled]="!editable" [value]="gradeOf(item).grade" (valueChange)="setGrade(item, $any($event))"></app-filter-combobox>
+  </div>
+
+  <div class="vx-item-comment">
+    <label class="vx-item-head" [for]="'vx-detail-' + item.id">
+      {{ 'validaciones.editor.comment' | translate }}<span *ngIf="detailRequiredFor(item); else optionalComment" class="vx-required" aria-hidden="true"> *</span>
+      <ng-template #optionalComment><span class="vx-optional"> {{ 'validaciones.editor.optional' | translate }}</span></ng-template>
+    </label>
+    <textarea class="ui-textarea" [id]="'vx-detail-' + item.id" rows="2" [disabled]="!editable" [class.invalid]="showDetailError(item)"
+              [placeholder]="(detailRequiredFor(item) ? 'validaciones.detail.' + gradeOf(item).grade : 'validaciones.editor.commentOptional') | translate"
+              [attr.aria-invalid]="showDetailError(item)" [maxlength]="textMax" [attr.aria-describedby]="'vx-detail-count-' + item.id"
+              [ngModel]="gradeOf(item).detail" (ngModelChange)="setDetail(item, $event)"></textarea>
+    <ng-container *ngTemplateOutlet="counter; context: { $implicit: gradeOf(item).detail, id: 'vx-detail-count-' + item.id }"></ng-container>
+    <p *ngIf="showDetailError(item)" class="ui-form-error">{{ 'validaciones.editor.detailRequired' | translate }}</p>
+  </div>
+</ng-template>
+
+<!-- Bajo cada texto libre, mientras se puede editar: «Máximo 1000 caracteres» a la izquierda y «N/1000» a la derecha. -->
+<ng-template #counter let-text let-id="id">
+  <p *ngIf="editable" class="vx-limit" [id]="id">
+    <span>{{ 'validaciones.editor.maxChars' | translate: { max: textMax } }}</span>
+    <span class="vx-limit-count">{{ text?.length ?? 0 }}/{{ textMax }}</span>
+  </p>
+</ng-template>

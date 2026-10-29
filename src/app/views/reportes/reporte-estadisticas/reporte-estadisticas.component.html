@@ -35,9 +35,7 @@
       <!-- Componente que se muestra en el anillo y su leyenda. -->
       <div class="ui-field">
         <label class="ui-label" for="rs-component">{{ 'reportes.stats.pickComponent' | translate }}</label>
-        <select class="ui-select" id="rs-component" [(ngModel)]="component">
-          <option *ngFor="let item of components" [ngValue]="item">{{ 'reportes.component.' + item | translate }}</option>
-        </select>
+        <app-filter-combobox inputId="rs-component" [options]="componentOptions()" [showAll]="false" [(ngModel)]="component"></app-filter-combobox>
       </div>
 
       <!-- Anillo con la proporción de cada calificación del componente elegido. -->
@@ -50,7 +48,7 @@
           <text x="21" y="26" text-anchor="middle" class="rs-ring-label">{{ 'reportes.stats.baseLabel' | translate }}</text>
         </svg>
         <div class="rs-legend">
-          <h3>{{ 'reportes.stats.levelIn' | translate: { component: ('reportes.component.' + component | translate) } }}</h3>
+          <h3>{{ (component === 'all' ? 'reportes.stats.levelInAll' : 'reportes.stats.levelIn') | translate: { component: ('reportes.component.' + component | translate) } }}</h3>
           <p class="ui-hint">{{ 'reportes.stats.levelHint' | translate: { threshold: threshold } }}</p>
           <ul>
             <li *ngFor="let item of legend">
@@ -65,7 +63,7 @@
       <!-- Cumplimiento base de cada componente (porcentaje de criterios que aplican). -->
       <h3 class="rs-summary-title">{{ 'reportes.stats.summary' | translate }}</h3>
       <div class="rs-summary">
-        <button *ngFor="let item of components" type="button" class="rs-summary-card" [class.active]="item === component" (click)="component = item">
+        <button *ngFor="let item of summaryItems" type="button" class="rs-summary-card" [class.active]="item === component" (click)="component = item">
           <strong>{{ 'reportes.component.' + item | translate }}</strong>
           <span class="rs-bar" aria-hidden="true"><span [style.width.%]="compliance(item)"></span></span>
           <span class="ui-hint">{{ 'reportes.stats.compliance' | translate }} <strong>{{ compliance(item) }}%</strong></span>

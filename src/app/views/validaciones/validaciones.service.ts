@@ -117,12 +117,35 @@ function itemKey(kind: InstrumentKind, occupationCode: string, field: string): s
   return kind === 'I2' ? `${occupationCode}::${field}` : field;
 }
 
+/** Ocupación del catálogo de una copia de Análisis: «1111-9-1» (`<original>-<comparativa>-<posición>`) → «1111». */
+function originalCodeOf(copyCode: string): string {
+  return /^(.+)-\d+-\d+$/.exec(copyCode)?.[1] ?? '';
+}
+
+/**
+ * Código de una función o denominación con la regla de presentación del servidor (`codigoItem` en
+ * `back/src/modules/instrumento2/codigos-item.ts`), la misma de la versión desplegada: `F-<ocupación>.<NN>` y
+ * `D-<ocupación>.<NNN>`, con el consecutivo dentro de la ocupación. Los snapshots congelados con una versión
+ * anterior del servidor guardaban el código interno de la copia («1111-9-1-D1») o el de la función genérica
+ * («F-412»); los nuevos ya traen este formato, así que para ellos no cambia nada.
+ */
+function listItemCode(identifier: string, base: string, position: number, stored: string): string {
+  if (base && identifier === 'funcion') {
+    return `F-${base}.${String(position).padStart(2, '0')}`;
+  }
+  if (base && identifier === 'denominacion') {
+    return `D-${base}.${String(position).padStart(3, '0')}`;
+  }
+  return stored;
+}
+
 /**
  * Ítems calificables de una ocupación a partir de su parte del snapshot, con la misma regla de
  * nombres del servidor (`camposDeSnapshot`): un identificador que aparece una vez va tal cual y uno
- * repetido se numera por orden de aparición («funcion_1», «funcion_2»…).
+ * repetido se numera por orden de aparición («funcion_1», «funcion_2»…). `codeBase` es la ocupación
+ * del catálogo con la que se numeran funciones y denominaciones (vacía en Instrumento 3).
  */
-function itemsFromSnapshot(kind: InstrumentKind, occupationCode: string, preguntas: PreguntaDto[]): ReviewItem[] {
+function itemsFromSnapshot(kind: InstrumentKind, occupationCode: string, preguntas: PreguntaDto[], codeBase = ''): ReviewItem[] {
   const totals = new Map<string, number>();
   for (const pregunta of preguntas) {
     const identifier = text(pregunta.identificador) || 'campo';
@@ -141,7 +164,7 @@ function itemsFromSnapshot(kind: InstrumentKind, occupationCode: string, pregunt
     const isList = (totals.get(identifier) ?? 1) > 1;
     const field = isList ? `${identifier}_${occurrence}` : identifier;
     const detail = text(pregunta.detalle);
-    const code = text(pregunta.codigo);
+    const code = listItemCode(identifier, codeBase, occurrence, text(pregunta.codigo));
     items.push({
       id: itemKey(kind, occupationCode, field),
       field,
@@ -153,6 +176,8 @@ function itemsFromSnapshot(kind: InstrumentKind, occupationCode: string, pregunt
       criterion: shown.criterion,
       // «F-2126.01 - Planificar…», como la versión desplegada.
       value: code && detail ? `${code} - ${detail}` : detail,
+      code,
+      text: detail,
       inactive: pregunta.inactivo === true
     });
   }
@@ -188,7 +213,7 @@ function occupationsOfInstrument2(dto: Instrumento2Dto): ReviewOccupation[] {
       area: snapshotValue(own, 'area_desempeno'),
       description: snapshotValue(own, 'descripcion'),
       adjustable: true,
-      items: itemsFromSnapshot('I2', copyCode, own)
+      items: itemsFromSnapshot('I2', copyCode, own, originalCodeOf(copyCode))
     };
   });
 }

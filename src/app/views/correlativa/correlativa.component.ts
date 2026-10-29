@@ -8,6 +8,7 @@ import { TranslationService } from '../../shared/i18n/translation.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import {
   CORRELATIVA_COLUMNS,
+  CORRELATIVA_HEADERS,
   CorrelationRow,
   CorrelativaColumn,
   CorrelativaExport,
@@ -15,10 +16,12 @@ import {
   CorrelativaKind,
   CorrelativaPage,
   CorrelativaQuery,
+  HeaderCell,
   createEmptyFilters,
   createEmptyQuery
 } from './correlativa.model';
 import { CorrelativaService } from './correlativa.service';
+import { ComboOption, FilterComboboxComponent } from '../../shared/ui/filter-combobox.component';
 import { SEARCH_DEBOUNCE_MS, pageCountOf } from '../../shared/ui/list';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 
@@ -40,7 +43,7 @@ interface KindTab {
 @Component({
   selector: 'app-correlativa',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent, FilterComboboxComponent],
   templateUrl: './correlativa.component.html',
   styleUrl: './correlativa.component.css'
 })
@@ -87,6 +90,8 @@ export class CorrelativaComponent implements OnInit {
   filtersOpen = false;
   /** Descarga en curso: evita lanzar dos a la vez. */
   downloading = false;
+  /** Filas (por id) con las descripciones abiertas; «Ver más» abre las de la CNO y la CUOC juntas, como el original. */
+  private readonly openDescriptions = new Set<number>();
 
   /** Cada valor es la espera (ms) antes de consultar: 0 para clics, el debounce al escribir. */
   private readonly reload = new Subject<number>();
@@ -125,9 +130,21 @@ export class CorrelativaComponent implements OnInit {
     return CORRELATIVA_COLUMNS[this.kind];
   }
 
+  get headers(): HeaderCell[][] {
+    return CORRELATIVA_HEADERS[this.kind];
+  }
+
   /** Ocupación no tiene filtros: solo se busca por texto. */
   get hasFilterOptions(): boolean {
     return this.kind !== 'ocupacion';
+  }
+
+  /** Opciones de los filtros Estado (denominación) y Aplicado (conocimiento), en el idioma guardado. */
+  filterChoices(filter: 'status' | 'applied'): ComboOption[] {
+    const t = (key: string) => this.translationService.translate(key);
+    return filter === 'status'
+      ? [{ value: 'Activo', label: t('correlativa.statusActive') }, { value: 'Inactivo', label: t('correlativa.statusInactive') }]
+      : [{ value: 'si', label: t('correlativa.applied') }, { value: 'no', label: t('correlativa.notApplied') }];
   }
 
   get hasFilters(): boolean {
@@ -147,6 +164,7 @@ export class CorrelativaComponent implements OnInit {
     this.query = { ...createEmptyQuery(), pageSize: this.query.pageSize };
     this.draft = createEmptyFilters();
     this.filtersOpen = false;
+    this.openDescriptions.clear();
     this.result = { items: [], total: 0 };
     this.load();
   }
@@ -186,6 +204,16 @@ export class CorrelativaComponent implements OnInit {
   /** Valor de una celda (los campos de cada pestaña están en `CORRELATIVA_COLUMNS`). */
   cell(row: CorrelationRow, field: string): string | number | boolean {
     return (row as unknown as Record<string, string | number | boolean>)[field];
+  }
+
+  isDescriptionOpen(row: CorrelationRow): boolean {
+    return this.openDescriptions.has(row.id);
+  }
+
+  toggleDescription(row: CorrelationRow): void {
+    if (!this.openDescriptions.delete(row.id)) {
+      this.openDescriptions.add(row.id);
+    }
   }
 
   /** "Descargar consultadas": todos los registros de la consulta actual, no solo la página. */

@@ -58,7 +58,7 @@ export function createTestReport(): ReportRecord[] {
           criterion('2126', 'name', 0, 'aplica', 'Agroecólogos'),
           criterion('2126', 'functions', 1, 'aplica', 'Planificar agroecosistemas'),
           criterion('2126', 'functions', 2, 'no_aplica', 'Proponer estrategias'),
-          criterion('2126', 'knowledge', 1, 'parcial', 'Biología', 'mejorarlo')
+          criterion('2126', 'knowledge', 1, 'propuesta_mejora', 'Biología', 'mejorarlo')
         ]),
         occupation('21321', 'Agrónomos', [criterion('21321', 'name', 0, 'no_aplica', 'Agrónomos'), criterion('21321', 'related', 1, 'aplica', 'Expertos forestales')])
       ],

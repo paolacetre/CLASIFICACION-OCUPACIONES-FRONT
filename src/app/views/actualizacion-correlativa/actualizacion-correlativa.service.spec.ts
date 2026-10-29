@@ -42,6 +42,25 @@ describe('ActualizacionCorrelativaService', () => {
     expect(relations[1].cuoc.map((item) => item.code)).toEqual(['11120', '11130']);
   });
 
+  it('keeps the observation of each CNO, joining different ones without repeating them', () => {
+    let relations: CorrelativeRelation[] = [];
+    service.relations().subscribe((value) => (relations = value));
+    backend.expectOne('/api/correlativa/ocupaciones').flush([
+      { codigo: 1, codOcupacionCno: '0012', nombOcupacionCno: 'Personal directivo', codOcupacionCuoc: '11120', nombOcupacionCuoc: 'A', observacion: 'Revisar nombre' },
+      { codigo: 2, codOcupacionCno: '0012', nombOcupacionCno: 'Personal directivo', codOcupacionCuoc: '11130', nombOcupacionCuoc: 'B', observacion: 'Revisar nombre' },
+      { codigo: 3, codOcupacionCno: '0012', nombOcupacionCno: 'Personal directivo', codOcupacionCuoc: '11140', nombOcupacionCuoc: 'C', observacion: 'Validar con la mesa' },
+      { codigo: 4, codOcupacionCno: '0011', nombOcupacionCno: 'Miembros', codOcupacionCuoc: '11110', nombOcupacionCuoc: 'D', observacion: null }
+    ]);
+    expect(relations.map((relation) => relation.observation)).toEqual(['', 'Revisar nombre; Validar con la mesa']);
+  });
+
+  it('sends back the observation the relation already had, so saving does not erase it', () => {
+    service.save({ code: '0012', name: 'Personal directivo' }, [{ code: '11120', name: 'A' }], 'Revisar nombre').subscribe();
+    const request = backend.expectOne('/api/correlativa/ocupaciones');
+    expect(request.request.body.observacion).toBe('Revisar nombre');
+    request.flush({ codOcupacionCno: '0012', total: 1 });
+  });
+
   it('saves a correlative with the body the backend expects', () => {
     let done = false;
     service.save({ code: '0011', name: 'Miembros' }, [{ code: '11110', name: 'Directores' }, { code: '11120', name: 'Gobierno' }]).subscribe(() => (done = true));

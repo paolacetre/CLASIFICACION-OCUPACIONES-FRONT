@@ -42,20 +42,14 @@
           </div>
           <div class="ui-field">
             <label class="ui-label" for="correlativa-status">{{ 'correlativa.filterStatus' | translate }}</label>
-            <select class="ui-select" id="correlativa-status" name="status" [(ngModel)]="draft.status">
-              <option value="">{{ 'correlativa.allStatuses' | translate }}</option>
-              <option value="Activo">{{ 'correlativa.statusActive' | translate }}</option>
-              <option value="Inactivo">{{ 'correlativa.statusInactive' | translate }}</option>
-            </select>
+            <app-filter-combobox inputId="correlativa-status" name="status" [options]="filterChoices('status')" [allLabel]="'correlativa.allStatuses' | translate"
+                                 [(ngModel)]="draft.status"></app-filter-combobox>
           </div>
         </ng-container>
         <div *ngIf="kind === 'conocimiento'" class="ui-field">
           <label class="ui-label" for="correlativa-applied">{{ 'correlativa.colApplied' | translate }}</label>
-          <select class="ui-select" id="correlativa-applied" name="applied" [(ngModel)]="draft.applied">
-            <option value="">{{ 'common.all' | translate }}</option>
-            <option value="si">{{ 'correlativa.applied' | translate }}</option>
-            <option value="no">{{ 'correlativa.notApplied' | translate }}</option>
-          </select>
+          <app-filter-combobox inputId="correlativa-applied" name="applied" [options]="filterChoices('applied')" [allLabel]="'common.all' | translate"
+                               [(ngModel)]="draft.applied"></app-filter-combobox>
         </div>
         <div class="correlativa-filter-actions">
           <button type="button" class="ui-btn ui-btn-secondary" [disabled]="!hasFilters" (click)="clearFilters()">{{ 'correlativa.clearFilters' | translate }}</button>
@@ -86,16 +80,19 @@
       </div>
 
       <ng-container *ngIf="result.total">
-        <div class="ui-table-wrap ui-table-responsive">
+        <!-- Denominación tiene ocho columnas (y nombres con palabras como «intergubernamentales»): pasa a fichas desde un ancho mayor que las otras pestañas. -->
+        <div class="ui-table-wrap ui-table-responsive" [class.ui-table-responsive-lg]="kind === 'denominacion'">
           <table class="ui-table correlativa-table" [attr.data-kind]="kind">
             <thead>
-              <tr>
-                <th *ngFor="let column of columns" scope="col">{{ column.labelKey | translate }}</th>
+              <tr *ngFor="let headerRow of headers">
+                <th *ngFor="let cell of headerRow" scope="col" [attr.colspan]="cell.colspan" [attr.rowspan]="cell.rowspan"
+                    [class.correlativa-group]="cell.group" [class.correlativa-group-cno]="cell.group === 'cno'"
+                    [class.correlativa-group-cuoc]="cell.group === 'cuoc'">{{ cell.labelKey | translate }}</th>
               </tr>
             </thead>
             <tbody>
               <tr *ngFor="let row of result.items">
-                <td *ngFor="let column of columns" [ngSwitch]="column.type" [attr.data-label]="column.labelKey | translate">
+                <td *ngFor="let column of columns" [ngSwitch]="column.type" [attr.data-label]="column.labelKey | translate" [class.correlativa-wide]="column.wide">
                   <span *ngSwitchCase="'cnoCode'" class="ui-badge ui-badge-info">{{ cell(row, column.field) }}</span>
                   <span *ngSwitchCase="'cuocCode'" class="ui-badge ui-badge-info">{{ cell(row, column.field) }}</span>
                   <span *ngSwitchCase="'code'" class="ui-badge ui-badge-neutral">{{ cell(row, column.field) }}</span>
@@ -105,7 +102,14 @@
                   <span *ngSwitchCase="'applied'" class="ui-badge" [ngClass]="cell(row, column.field) ? 'ui-badge-ok' : 'ui-badge-neutral'">
                     {{ (cell(row, column.field) ? 'correlativa.applied' : 'correlativa.notApplied') | translate }}
                   </span>
-                  <ng-container *ngSwitchDefault>{{ cell(row, column.field) || '—' }}</ng-container>
+                  <ng-container *ngSwitchDefault>
+                    {{ cell(row, column.field) || '—' }}
+                    <ng-container *ngIf="column.descriptionField && cell(row, column.descriptionField) as description">
+                      <p class="correlativa-desc" [class.open]="isDescriptionOpen(row)">{{ description }}</p>
+                      <button type="button" class="ui-btn ui-btn-ghost ui-btn-sm correlativa-desc-toggle" [attr.aria-expanded]="isDescriptionOpen(row)"
+                              (click)="toggleDescription(row)">{{ (isDescriptionOpen(row) ? 'correlativa.seeLess' : 'correlativa.seeMore') | translate }}</button>
+                    </ng-container>
+                  </ng-container>
                 </td>
               </tr>
             </tbody>

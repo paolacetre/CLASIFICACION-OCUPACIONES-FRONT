@@ -95,10 +95,27 @@
   font-weight: var(--fw-semibold);
 }
 
-.analisis-result-name {
+/* Cifras del mismo ancho: los códigos miden igual y los nombres empiezan a la misma altura. */
+.analisis-result-row .ui-badge {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Nombre y, debajo, la clasificación y el área a la que pertenece. */
+.analisis-result-text {
+  display: flex;
   flex: 1 1 200px;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
+}
+
+.analisis-result-name {
   color: var(--ui-text);
+}
+
+.analisis-result-meta {
+  color: var(--neutral-700);
+  font-size: 0.875em;
 }
 
 /* ---------- Ocupaciones seleccionadas ---------- */
@@ -422,6 +439,10 @@
 :host-context(.shell.dark-mode) .analisis-detail-section,
 :host-context(.shell.dark-mode) .analisis-detail-list li {
   color: #F1F1F1;
+}
+
+:host-context(.shell.dark-mode) .analisis-result-meta {
+  color: #D4D4D4;
 }
 
 :host-context(.shell.dark-mode) .analisis-count,

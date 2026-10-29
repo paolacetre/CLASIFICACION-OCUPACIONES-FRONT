@@ -130,9 +130,9 @@ export class ActualizacionCorrelativaComponent {
       return;
     }
     const cno = this.cno.items()[0];
-    // Guardar reemplaza las CUOC de esa CNO: reutilizar una CNO ya relacionada sin venir de
-    // «Editar» borraría su correlativa sin avisar.
-    if (!this.editingCno() && this.relations().some((relation) => relation.cno.code === cno.code)) {
+    // Guardar reemplaza las CUOC de esa CNO: reutilizar una CNO ya relacionada sin venir de su
+    // «Editar» (también si al editar otra se cambió la CNO por esta) borraría su correlativa sin avisar.
+    if (cno.code !== this.editingCno() && this.relations().some((relation) => relation.cno.code === cno.code)) {
       this.toast.warning(this.t('actualizacionCorrelativa.alreadyRelated', { code: cno.code }), 6000);
       return;
     }
@@ -145,7 +145,10 @@ export class ActualizacionCorrelativaComponent {
     }
   }
 
-  /** Guarda la correlativa: el backend reemplaza todas las CUOC de esa CNO por las elegidas. */
+  /**
+   * Guarda la correlativa: el backend reemplaza todas las filas de esa CNO por las elegidas, así que
+   * se reenvía la observación que ya tenía para no borrarla.
+   */
   confirmRelation(): void {
     const cno = this.cno.items()[0];
     const cuoc = this.cuoc.items();
@@ -153,9 +156,10 @@ export class ActualizacionCorrelativaComponent {
       return;
     }
     const editing = this.editingCno();
+    const observation = this.relations().find((relation) => relation.cno.code === cno.code)?.observation ?? '';
     this.saving.set(true);
     this.service
-      .save(cno, cuoc)
+      .save(cno, cuoc, observation)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

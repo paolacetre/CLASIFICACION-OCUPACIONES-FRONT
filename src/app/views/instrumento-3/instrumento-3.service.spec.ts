@@ -7,7 +7,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { SESSION } from '../../shared/session';
-import { Proposal, ProposalDraft, createEmptyDraft } from './instrumento-3.model';
+import { Instrument3Catalogs, Proposal, ProposalDraft, createEmptyDraft } from './instrumento-3.model';
 import { INVALID_PROPOSAL, Instrumento3Service, PROPOSAL_LOCKED, PROPOSAL_NOT_FOUND, SAVED_NOT_SENT, SavedNotSentError } from './instrumento-3.service';
 
 describe('Instrumento3Service', () => {
@@ -41,16 +41,15 @@ describe('Instrumento3Service', () => {
     municipio: '05001',
     empresaEntidad: 'SENA',
     cargo: 'Analista',
-    profesion: null,
     sector: 'salud',
     nombreOcupacion: 'Gestores de telesalud',
     codArea: 3,
-    areaDesempeno: '3',
+    areaDesempeno: '3. Salud',
     codNivelCualificacion: 2,
-    nivelCualificacion: 'nivel2',
+    nivelCualificacion: 'Nivel 2 (B) - Tecnicos y supervisores',
     descripcion: 'Coordinan la atención remota.',
     otrasHabilidades: null,
-    otrosConocimientos: 'Primeros auxilios',
+    otrosConocimientos: 'Primeros auxilios; Telemedicina',
     funciones: ['Agendar teleconsultas', ''],
     denominaciones: ['Gestor de telemedicina'],
     habilidades: ['Trabajo en equipo'],
@@ -63,15 +62,16 @@ describe('Instrumento3Service', () => {
     ...createEmptyDraft({ name: ' Ana Ríos ', email: ' ana@sena.edu.co ' }),
     date: '2026-10-06',
     occupationName: ' Gestores de telesalud ',
-    area: '3',
-    level: 'nivel34',
+    area: '3. Salud',
+    level: 'Nivel 3,4 (C) - Auxiliares y operativos',
     description: ' Coordinan la atención remota. ',
     functions: [' Agendar teleconsultas ', '', '  '],
     denominations: ['Gestor de telemedicina', '', ''],
     relatedOccupations: ['', ''],
     skills: ['Trabajo en equipo'],
+    otherSkills: ['', '  '],
     knowledge: ['Servicio al cliente'],
-    otherKnowledge: ' Primeros auxilios '
+    otherKnowledge: [' Primeros auxilios ', '', 'Telemedicina']
   };
 
   const PROFILE_URL = '/api/mi-cuenta/perfil-analista';
@@ -104,12 +104,11 @@ describe('Instrumento3Service', () => {
       municipio: '',
       empresaEntidad: '',
       cargo: '',
-      profesion: '',
       sector: '',
       nombreOcupacion: 'Gestores de telesalud',
-      areaDesempeno: '3',
+      areaDesempeno: '3. Salud',
       codArea: 3,
-      nivelCualificacion: 'nivel34',
+      nivelCualificacion: 'Nivel 3,4 (C) - Auxiliares y operativos',
       codNivelCualificacion: 3,
       descripcion: 'Coordinan la atención remota.',
       funciones: ['Agendar teleconsultas'],
@@ -118,7 +117,8 @@ describe('Instrumento3Service', () => {
       habilidades: ['Trabajo en equipo'],
       otrasHabilidades: '',
       conocimientos: ['Servicio al cliente'],
-      otrosConocimientos: 'Primeros auxilios'
+      // Un campo por cada «+ Agregar», sin los vacíos, en el único texto que guarda el backend.
+      otrosConocimientos: 'Primeros auxilios; Telemedicina'
     });
     request.flush(dto(7, 'BORRADOR'));
     // La respuesta vuelve en la forma del formulario (los ítems vacíos no se muestran).
@@ -134,19 +134,18 @@ describe('Instrumento3Service', () => {
       municipality: '05001',
       organization: 'SENA',
       position: 'Analista',
-      profession: '',
       sector: 'salud',
       occupationName: 'Gestores de telesalud',
-      area: '3',
-      level: 'nivel2',
+      area: '3. Salud',
+      level: 'Nivel 2 (B) - Tecnicos y supervisores',
       description: 'Coordinan la atención remota.',
       functions: ['Agendar teleconsultas'],
       denominations: ['Gestor de telemedicina'],
       relatedOccupations: [],
       skills: ['Trabajo en equipo'],
-      otherSkills: '',
+      otherSkills: [],
       knowledge: ['Servicio al cliente'],
-      otherKnowledge: 'Primeros auxilios'
+      otherKnowledge: ['Primeros auxilios', 'Telemedicina']
     });
 
     // Sin correo, el campo no viaja (el backend lo valida aunque sea opcional); sin área ni nivel, sus códigos van en 0.
@@ -164,14 +163,43 @@ describe('Instrumento3Service', () => {
     undated.flush(dto(9, 'BORRADOR'));
   });
 
+  it('should read area, level, skills and knowledge complete from the CNO catalog of the server', () => {
+    setup();
+    let catalogs: Instrument3Catalogs | undefined;
+    service.catalogs().subscribe((result) => (catalogs = result));
+    const page = <T>(path: string, data: T[]) => {
+      const request = backend.expectOne((item) => item.url === `/api/cno/catalogos/${path}`);
+      expect(request.request.params.get('limit')).toBe('500');
+      request.flush({ data, total: data.length, page: 1, limit: 500, totalPages: 1 });
+    };
+    page('areas-desempeno', [{ codDesempeno: '1', nomDesempeno: 'Finanzas y Administración' }, { codDesempeno: '0', nomDesempeno: 'Dirección y Gerencia' }]);
+    // Los niveles que Análisis crea como copia no son del catálogo oficial.
+    page('niveles-cualificacion', [
+      { codCualificacion: 'Nivel 1 (A)', nivelesCualificacion: 'Profesionales, Dirección y Gerencia' },
+      { codCualificacion: 'Nivel 1 (A)-C1', nivelesCualificacion: 'Copia de Análisis', esCopia: true }
+    ]);
+    page('habilidades', [{ nombHabDest: 'Liderazgo' }, { nombHabDest: 'Comunicación asertiva' }, { nombHabDest: 'Liderazgo' }]);
+    page('conocimientos', [{ nombConocimiento: 'Matemáticas' }, { nombConocimiento: 'Administración y gerencia' }]);
+    expect(catalogs).toEqual({
+      areas: [
+        { value: '0. Dirección y Gerencia', label: '0. Dirección y Gerencia' },
+        { value: '1. Finanzas y Administración', label: '1. Finanzas y Administración' }
+      ],
+      levels: [{ value: 'Nivel 1 (A) - Profesionales, Dirección y Gerencia', label: 'Nivel 1 (A) - Profesionales, Dirección y Gerencia' }],
+      skills: ['Comunicación asertiva', 'Liderazgo'],
+      knowledge: ['Administración y gerencia', 'Matemáticas']
+    });
+  });
+
   it('should read the general data the server remembers, or nothing when it has none', () => {
     setup();
     const results: unknown[] = [];
     service.informant().subscribe((informant) => results.push(informant));
     const request = backend.expectOne(PROFILE_URL);
     expect(request.request.method).toBe('GET');
-    request.flush({ fecha: '2026-10-01', nombreApellidos: 'Ana Ríos', email: 'ana@sena.edu.co', telefono: null, departamento: 'antioquia', municipio: '05001', empresaEntidad: 'SENA', cargo: 'Analista', profesion: '', sector: 'salud' });
-    expect(results[0]).toEqual({ fullName: 'Ana Ríos', email: 'ana@sena.edu.co', phone: '', department: 'antioquia', municipality: '05001', organization: 'SENA', position: 'Analista', profession: '', sector: 'salud' });
+    request.flush({ fecha: '2026-10-01', nombreApellidos: 'Ana Ríos', email: 'ana@sena.edu.co', telefono: null, departamento: 'antioquia', municipio: '05001', empresaEntidad: 'SENA', cargo: 'Analista', profesion: 'Economista', sector: 'salud' });
+    // La profesión que el servidor aún recuerde no se usa: el formulario ya no la pide.
+    expect(results[0]).toEqual({ fullName: 'Ana Ríos', email: 'ana@sena.edu.co', phone: '', department: 'antioquia', municipality: '05001', organization: 'SENA', position: 'Analista', sector: 'salud' });
 
     // Sin perfil, con el perfil vacío o si el servidor no tiene ese servicio: nada que llenar.
     service.informant().subscribe((informant) => results.push(informant));
@@ -191,7 +219,7 @@ describe('Instrumento3Service', () => {
     backend.expectNone('/api/instrumento3');
     const profile = backend.expectOne(PROFILE_URL);
     expect(profile.request.method).toBe('PUT');
-    expect(profile.request.body).toEqual({ fecha: '2026-10-06', nombreApellidos: 'Ana Ríos', email: 'ana@sena.edu.co', telefono: '', departamento: '', municipio: '', empresaEntidad: '', cargo: '', profesion: '', sector: '' });
+    expect(profile.request.body).toEqual({ fecha: '2026-10-06', nombreApellidos: 'Ana Ríos', email: 'ana@sena.edu.co', telefono: '', departamento: '', municipio: '', empresaEntidad: '', cargo: '', sector: '' });
     profile.flush({ message: 'Cannot PUT' }, { status: 404, statusText: 'Not Found' });
     backend.expectOne('/api/instrumento3').flush(dto(7, 'BORRADOR'));
     expect(saved?.id).toBe(7);

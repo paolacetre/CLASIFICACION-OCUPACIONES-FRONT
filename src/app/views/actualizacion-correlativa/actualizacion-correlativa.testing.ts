@@ -88,10 +88,10 @@ export class FakeActualizacionCorrelativaService implements Pick<ActualizacionCo
     return mockResponse(() => clone(this.relationsData));
   }
 
-  save(cno: CorrelativeItem, cuoc: CorrelativeItem[]): Observable<void> {
+  save(cno: CorrelativeItem, cuoc: CorrelativeItem[], observation = ''): Observable<void> {
     return mockResponse(() => {
       const others = this.relationsData.filter((relation) => relation.cno.code !== cno.code);
-      this.relationsData = [...others, { cno: clone(cno), cuoc: clone(cuoc) }].sort((a, b) => a.cno.code.localeCompare(b.cno.code));
+      this.relationsData = [...others, { cno: clone(cno), cuoc: clone(cuoc), observation }].sort((a, b) => a.cno.code.localeCompare(b.cno.code));
     });
   }
 

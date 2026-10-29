@@ -6,6 +6,7 @@ import { forkJoin } from 'rxjs';
 import { DialogDirective } from '../../../shared/dialog/dialog.directive';
 import { TranslationService } from '../../../shared/i18n/translation.service';
 import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog.component';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../../shared/ui/filter-combobox.component';
 import {
   CatalogItem,
   DraftFunction,
@@ -50,7 +51,7 @@ const toOptions = (items: CatalogItem[]): PickOption[] => items.map((item) => ({
 @Component({
   selector: 'app-ocupacion-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClassTranslatePipe, DialogDirective, ConfirmDialogComponent, OptionPickerComponent],
+  imports: [CommonModule, FormsModule, ClassTranslatePipe, DialogDirective, ConfirmDialogComponent, OptionPickerComponent, FilterComboboxComponent],
   templateUrl: './ocupacion-wizard.component.html',
   styleUrl: './ocupacion-wizard.component.css'
 })
@@ -256,6 +257,11 @@ export class OcupacionWizardComponent implements OnInit {
 
   get registeredOnLabel(): string {
     return registrationDate(this.draft.registeredOn);
+  }
+
+  /** Áreas y niveles para los desplegables: se guarda el código y se ve «código · nombre». */
+  catalogOptions(list: 'areas' | 'levels'): ComboOption[] {
+    return comboOptions(this.catalogs?.[list], (item) => item.code, (item) => `${item.code} · ${item.name}`);
   }
 
   areaName(): string {

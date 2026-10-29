@@ -5,13 +5,20 @@ import { normalizeText } from '../../shared/ui/list';
  * `GET /api/resumen` (una fila por instrumento: la «agrupación»; solo validaciones cerradas).
  */
 
-/** Calificación de un criterio como la muestra el reporte («Con propuesta de mejora» cuenta como Parcial). */
-export type CriterionState = 'aplica' | 'parcial' | 'requiere_ajuste' | 'no_aplica' | 'sin_dato';
+/**
+ * Calificación de un criterio: las tres que da el experto (Aplica, Con propuesta de mejora, No aplica; Paola, 2026-10-28,
+ * en lugar del «Parcial» de la desplegada). «Requiere ajuste» solo existe en validaciones guardadas antes y «Sin dato» es un
+ * criterio que quedó sin calificar: se muestran únicamente si aparecen.
+ */
+export type CriterionState = 'aplica' | 'propuesta_mejora' | 'no_aplica' | 'requiere_ajuste' | 'sin_dato';
 
-/** Calificaciones del reporte, en el orden de las leyendas y el filtro. */
-export const CRITERION_STATES: readonly CriterionState[] = ['aplica', 'parcial', 'requiere_ajuste', 'no_aplica', 'sin_dato'];
+/** Calificaciones del reporte, en el orden de las leyendas y los filtros. */
+export const CRITERION_STATES: readonly CriterionState[] = ['aplica', 'propuesta_mejora', 'no_aplica', 'requiere_ajuste', 'sin_dato'];
 
-/** Calificación del experto (backend) → la del reporte (`toCoincidenceState` de la desplegada). */
+/** Las que se califican hoy (las del filtro «Coincidencia»). */
+export const GRADED_STATES: readonly CriterionState[] = ['aplica', 'propuesta_mejora', 'no_aplica'];
+
+/** Calificación del experto (backend) → la del reporte (el mismo nombre). */
 export function criterionStateOf(estado: string): CriterionState {
   switch (estado) {
     case 'aplica':
@@ -19,7 +26,7 @@ export function criterionStateOf(estado: string): CriterionState {
     case 'no_aplica':
       return 'no_aplica';
     case 'propuesta_mejora':
-      return 'parcial';
+      return 'propuesta_mejora';
     case 'requiere_ajuste':
       return 'requiere_ajuste';
     default:
@@ -60,33 +67,39 @@ export interface ReportCriterion {
   comment: string;
 }
 
-/** Resultado de una ocupación o de un envío completo. */
-export type Evaluation = 'aprobado' | 'con_mejoras' | 'parcial' | 'no_aprobado' | 'sin_evaluacion';
+/** Resultado de una ocupación o de un envío completo, con las mismas tres calificaciones. */
+export type Evaluation = 'aplica' | 'propuesta_mejora' | 'no_aplica' | 'sin_evaluacion';
 
 /** Resultados posibles de un envío, en el orden de los indicadores. */
-export const EVALUATIONS: readonly Exclude<Evaluation, 'sin_evaluacion'>[] = ['aprobado', 'con_mejoras', 'parcial', 'no_aprobado'];
+export const EVALUATIONS: readonly Exclude<Evaluation, 'sin_evaluacion'>[] = ['aplica', 'propuesta_mejora', 'no_aplica'];
 
 /**
- * Resultado según las calificaciones, la misma regla de la desplegada (`evaluarCriterios`):
- * todo Aplica → Aprobado; Aplica y alguno Parcial o Requiere ajuste (sin No aplica) → Con mejoras;
- * Aplica y algún No aplica → Parcial; ningún Aplica y algún No aplica → No aprobado.
+ * Resultado con las calificaciones reales (Paola, 2026-10-28; reemplaza Aprobado / Con mejoras / Parcial / No aprobado de
+ * la desplegada) y la misma regla con la que Validación experta decide el veredicto: algún No aplica → No aplica (se
+ * piden ajustes); si no, alguna Con propuesta de mejora → Con propuesta de mejora; todo Aplica → Aplica. Un «Requiere
+ * ajuste» guardado antes cuenta como propuesta de mejora.
  */
 export function evaluate(criteria: ReadonlyArray<Pick<ReportCriterion, 'state'>>): Evaluation {
   let apply = 0;
   let notApply = 0;
-  let partial = 0;
+  let improve = 0;
   for (const { state } of criteria) {
     if (state === 'aplica') apply++;
     else if (state === 'no_aplica') notApply++;
-    else if (state === 'parcial' || state === 'requiere_ajuste') partial++;
+    else if (state === 'propuesta_mejora' || state === 'requiere_ajuste') improve++;
   }
-  if (apply > 0 && notApply === 0) {
-    return partial === 0 ? 'aprobado' : 'con_mejoras';
+  if (notApply > 0) {
+    return 'no_aplica';
   }
-  if (apply > 0 && notApply > 0) {
-    return 'parcial';
+  if (improve > 0) {
+    return 'propuesta_mejora';
   }
-  return apply === 0 && notApply > 0 ? 'no_aprobado' : 'sin_evaluacion';
+  return apply > 0 ? 'aplica' : 'sin_evaluacion';
+}
+
+/** Cuántos criterios hay de cada calificación (solo las que aparecen), para mostrar la calificación real de un envío. */
+export function gradeCounts(criteria: ReadonlyArray<Pick<ReportCriterion, 'state'>>): Array<{ state: CriterionState; count: number }> {
+  return CRITERION_STATES.map((state) => ({ state, count: criteria.filter((item) => item.state === state).length })).filter((item) => item.count > 0);
 }
 
 /** Clasificación por la proporción de criterios en «Aplica» (`resolveClasificacion` de la desplegada). */
@@ -107,12 +120,12 @@ export function classify(criteria: ReadonlyArray<Pick<ReportCriterion, 'state'>>
 /** Umbral base de coincidencia del reporte (las estadísticas y su descarga). */
 export const BASE_THRESHOLD = 60;
 
-/** Puntaje de coincidencia (0–100): Aplica 100, Parcial 60, No aplica 0 y lo demás 30, en promedio. */
+/** Puntaje de coincidencia (0–100): Aplica 100, Con propuesta de mejora 60, No aplica 0 y lo demás 30, en promedio. */
 export function coincidenceScore(criteria: ReadonlyArray<Pick<ReportCriterion, 'state'>>): number {
   if (!criteria.length) {
     return 0;
   }
-  const points = criteria.reduce((sum, { state }) => sum + (state === 'aplica' ? 100 : state === 'parcial' ? 60 : state === 'no_aplica' ? 0 : 30), 0);
+  const points = criteria.reduce((sum, { state }) => sum + (state === 'aplica' ? 100 : state === 'propuesta_mejora' ? 60 : state === 'no_aplica' ? 0 : 30), 0);
   return points / criteria.length;
 }
 
@@ -174,7 +187,7 @@ export interface ReportFilters {
   profession: string;
   position: string;
   /** Registros con al menos un criterio en ese estado. */
-  coincidence: '' | 'aplica' | 'no_aplica' | 'parcial';
+  coincidence: '' | 'aplica' | 'no_aplica' | 'propuesta_mejora';
   classification: '' | Classification;
 }
 

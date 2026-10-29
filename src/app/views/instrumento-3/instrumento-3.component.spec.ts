@@ -50,13 +50,24 @@ describe('Instrumento3Component', () => {
   const texts = (selector: string, root: ParentNode = compiled) => Array.from(root.querySelectorAll(selector)).map((item) => clean(item.textContent));
   const button = (label: string, root: ParentNode = compiled) => Array.from(root.querySelectorAll('button')).find((item) => item.textContent?.includes(label)) as HTMLButtonElement;
 
+  /** Abre el desplegable con buscador `id`, lee sus opciones (la primera es la vacía) y lo vuelve a cerrar. */
+  function choicesOf(id: string): (string | undefined)[] {
+    const trigger = compiled.querySelector(`#${id}`) as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+    const choices = texts(`#${id}-list .fc-option`);
+    trigger.click();
+    fixture.detectChanges();
+    return choices;
+  }
+
   /** Llena lo obligatorio para enviar. */
   function fillRequired(): void {
     component.draft.fullName = 'Ana Ríos';
     component.draft.email = 'ana@sena.edu.co';
     component.draft.occupationName = 'Operadores de telemedicina';
-    component.draft.area = '3';
-    component.draft.level = 'nivel2';
+    component.draft.area = '3. Salud';
+    component.draft.level = 'Nivel 2 (B) - Tecnicos y supervisores';
     component.draft.description = 'Coordinan la atención remota de pacientes.';
   }
 
@@ -68,9 +79,13 @@ describe('Instrumento3Component', () => {
 
     // Solo la fecha viene puesta (la de hoy): nombre, correo y lo demás empiezan vacíos.
     await fixture.whenStable();
-    const general = Array.from(compiled.querySelectorAll('.i3-grid input, .i3-grid select')) as (HTMLInputElement | HTMLSelectElement)[];
-    expect(general.length).toBe(10);
-    expect(general.map((field) => field.value)).toEqual([todayAsInputDate(), '', '', '', '', '', '', '', '', '']);
+    // Sin «Profesión»: fecha, nombre, correo, teléfono, departamento, municipio, empresa, cargo y sector.
+    expect(compiled.querySelectorAll('.i3-grid .ui-field').length).toBe(9);
+    const inputs = Array.from(compiled.querySelectorAll('.i3-grid input')) as HTMLInputElement[];
+    expect(inputs.map((field) => field.value)).toEqual([todayAsInputDate(), '', '', '', '', '']);
+    // Departamento, municipio y sector son desplegables con buscador, sin elegir.
+    expect(texts('.i3-grid .fc-value')).toEqual(['Seleccione departamento', 'Seleccione primero un departamento', 'Seleccione sector']);
+    expect(compiled.querySelector('#i3-profession')).toBeNull();
     expect((compiled.querySelector('#i3-name') as HTMLInputElement).placeholder).toBe('Ingrese nombre completo');
     expect((compiled.querySelector('#i3-email') as HTMLInputElement).placeholder).toBe('correo@ejemplo.com');
 
@@ -87,16 +102,19 @@ describe('Instrumento3Component', () => {
       '9. Conocimientos'
     ]);
     expect([component.draft.functions.length, component.draft.denominations.length, component.draft.relatedOccupations.length]).toEqual([3, 3, 2]);
-    expect(compiled.querySelectorAll('#i3-area option').length).toBe(10);
-    expect(compiled.querySelectorAll('#i3-level option').length).toBe(6);
-    expect(compiled.querySelectorAll('#i3-sector option').length).toBe(32);
-    expect(compiled.querySelectorAll('.i3-chips')[0].querySelectorAll('.i3-chip').length).toBe(15);
-    expect(compiled.querySelectorAll('.i3-chips')[1].querySelectorAll('.i3-chip').length).toBe(20);
+    // Área, nivel, habilidades y conocimientos salen completos del catálogo del servidor (más «Seleccione» en los desplegables).
+    expect(choicesOf('i3-area')).toEqual(['Seleccione', ...service.catalogsData.areas.map((area) => area.label)]);
+    expect(choicesOf('i3-area')[1]).toBe('0. Dirección y Gerencia');
+    expect(choicesOf('i3-level')).toEqual(['Seleccione', ...service.catalogsData.levels.map((level) => level.label)]);
+    expect(choicesOf('i3-sector').length).toBe(32);
+    expect(texts('.i3-chips')).toEqual([service.catalogsData.skills.join(' '), service.catalogsData.knowledge.join(' ')]);
     // Solo las tres primeras secciones llevan la casilla a la derecha; en las demás va debajo.
     expect(compiled.querySelectorAll('.i3-srow-ctrl').length).toBe(3);
     expect(compiled.querySelectorAll('.i3-scontent').length).toBe(6);
-    expect(texts('.i3-note').map((note) => note?.split('.')[0])).toEqual(['Otras denominaciones', 'Otras ocupaciones', 'Otras habilidades', 'Otros conocimientos']);
-    expect(texts('.i3-add')).toEqual(['+ Agregar función', '+ Agregar denominación', '+ Agregar ocupación relacionada']);
+    // Habilidades y conocimientos ya no traen el campo fijo «Otras… ¿Cuáles?»: se abre uno con «+ Agregar».
+    expect(texts('.i3-note').map((note) => note?.split('.')[0])).toEqual(['Otras denominaciones', 'Otras ocupaciones']);
+    expect(texts('.i3-add')).toEqual(['+ Agregar función', '+ Agregar denominación', '+ Agregar ocupación relacionada', '+ Agregar habilidad', '+ Agregar conocimiento']);
+    expect([component.draft.otherSkills, component.draft.otherKnowledge]).toEqual([[], []]);
     const links = Array.from(compiled.querySelectorAll('.i3-references a')) as HTMLAnchorElement[];
     expect(links.map((link) => clean(link.textContent))).toEqual(['1. Glosario y estructura gramatical', '2. Nivel de cualificación', '3. Listado de habilidades', '4. Listado de conocimientos']);
     expect(links.every((link) => link.target === '_blank' && link.rel === 'noopener noreferrer')).toBeTrue();
@@ -107,7 +125,7 @@ describe('Instrumento3Component', () => {
   });
 
   it('should fill the general data with what the server remembers of who is signed in, keeping the date of today', async () => {
-    service.remembered = { fullName: 'Ana Ríos', email: 'ana@sena.edu.co', phone: '3001234567', department: 'antioquia', municipality: '05001', organization: 'SENA', position: 'Analista', profession: '', sector: 'salud' };
+    service.remembered = { fullName: 'Ana Ríos', email: 'ana@sena.edu.co', phone: '3001234567', department: 'antioquia', municipality: '05001', organization: 'SENA', position: 'Analista', sector: 'salud' };
     component.ngOnInit();
     await new Promise((resolve) => setTimeout(resolve));
     fixture.detectChanges();
@@ -117,32 +135,59 @@ describe('Instrumento3Component', () => {
     expect(component.draft.date).toBe(todayAsInputDate());
     expect((compiled.querySelector('#i3-name') as HTMLInputElement).value).toBe('Ana Ríos');
     expect((compiled.querySelector('#i3-email') as HTMLInputElement).value).toBe('ana@sena.edu.co');
-    expect(component.draft).toEqual(jasmine.objectContaining({ phone: '3001234567', department: 'antioquia', municipality: '05001', organization: 'SENA', position: 'Analista', profession: '', sector: 'salud' }));
+    expect(component.draft).toEqual(jasmine.objectContaining({ phone: '3001234567', department: 'antioquia', municipality: '05001', organization: 'SENA', position: 'Analista', sector: 'salud' }));
     // La propuesta en sí sigue en blanco.
     expect(component.draft.occupationName).toBe('');
   });
 
   it('should offer the municipalities of the chosen department only', async () => {
     expect(component.departments.length).toBe(33);
-    const municipality = compiled.querySelector('#i3-municipality') as HTMLSelectElement;
-    await fixture.whenStable();
+    const municipality = compiled.querySelector('#i3-municipality') as HTMLButtonElement;
     expect(municipality.disabled).toBeTrue();
-    expect(municipality.options[0].textContent).toBe('Seleccione primero un departamento');
+    expect(clean(municipality.textContent)).toBe('Seleccione primero un departamento');
 
     component.draft.department = 'amazonas';
     component.draft.municipality = '91001';
     fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
     expect(municipality.disabled).toBeFalse();
-    expect(Array.from(municipality.options).map((option) => option.textContent)).toContain('Leticia');
-    expect(municipality.options[0].textContent).toBe('Seleccione municipio');
+    expect(clean(municipality.textContent)).toBe('Leticia');
+    const choices = choicesOf('i3-municipality');
+    expect(choices[0]).toBe('Seleccione municipio');
+    expect(choices).toContain('Leticia');
 
-    // Otro departamento: el municipio elegido deja de valer.
-    component.draft.department = 'antioquia';
-    component.onDepartmentChange();
+    // Volver a elegir el mismo departamento conserva el municipio; otro lo borra.
+    component.chooseDepartment('amazonas');
+    expect(component.draft.municipality).toBe('91001');
+    component.chooseDepartment('antioquia');
     expect(component.draft.municipality).toBe('');
     expect(component.municipalities.some((option) => option.label === 'Medellín')).toBeTrue();
+  });
+
+  it('should find an option by typing in the search box of the drop-down and choose it with Enter', () => {
+    const department = compiled.querySelector('#i3-department') as HTMLButtonElement;
+    department.click();
+    fixture.detectChanges();
+    const search = compiled.querySelector('.fc-search') as HTMLInputElement;
+    expect(search.placeholder).toBe('Buscar...');
+    search.value = 'valle';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(texts('#i3-department-list .fc-option')).toEqual(['Seleccione departamento', 'Valle del Cauca']);
+    search.value = 'zzz';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(text('#i3-department-list .fc-empty')).toBe('Sin resultados');
+
+    // Sin tildes también encuentra: «bogota» → «Bogotá D.C.».
+    search.value = 'bogota';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    search.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    fixture.detectChanges();
+    expect(component.draft.department).toBe('bogota_dc');
+    expect(compiled.querySelector('.fc-panel')).toBeNull();
+    expect(clean(department.textContent)).toBe('Bogotá D.C.');
+    expect(document.activeElement).toBe(department);
   });
 
   it('should add and remove boxes, keeping at least one, and mark skills and knowledge', () => {
@@ -173,6 +218,37 @@ describe('Instrumento3Component', () => {
     expect(component.draft.skills).toEqual([]);
     component.toggleChoice('knowledge', 'Idiomas');
     expect(component.draft.knowledge).toEqual(['Idiomas']);
+  });
+
+  it('should open a field for each skill or knowledge that is not in the catalog with «+ Agregar», and remove it', async () => {
+    const skills = () => compiled.querySelectorAll('.i3-section')[7] as HTMLElement;
+    const knowledge = () => compiled.querySelectorAll('.i3-section')[8] as HTMLElement;
+    expect(skills().querySelectorAll('.i3-item input').length).toBe(0);
+
+    // Como en la app: Angular pinta solo tras cada clic (el foco espera a que el campo exista).
+    fixture.autoDetectChanges();
+    button('Agregar habilidad').click();
+    button('Agregar habilidad').click();
+    // Dentro del formulario, cada campo nuevo se registra en la siguiente vuelta.
+    await fixture.whenStable();
+    // El cursor queda en el campo recién abierto.
+    expect(document.activeElement?.id).toBe('i3-otherSkills-1');
+    const fields = Array.from(skills().querySelectorAll<HTMLInputElement>('.i3-item input'));
+    expect(fields.map((field) => field.placeholder)).toEqual(['Otra habilidad 1', 'Otra habilidad 2']);
+    fields[1].value = 'Manejo de drones';
+    fields[1].dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(component.draft.otherSkills).toEqual(['', 'Manejo de drones']);
+
+    // La papelera quita su campo.
+    (skills().querySelectorAll('.i3-remove')[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(component.draft.otherSkills).toEqual(['Manejo de drones']);
+
+    button('Agregar conocimiento').click();
+    fixture.detectChanges();
+    expect(Array.from(knowledge().querySelectorAll<HTMLInputElement>('.i3-item input')).map((field) => field.placeholder)).toEqual(['Otro conocimiento 1']);
+    expect(component.draft.otherKnowledge).toEqual(['']);
   });
 
   it('should save a draft with just the occupation name, and keep updating that same proposal', fakeAsync(() => {

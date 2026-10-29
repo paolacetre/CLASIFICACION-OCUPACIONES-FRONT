@@ -30,16 +30,25 @@
   flex-direction: column;
   gap: 16px;
   padding: 0 0 18px;
-  overflow: hidden;
 }
 
 .i3-form > * {
   margin: 0 18px;
 }
 
+/*
+ * El formulario, «Datos generales» y las secciones de área y nivel no recortan su contenido: la lista de los
+ * desplegables con buscador sale por debajo del recuadro. Por eso las esquinas que tienen fondo se redondean
+ * a mano (el radio de adentro descuenta el borde).
+ */
+.i3-form {
+  --i3-inner-radius: calc(var(--border-radius) - 1px);
+}
+
 /* "Favor diligenciar las celdas sombreadas en gris" */
 .i3-form > .i3-strip {
   margin: 0;
+  border-radius: var(--i3-inner-radius) var(--i3-inner-radius) 0 0;
   padding: 10px 18px;
   border-bottom: 1px solid var(--i3-note-border);
   background: var(--i3-note-bg);
@@ -51,7 +60,6 @@
 .i3-general {
   border: 1px solid var(--neutral-100);
   border-radius: var(--border-radius);
-  overflow: hidden;
 }
 
 .i3-general-head {
@@ -61,6 +69,7 @@
   gap: 10px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--neutral-100);
+  border-radius: var(--i3-inner-radius) var(--i3-inner-radius) 0 0;
   background: var(--neutral-50);
 }
 
@@ -89,7 +98,6 @@
 }
 
 .ui-input.invalid,
-.ui-select.invalid,
 .ui-textarea.invalid {
   border-color: var(--state-error-fg);
   box-shadow: 0 0 0 3px rgba(232, 28, 28, 0.12);
@@ -97,7 +105,6 @@
 
 /* Los campos del formato son rectos, como casillas. */
 .i3-form .ui-input,
-.i3-form .ui-select,
 .i3-form .ui-textarea {
   border-width: 1px;
   border-radius: var(--border-radius);
@@ -158,6 +165,23 @@
   border: 1px solid var(--i3-tint-border);
   border-radius: var(--border-radius);
   overflow: hidden;
+}
+
+/* Área y nivel no recortan (su lista sale del recuadro): las celdas que tocan las esquinas se redondean, según cómo se acomode la fila. */
+.i3-section-select {
+  overflow: visible;
+}
+
+.i3-section-select .i3-srow-label {
+  border-radius: var(--i3-inner-radius) 0 0 var(--i3-inner-radius);
+}
+
+.i3-section-select .i3-srow-control {
+  border-radius: 0 var(--i3-inner-radius) var(--i3-inner-radius) 0;
+}
+
+.i3-srow-control app-filter-combobox {
+  flex: 1;
 }
 
 /* Título | lo que se pide (y, en las tres primeras, la casilla a la derecha). */
@@ -369,6 +393,18 @@
     border-left: 0;
     border-top: 1px solid var(--i3-tint-border);
   }
+
+  .i3-section-select .i3-srow-label {
+    border-radius: var(--i3-inner-radius) 0 0 0;
+  }
+
+  .i3-section-select .i3-srow-desc {
+    border-top-right-radius: var(--i3-inner-radius);
+  }
+
+  .i3-section-select .i3-srow-control {
+    border-radius: 0 0 var(--i3-inner-radius) var(--i3-inner-radius);
+  }
 }
 
 @container (max-width: 620px) {
@@ -390,6 +426,14 @@
     border-right: 0;
     border-bottom: 1px solid var(--i3-tint-border);
     justify-content: flex-start;
+  }
+
+  .i3-section-select .i3-srow-label {
+    border-radius: var(--i3-inner-radius) var(--i3-inner-radius) 0 0;
+  }
+
+  .i3-section-select .i3-srow-desc {
+    border-top-right-radius: 0;
   }
 
   .i3-actions-buttons,

@@ -60,18 +60,14 @@
             </div>
             <div class="ui-field">
               <label class="ui-label" for="ow-area">{{ 'ocupacionWizard.area' | ctranslate }} *</label>
-              <select id="ow-area" class="ui-select" name="area" [(ngModel)]="draft.areaCode" [attr.aria-invalid]="basicSubmitted && !!fieldError('area')">
-                <option value="">{{ 'ocupacionWizard.areaPlaceholder' | ctranslate }}</option>
-                <option *ngFor="let item of catalog.areas" [value]="item.code">{{ item.code }} · {{ item.name }}</option>
-              </select>
+              <app-filter-combobox inputId="ow-area" name="area" [options]="catalogOptions('areas')" [allLabel]="'ocupacionWizard.areaPlaceholder' | ctranslate"
+                                   [invalid]="basicSubmitted && !!fieldError('area')" [(ngModel)]="draft.areaCode"></app-filter-combobox>
               <span *ngIf="basicSubmitted && fieldError('area') as error" class="ow-error" role="alert">{{ error | ctranslate }}</span>
             </div>
             <div class="ui-field">
               <label class="ui-label" for="ow-level">{{ 'ocupacionWizard.level' | ctranslate }} *</label>
-              <select id="ow-level" class="ui-select" name="level" [(ngModel)]="draft.levelCode" [attr.aria-invalid]="basicSubmitted && !!fieldError('level')">
-                <option value="">{{ 'ocupacionWizard.levelPlaceholder' | ctranslate }}</option>
-                <option *ngFor="let item of catalog.levels" [value]="item.code">{{ item.code }} · {{ item.name }}</option>
-              </select>
+              <app-filter-combobox inputId="ow-level" name="level" [options]="catalogOptions('levels')" [allLabel]="'ocupacionWizard.levelPlaceholder' | ctranslate"
+                                   [invalid]="basicSubmitted && !!fieldError('level')" [(ngModel)]="draft.levelCode"></app-filter-combobox>
               <span *ngIf="basicSubmitted && fieldError('level') as error" class="ow-error" role="alert">{{ error | ctranslate }}</span>
             </div>
             <div class="ui-field">

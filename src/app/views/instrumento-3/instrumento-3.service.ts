@@ -1,9 +1,9 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, defer, map, of, switchMap, throwError } from 'rxjs';
-import { text } from '../../shared/api/http-helpers';
-import { LEVEL_CODES } from './instrumento-3.catalogs';
-import { INFORMANT_FIELDS, Informant, Proposal, ProposalDraft, todayAsInputDate } from './instrumento-3.model';
+import { Observable, catchError, defer, forkJoin, map, of, switchMap, throwError } from 'rxjs';
+import { ApiPage, queryParams, text } from '../../shared/api/http-helpers';
+import { levelText } from '../analisis/analisis.model';
+import { INFORMANT_FIELDS, Informant, Instrument3Catalogs, Proposal, ProposalDraft, areaCode, levelCode, todayAsInputDate } from './instrumento-3.model';
 
 /** La propuesta pedida no existe (el 404 del servidor). */
 export const PROPOSAL_NOT_FOUND = 'PROPOSAL_NOT_FOUND';
@@ -35,7 +35,6 @@ interface PropuestaDto {
   municipio?: string | null;
   empresaEntidad?: string | null;
   cargo?: string | null;
-  profesion?: string | null;
   sector?: string | null;
   nombreOcupacion?: string | null;
   areaDesempeno?: string | null;
@@ -60,9 +59,33 @@ interface PerfilAnalistaDto {
   municipio?: string | null;
   empresaEntidad?: string | null;
   cargo?: string | null;
-  profesion?: string | null;
   sector?: string | null;
 }
+
+/** Filas de los catálogos CNO (`/api/cno/catalogos/...`) que usa el formulario. */
+interface AreaDto {
+  codDesempeno: string | number;
+  nomDesempeno: string;
+}
+interface NivelDto {
+  codCualificacion: string;
+  nivelesCualificacion: string;
+  esCopia?: boolean | null;
+}
+interface HabilidadDto {
+  nombHabDest: string;
+}
+interface ConocimientoDto {
+  nombConocimiento: string;
+}
+
+/** Cuántas filas se piden de cada catálogo: todas (son unas decenas). */
+const CATALOG_LIMIT = 500;
+
+const byName = (a: string, b: string) => a.localeCompare(b, 'es');
+
+/** «Otras» habilidades o conocimientos: el backend las guarda en un solo texto, separadas por «; ». */
+const OTHERS_SEPARATOR = '; ';
 
 function toInformant(dto: PerfilAnalistaDto | null): Informant | null {
   if (!dto) {
@@ -76,7 +99,6 @@ function toInformant(dto: PerfilAnalistaDto | null): Informant | null {
     municipality: text(dto.municipio),
     organization: text(dto.empresaEntidad),
     position: text(dto.cargo),
-    profession: text(dto.profesion),
     sector: text(dto.sector)
   };
   return INFORMANT_FIELDS.some((field) => informant[field]) ? informant : null;
@@ -90,6 +112,7 @@ function toInputDate(value: string | null | undefined): string {
 
 function toProposal(dto: PropuestaDto): Proposal {
   const list = (items: string[] | null | undefined) => (items ?? []).map((item) => text(item)).filter(Boolean);
+  const others = (value: string | null | undefined) => list(text(value).split(OTHERS_SEPARATOR.trim()).map((item) => item.trim()));
   return {
     id: dto.id,
     state: dto.estado,
@@ -102,7 +125,6 @@ function toProposal(dto: PropuestaDto): Proposal {
     municipality: text(dto.municipio),
     organization: text(dto.empresaEntidad),
     position: text(dto.cargo),
-    profession: text(dto.profesion),
     sector: text(dto.sector),
     occupationName: text(dto.nombreOcupacion),
     area: text(dto.areaDesempeno),
@@ -112,9 +134,9 @@ function toProposal(dto: PropuestaDto): Proposal {
     denominations: list(dto.denominaciones),
     relatedOccupations: list(dto.ocupacionesRelacionadas),
     skills: list(dto.habilidades),
-    otherSkills: text(dto.otrasHabilidades),
+    otherSkills: others(dto.otrasHabilidades),
     knowledge: list(dto.conocimientos),
-    otherKnowledge: text(dto.otrosConocimientos)
+    otherKnowledge: others(dto.otrosConocimientos)
   };
 }
 
@@ -135,21 +157,20 @@ function toBody(draft: ProposalDraft): Record<string, unknown> {
     municipio: draft.municipality,
     empresaEntidad: draft.organization.trim(),
     cargo: draft.position.trim(),
-    profesion: draft.profession.trim(),
     sector: draft.sector,
     nombreOcupacion: draft.occupationName.trim(),
     areaDesempeno: draft.area,
-    codArea: Number(draft.area) || 0,
+    codArea: areaCode(draft.area),
     nivelCualificacion: draft.level,
-    codNivelCualificacion: LEVEL_CODES[draft.level] ?? 0,
+    codNivelCualificacion: levelCode(draft.level),
     descripcion: draft.description.trim(),
     funciones: filled(draft.functions),
     denominaciones: filled(draft.denominations),
     ocupacionesRelacionadas: filled(draft.relatedOccupations),
     habilidades: filled(draft.skills),
-    otrasHabilidades: draft.otherSkills.trim(),
+    otrasHabilidades: filled(draft.otherSkills).join(OTHERS_SEPARATOR),
     conocimientos: filled(draft.knowledge),
-    otrosConocimientos: draft.otherKnowledge.trim()
+    otrosConocimientos: filled(draft.otherKnowledge).join(OTHERS_SEPARATOR)
   };
 }
 
@@ -183,6 +204,35 @@ export class Instrumento3Service {
     return this.http.get<PerfilAnalistaDto | null>('/api/mi-cuenta/perfil-analista').pipe(
       map(toInformant),
       catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Área de desempeño, nivel de cualificación, habilidades y conocimientos del catálogo CNO del servidor
+   * (`/api/cno/catalogos/...`), completos: antes eran listas fijas del formato y faltaban muchas. Las áreas
+   * van por su número («0. Dirección y Gerencia»…), los niveles con su código como en Análisis y las
+   * habilidades y los conocimientos en orden alfabético. Los niveles creados para Análisis no se ofrecen.
+   */
+  catalogs(): Observable<Instrument3Catalogs> {
+    const page = <T>(path: string) => this.http.get<ApiPage<T>>(`/api/cno/catalogos/${path}`, { params: queryParams({ page: 1, limit: CATALOG_LIMIT }) });
+    return forkJoin({
+      areas: page<AreaDto>('areas-desempeno'),
+      levels: page<NivelDto>('niveles-cualificacion'),
+      skills: page<HabilidadDto>('habilidades'),
+      knowledge: page<ConocimientoDto>('conocimientos')
+    }).pipe(
+      map(({ areas, levels, skills, knowledge }) => ({
+        areas: [...areas.data]
+          .sort((a, b) => Number(a.codDesempeno) - Number(b.codDesempeno))
+          .map((area) => `${text(String(area.codDesempeno))}. ${text(area.nomDesempeno)}`)
+          .map((label) => ({ value: label, label })),
+        levels: levels.data
+          .filter((level) => !level.esCopia)
+          .map((level) => levelText({ level: text(level.nivelesCualificacion), levelCode: text(level.codCualificacion) }))
+          .map((label) => ({ value: label, label })),
+        skills: [...new Set(skills.data.map((skill) => text(skill.nombHabDest)).filter(Boolean))].sort(byName),
+        knowledge: [...new Set(knowledge.data.map((item) => text(item.nombConocimiento)).filter(Boolean))].sort(byName)
+      }))
     );
   }
 
@@ -231,7 +281,6 @@ export class Instrumento3Service {
       municipio: draft.municipality,
       empresaEntidad: draft.organization.trim(),
       cargo: draft.position.trim(),
-      profesion: draft.profession.trim(),
       sector: draft.sector
     };
     return this.http.put('/api/mi-cuenta/perfil-analista', body).pipe(catchError(() => of(null)));

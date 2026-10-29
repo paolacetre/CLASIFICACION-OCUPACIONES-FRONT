@@ -7,7 +7,7 @@ import { initialsFrom } from '../../shared/format/initials';
 import { TranslatePipe } from '../../shared/i18n/translate.pipe';
 import { TranslationService } from '../../shared/i18n/translation.service';
 import { ToastService } from '../../shared/toast/toast.service';
-import { AnalysisItem, AnalysisListKey, AnalysisOccupation } from '../analisis/analisis.model';
+import { AnalysisItem, AnalysisListKey, AnalysisOccupation, levelText } from '../analisis/analisis.model';
 import { ComparativaComponent } from '../comparativa/comparativa.component';
 import { Expert, ExpertSelection, Instrument2Detail, Instrument2Item, Instrument2State, Instrument2Tab, belongsToTab, canSendToExpert } from './instrumento-2.model';
 import { INSTRUMENT_NOT_READY, Instrumento2Service } from './instrumento-2.service';
@@ -34,7 +34,7 @@ interface SendModal {
 }
 
 /** Secciones del detalle de una ocupación. */
-export type DetailSection = 'general' | 'description' | AnalysisListKey | 'traceability';
+export type DetailSection = 'general' | AnalysisListKey | 'traceability';
 
 interface TabOption {
   id: Instrument2Tab;
@@ -85,7 +85,6 @@ export class Instrumento2Component implements OnInit {
   ];
   readonly sections: SectionOption[] = [
     { id: 'general', labelKey: 'instrumento2.sectionGeneral' },
-    { id: 'description', labelKey: 'instrumento2.sectionDescription' },
     { id: 'functions', labelKey: 'instrumento2.sectionFunctions' },
     { id: 'denominations', labelKey: 'instrumento2.sectionDenominations' },
     { id: 'skills', labelKey: 'instrumento2.sectionSkills' },
@@ -150,6 +149,10 @@ export class Instrumento2Component implements OnInit {
         // Lo marcado que ya no existe o ya no se puede enviar deja de contar.
         this.selectedIds = new Set(items.filter((item) => this.selectedIds.has(item.id) && canSendToExpert(item.state)).map((item) => item.id));
         this.page = Math.min(this.page, this.pageCount);
+        // El detalle se abre bajo su fila: si la fila ya no está a la vista (p. ej. al enviarla salió de «Pendientes»), se cierra.
+        if (this.openId !== null && !this.pageItems.some((item) => item.id === this.openId)) {
+          this.closeDetail();
+        }
       },
       error: () => {
         this.loading = false;
@@ -300,6 +303,11 @@ export class Instrumento2Component implements OnInit {
     return this.detail?.occupations[this.activeOccupation] ?? null;
   }
 
+  /** Nivel como en Análisis y Comparativa: en la CNO con su código («Nivel 1 (A) - Profesionales…»). */
+  levelLabel(occupation: AnalysisOccupation): string {
+    return levelText(occupation);
+  }
+
   showOccupation(index: number): void {
     this.activeOccupation = index;
     // Los contadores de cada sección cambian entre ocupaciones: se vuelve a la general.
@@ -309,12 +317,25 @@ export class Instrumento2Component implements OnInit {
   /** Componentes de la sección abierta, si es una lista. */
   sectionItems(occupation: AnalysisOccupation): AnalysisItem[] | null {
     const section = this.section;
-    return section === 'general' || section === 'description' || section === 'traceability' ? null : occupation[section];
+    return section === 'general' || section === 'traceability' ? null : occupation[section];
+  }
+
+  /** Nombre de una sección para la ocupación que se ve: en la CUOC las habilidades se llaman destrezas. */
+  sectionLabelKey(occupation: AnalysisOccupation, section: DetailSection, labelKey: string): string {
+    return section === 'skills' && occupation.catalog === 'CUOC' ? 'instrumento2.sectionSkillsCuoc' : labelKey;
+  }
+
+  /**
+   * Nota al pie del detalle, como la versión desplegada: lo pendiente de envío se corrige en Comparativa (al guardar
+   * vuelve aquí); lo que ya salió a validación experta solo se consulta.
+   */
+  noticeKey(item: Pick<Instrument2Item, 'state'>): string {
+    return this.canSend(item) ? 'instrumento2.editNotice' : 'instrumento2.readOnlyNotice';
   }
 
   /** Cantidad que acompaña a una sección de lista; `null` en las que no son listas. */
   sectionCount(occupation: AnalysisOccupation, section: DetailSection): number | null {
-    return section === 'general' || section === 'description' || section === 'traceability' ? null : occupation[section].length;
+    return section === 'general' || section === 'traceability' ? null : occupation[section].length;
   }
 
   /* ---------- Comparación (la misma pantalla de Comparativa, en solo lectura) ---------- */

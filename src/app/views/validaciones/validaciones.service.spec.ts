@@ -130,7 +130,40 @@ describe('ValidacionesService', () => {
     labelKey: 'validaciones.item.function',
     criterion: 5,
     value,
+    code: '',
+    text: value,
     inactive: false
+  });
+
+  it('shows functions and denominations of an old snapshot with the catalog format and their consecutive, like the server today', () => {
+    const record: ReviewRecord = { id: 11, kind: 'I2', state: 'received', occupations: [], analyst: '', date: '' };
+    let review: Review | undefined;
+    service.review(record).subscribe((value) => (review = value));
+    // Así quedó congelado el #11 en la base: código interno de la copia y el de la función genérica.
+    backend.expectOne('/api/instrumento2/11').flush({
+      ...i2(11, 'ENVIADO_EXPERTO', ''),
+      ocupacion: '1111-9-1',
+      preguntas: [
+        { identificador: 'nombre', detalle: 'Contadores' },
+        { identificador: 'funcion', detalle: 'Elaborar información financiera', codigo: 'F-412' },
+        { identificador: 'funcion', detalle: 'Analizar proyecciones', codigo: 'F-413' },
+        { identificador: 'denominacion', detalle: 'Analista de salarios', codigo: '1111-9-1-D1' },
+        { identificador: 'denominacion', detalle: 'Consultor de recursos humanos', codigo: '1111-9-1-D2' },
+        { identificador: 'relacionada', detalle: 'Gerentes financieros', codigo: '0111' }
+      ]
+    });
+    backend.expectOne('/api/instrumento2/11/validacion-experta').flush(null);
+
+    const items = review?.occupations[0].items ?? [];
+    expect(items.filter((item) => item.section !== 'info').map((item) => item.value)).toEqual([
+      'F-1111.01 - Elaborar información financiera',
+      'F-1111.02 - Analizar proyecciones',
+      'D-1111.001 - Analista de salarios',
+      'D-1111.002 - Consultor de recursos humanos',
+      // Las demás listas conservan el código que trae el snapshot.
+      '0111 - Gerentes financieros'
+    ]);
+    expect(items.find((item) => item.field === 'denominacion_1')?.code).toBe('D-1111.001');
   });
 
   it('saves each grade in the snapshot field of its occupation, with the proposals of area and description', () => {

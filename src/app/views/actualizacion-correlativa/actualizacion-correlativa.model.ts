@@ -12,6 +12,12 @@ export interface CorrelativeItem {
 export interface CorrelativeRelation {
   cno: CorrelativeItem;
   cuoc: CorrelativeItem[];
+  /**
+   * Observación de la relación (cadena vacía si no tiene). Guardar reemplaza todas las filas de
+   * la CNO, así que se reenvía para no borrarla; si sus filas traían observaciones distintas (de
+   * un Excel), van todas juntas separadas por «; ».
+   */
+  observation: string;
 }
 
 /** Los tres tipos de Excel que acepta «Cargar Excel» (`POST /api/correlativa/upload/:tipo`). */
@@ -61,7 +67,10 @@ export interface CatalogPage {
 
 /** Una relación parte de UNA ocupación CNO; de ella pueden colgar hasta 10 CUOC (como el original). */
 export const CNO_LIMIT = 1;
-/** Máximo de ocupaciones CUOC que se relacionan con una CNO a la vez. */
+/**
+ * Máximo de ocupaciones CUOC que se relacionan con una CNO a la vez. Una relación que ya trae más
+ * (cargada por Excel) se edita con todas las suyas: recortarla borraría las que sobran al guardar.
+ */
 export const CUOC_LIMIT = 10;
 
 /** Tarjetas de relaciones que se muestran antes de pulsar «Ver todas». */
@@ -75,19 +84,30 @@ export function compareCodes(a: string, b: string): number {
   return a.localeCompare(b, undefined, { numeric: true });
 }
 
-/** Agrupa las filas CNO-CUOC por ocupación CNO, en orden de código. */
-export function groupRelations(rows: ReadonlyArray<{ cnoCode: string; cnoName: string; cuocCode: string; cuocName: string }>): CorrelativeRelation[] {
+/** Agrupa las filas CNO-CUOC por ocupación CNO, en orden de código, juntando sus observaciones sin repetirlas. */
+export function groupRelations(
+  rows: ReadonlyArray<{ cnoCode: string; cnoName: string; cuocCode: string; cuocName: string; observation?: string }>
+): CorrelativeRelation[] {
   const byCno = new Map<string, CorrelativeRelation>();
+  const observations = new Map<string, string[]>();
   for (const row of rows) {
     const cuoc = { code: row.cuocCode, name: row.cuocName };
     const existing = byCno.get(row.cnoCode);
     if (existing) {
       existing.cuoc.push(cuoc);
     } else {
-      byCno.set(row.cnoCode, { cno: { code: row.cnoCode, name: row.cnoName }, cuoc: [cuoc] });
+      byCno.set(row.cnoCode, { cno: { code: row.cnoCode, name: row.cnoName }, cuoc: [cuoc], observation: '' });
+      observations.set(row.cnoCode, []);
+    }
+    const observation = row.observation?.trim() ?? '';
+    const notes = observations.get(row.cnoCode)!;
+    if (observation && !notes.includes(observation)) {
+      notes.push(observation);
     }
   }
-  return [...byCno.values()].sort((a, b) => compareCodes(a.cno.code, b.cno.code));
+  return [...byCno.values()]
+    .map((relation) => ({ ...relation, observation: observations.get(relation.cno.code)!.join('; ') }))
+    .sort((a, b) => compareCodes(a.cno.code, b.cno.code));
 }
 
 /** Búsqueda en «Relaciones existentes»: por código o nombre, de cualquiera de los dos lados. */

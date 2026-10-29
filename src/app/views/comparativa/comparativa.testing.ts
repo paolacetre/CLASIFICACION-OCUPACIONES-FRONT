@@ -15,6 +15,8 @@ interface OccupationSeed {
   code: string;
   name: string;
   level?: string;
+  /** Solo CNO, como lo entrega el servidor: «Nivel 1 (A)». */
+  levelCode?: string;
   area?: string;
   description?: string;
   functions?: string[];
@@ -28,6 +30,7 @@ function occupation(seed: OccupationSeed): AnalysisOccupation {
     status: 'Activo',
     name: seed.name,
     level: seed.level ?? '',
+    ...(seed.levelCode ? { levelCode: seed.levelCode } : {}),
     area: seed.area ?? '',
     description: seed.description ?? '',
     functions: items('functions', seed.functions ?? []),
@@ -75,7 +78,8 @@ export function createTestComparisons(): Comparison[] {
           catalog: 'CNO',
           code: '2123',
           name: 'Expertos agrícolas y pecuarios',
-          level: 'Nivel 1 (A) - Profesionales',
+          level: 'Profesionales, Dirección y Gerencia',
+          levelCode: 'Nivel 1 (A)',
           area: 'Ciencias Naturales, Aplicadas y Relacionadas',
           description: 'Asesoran y prestan asistencia técnica a productores agrícolas y pecuarios sobre cultivos, ganadería, suelos y comercialización.'
         }),

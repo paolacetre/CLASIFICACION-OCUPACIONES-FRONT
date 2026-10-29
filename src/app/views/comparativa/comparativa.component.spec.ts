@@ -6,6 +6,7 @@ import { MOCK_LATENCY_MS } from '../../shared/api/mock-api';
 import { clearTestSession, startTestSession } from '../../shared/auth/session.testing';
 import { SESSION } from '../../shared/session';
 import { ComparativaComponent, aspectMatches, createEmptyQuery } from './comparativa.component';
+import { comboText } from '../../shared/ui/filter-combobox.testing';
 import { SEARCH_DEBOUNCE_MS } from '../../shared/ui/list';
 import { COMPARISON_LOCKED, COMPARISON_NOT_FOUND, ComparativaService } from './comparativa.service';
 import { FakeComparativaService } from './comparativa.testing';
@@ -231,6 +232,84 @@ describe('ComparativaComponent', () => {
     expect(saved.functions.length).toBe(before + 1);
     expect(saved.functions[0].code).toBe('F-9999.01');
     expect(saved.denominations.map((item) => item.text)).toContain('Agrónomo');
+  }));
+
+  it('should call the CUOC skills "Destrezas", as the rest of the app does', fakeAsync(() => {
+    component.open(3);
+    refresh();
+    Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) => item.textContent?.includes('Habilidades'))!.click();
+    refresh();
+    const titles = Array.from(compiled.querySelectorAll('.cpv-card .cpv-list-head .cpv-section-title')).map((title) => title.textContent?.replace(/\s+/g, ' ').trim());
+    expect(titles).toEqual(['Habilidades 0', 'Destrezas 0']);
+  }));
+
+  it('should not let the text of skills and knowledge be rewritten (the server would add them to the catalog), only removed or added', fakeAsync(() => {
+    component.open(3);
+    refresh();
+    button('Editar').click();
+    refresh();
+    component.drafts[0].skills = [{ code: '42', text: 'Liderazgo' }];
+    component.drafts[0].knowledge = [{ code: '79', text: 'Administración' }];
+    const firstCard = () => compiled.querySelectorAll('.cpv-card')[0] as HTMLElement;
+    for (const tab of ['Habilidades', 'Conocimientos']) {
+      Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) => item.textContent?.includes(tab))!.click();
+      refresh();
+      const items = firstCard().querySelectorAll('.cpv-item').length;
+      expect(items).withContext(tab).toBeGreaterThan(0);
+      expect(firstCard().querySelectorAll('.cpv-item textarea').length).withContext(tab).toBe(0);
+      expect(firstCard().querySelectorAll('.cpv-remove').length).withContext(tab).toBe(items);
+      expect(firstCard().querySelector('.cpv-add')).withContext(tab).toBeTruthy();
+      expect(firstCard().querySelector('.cpv-catalog-hint')?.textContent).withContext(tab).toContain('no cambiar su texto');
+    }
+
+    // Las relacionadas sí se reescriben.
+    Array.from(compiled.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((item) => item.textContent?.includes('Relacionadas'))!.click();
+    refresh();
+    expect(firstCard().querySelector('.cpv-catalog-hint')).toBeNull();
+    expect(firstCard().querySelectorAll('.cpv-item textarea').length).toBe(component.drafts[0].related.length);
+  }));
+
+  it('should show the level and the area of each classification as Análisis does: CNO with the level code, CUOC with its own titles', fakeAsync(() => {
+    component.open(3);
+    refresh();
+    const card = (index: number) => compiled.querySelectorAll('.cpv-card')[index] as HTMLElement;
+    const labels = (index: number) => Array.from(card(index).querySelectorAll('.cpv-label')).map((label) => label.textContent?.trim());
+    const box = (index: number, field: string) => card(index).querySelector(`#cpv-${field}-${index}`)?.textContent?.trim();
+
+    expect(labels(0)).toEqual(['Nombre de la ocupación', 'Nivel de cualificación', 'Área de desempeño']);
+    expect(box(0, 'level')).toBe('Nivel 1 (A) - Profesionales, Dirección y Gerencia');
+    expect(card(0).querySelector('.cpv-level')?.textContent?.trim()).toBe('Nivel 1 (A) - Profesionales, Dirección y Gerencia');
+    expect(labels(1)).toEqual(['Nombre de la ocupación', 'Nivel de competencia', 'Área de cualificación']);
+    expect(box(1, 'level')).toBe('Nivel 4');
+    expect(box(1, 'area')).toBe('Agropecuario, silvicultura, pesca, acuicultura y veterinaria');
+
+    // Al editar, el desplegable muestra el código del nivel CNO, pero guarda su nombre (así lo busca el servidor).
+    button('Editar').click();
+    refresh(MOCK_LATENCY_MS);
+    expect(comboText(fixture, 'cpv-level-0')).toBe('Nivel 1 (A) - Profesionales, Dirección y Gerencia');
+    expect(component.drafts[0].level).toBe('Profesionales, Dirección y Gerencia');
+  }));
+
+  it('should show name, level and area one below the other, in view and edit mode, so the long names fit', fakeAsync(() => {
+    document.body.appendChild(compiled);
+    component.open(3);
+    refresh();
+    const columns = () => Array.from(compiled.querySelectorAll('.cpv-fields')).map((fields) => getComputedStyle(fields).gridTemplateColumns.split(' ').length);
+    expect(columns()).toEqual([1, 1]);
+    button('Editar').click();
+    refresh();
+    expect(columns()).toEqual([1, 1]);
+    compiled.remove();
+  }));
+
+  it('should not give the cards a scroll of their own: they grow with their content and the page scrolls', fakeAsync(() => {
+    document.body.appendChild(compiled);
+    component.open(3);
+    refresh();
+    const bodies = Array.from(compiled.querySelectorAll<HTMLElement>('.cpv-card-body'));
+    expect(bodies.length).toBe(2);
+    expect(bodies.every((body) => getComputedStyle(body).overflowY === 'visible' && getComputedStyle(body).maxHeight === 'none')).toBeTrue();
+    compiled.remove();
   }));
 
   it('should ask before discarding unsaved changes and go back to what was saved', fakeAsync(() => {

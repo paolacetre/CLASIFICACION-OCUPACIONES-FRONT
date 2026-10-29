@@ -12,12 +12,19 @@ export function criterionTitle(criterion: Pick<ReportCriterion, 'family' | 'n'>,
 /** Columna de cada criterio: su familia y número, sin el código de la ocupación (para alinear filas). */
 const criterionKey = (criterion: ReportCriterion) => `${criterion.family}|${criterion.n}`;
 
+/** Una hoja más del libro, ya armada fila por fila (p. ej. los porcentajes de Estadísticas). */
+export interface ExtraSheet {
+  name: string;
+  rows: Array<Array<string | number>>;
+}
+
 /**
  * Libro de Excel del reporte: una fila por ocupación validada (como `toFilasExporte` de la versión
  * desplegada), con los datos del envío y del informante y una columna por criterio con su
- * calificación y el comentario del experto. La librería `xlsx` se carga aparte, solo al exportar.
+ * calificación y el comentario del experto. `before` son hojas que van antes (las estadísticas).
+ * La librería `xlsx` se carga aparte, solo al exportar.
  */
-export async function exportRecords(records: ReportRecord[], t: Translate, fileName: string, compact = false): Promise<void> {
+export async function exportRecords(records: ReportRecord[], t: Translate, fileName: string, compact = false, before: ExtraSheet[] = []): Promise<void> {
   const XLSX = await import('xlsx');
   const criteria = new Map<string, ReportCriterion>();
   for (const record of records) {
@@ -99,6 +106,13 @@ export async function exportRecords(records: ReportRecord[], t: Translate, fileN
     sheet['!autofilter'] = { ref: sheet['!ref'] };
   }
   const book = XLSX.utils.book_new();
+  for (const extra of before) {
+    const extraSheet = XLSX.utils.aoa_to_sheet(extra.rows);
+    extraSheet['!cols'] = (extra.rows[0] ?? []).map((_, column) => ({
+      wch: Math.min(48, Math.max(12, ...extra.rows.map((row) => String(row[column] ?? '').length + 2)))
+    }));
+    XLSX.utils.book_append_sheet(book, extraSheet, extra.name);
+  }
   XLSX.utils.book_append_sheet(book, sheet, 'Resumen');
   XLSX.writeFile(book, `${fileName}.xlsx`, { compression: true });
 }

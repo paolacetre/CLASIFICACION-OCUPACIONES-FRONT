@@ -249,6 +249,8 @@
 }
 
 /* Tarjetas de las ocupaciones con la columna "Comparación" entre la primera y la segunda. */
+/* Cada tarjeta ocupa dos filas (encabezado y cuerpo) que comparte con las demás por subgrid: el encabezado más
+   alto fija la altura de todos y el contenido de las tarjetas empieza a la misma altura. */
 .cpv-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 200px minmax(0, 1fr);
@@ -261,8 +263,10 @@
 }
 
 .cpv-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-row: span 2;
+  grid-template-rows: subgrid;
+  row-gap: 0;
   min-width: 0;
   padding: 0;
   overflow: hidden;
@@ -339,15 +343,12 @@
 }
 
 /* El cuerpo se desplaza por dentro para que las tarjetas queden parejas. */
+/* Sin desplazamiento propio: la tarjeta crece con su contenido y se desplaza la página. */
 .cpv-card-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-height: calc(100vh - 330px);
-  min-height: 280px;
   padding: 18px;
-  overflow-y: auto;
-  scrollbar-width: thin;
 }
 
 .cpv-section {
@@ -371,10 +372,16 @@
   height: 17px;
 }
 
+/* Nombre, nivel y área uno debajo del otro, con todo el ancho: los nombres de ocupaciones, niveles y áreas son
+   largos y en columnas se partían en muchas líneas. */
 .cpv-fields {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.cpv-catalog-hint {
+  margin: 0 0 10px;
 }
 
 .cpv-field {
@@ -397,7 +404,8 @@
   background: var(--state-ok-bg);
   color: var(--ui-text);
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  /* Solo parte una palabra si no cabe sola en el renglón («anywhere» cortaba «Administració-n»). */
+  overflow-wrap: break-word;
 }
 
 .cpv-box-text {
@@ -447,7 +455,12 @@
 }
 
 /* Columna "Comparación": un botón por aspecto, verde si coincide y naranja si difiere. */
+/* La columna «Comparación» ocupa las dos filas y queda fija al bajar por las tarjetas. */
 .cpv-compare {
+  position: sticky;
+  top: 16px;
+  grid-row: span 2;
+  align-self: start;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -573,8 +586,9 @@
     grid-template-columns: 1fr;
   }
 
-  .cpv-card-body {
-    max-height: none;
+  /* En una columna la comparación va entre las tarjetas: no se queda fija encima de ellas. */
+  .cpv-compare {
+    position: static;
   }
 }
 

@@ -151,7 +151,7 @@
             <h2 class="cpv-card-title">{{ occupation.name }}</h2>
             <p class="cpv-card-tags">
               <span class="cpv-code"><span>{{ occupation.catalog }}</span>{{ occupation.code }}</span>
-              <span *ngIf="occupation.level" class="cpv-level">{{ occupation.level }}</span>
+              <span *ngIf="occupation.level" class="cpv-level">{{ levelLabel(occupation) }}</span>
             </p>
           </div>
           <button *ngIf="editable && !editing" type="button" class="ui-btn ui-btn-outline ui-btn-sm cpv-edit" (click)="startEditing(index)"
@@ -172,22 +172,20 @@
               <div class="cpv-fields">
                 <div class="cpv-field">
                   <label class="cpv-label" [for]="'cpv-name-' + index">{{ 'comparativa.fieldName' | translate }}</label>
-                  <textarea *ngIf="editing; else nameView" class="ui-textarea cpv-input" rows="2" maxlength="200" [id]="'cpv-name-' + index"
+                  <textarea *ngIf="editing; else nameView" class="ui-textarea cpv-input" rows="3" maxlength="200" [id]="'cpv-name-' + index"
                             [(ngModel)]="drafts[index].name" [name]="'name' + index"></textarea>
                   <ng-template #nameView><p class="cpv-box" [id]="'cpv-name-' + index">{{ occupation.name || '—' }}</p></ng-template>
                 </div>
                 <div class="cpv-field">
-                  <label class="cpv-label" [for]="'cpv-level-' + index">{{ 'comparativa.aspect.level' | translate }}</label>
-                  <select *ngIf="editing; else levelView" class="ui-select cpv-input" [id]="'cpv-level-' + index" [(ngModel)]="drafts[index].level" [name]="'level' + index">
-                    <option *ngFor="let option of levelOptions(index)" [value]="option">{{ option }}</option>
-                  </select>
-                  <ng-template #levelView><p class="cpv-box" [id]="'cpv-level-' + index">{{ occupation.level || '—' }}</p></ng-template>
+                  <label class="cpv-label" [for]="'cpv-level-' + index">{{ (occupation.catalog === 'CUOC' ? 'comparativa.fieldLevelCuoc' : 'comparativa.aspect.level') | translate }}</label>
+                  <app-filter-combobox *ngIf="editing; else levelView" [inputId]="'cpv-level-' + index" [options]="levelChoices(index)" [showAll]="false"
+                                       [(ngModel)]="drafts[index].level" [name]="'level' + index"></app-filter-combobox>
+                  <ng-template #levelView><p class="cpv-box" [id]="'cpv-level-' + index">{{ levelLabel(occupation) || '—' }}</p></ng-template>
                 </div>
                 <div class="cpv-field">
-                  <label class="cpv-label" [for]="'cpv-area-' + index">{{ 'comparativa.aspect.area' | translate }}</label>
-                  <select *ngIf="editing; else areaView" class="ui-select cpv-input" [id]="'cpv-area-' + index" [(ngModel)]="drafts[index].area" [name]="'area' + index">
-                    <option *ngFor="let option of areaOptions(index)" [value]="option">{{ option }}</option>
-                  </select>
+                  <label class="cpv-label" [for]="'cpv-area-' + index">{{ (occupation.catalog === 'CUOC' ? 'comparativa.fieldAreaCuoc' : 'comparativa.aspect.area') | translate }}</label>
+                  <app-filter-combobox *ngIf="editing; else areaView" [inputId]="'cpv-area-' + index" [options]="areaChoices(index)" [showAll]="false"
+                                       [(ngModel)]="drafts[index].area" [name]="'area' + index"></app-filter-combobox>
                   <ng-template #areaView><p class="cpv-box" [id]="'cpv-area-' + index">{{ occupation.area || '—' }}</p></ng-template>
                 </div>
               </div>
@@ -223,7 +221,7 @@
             <header class="cpv-list-head">
               <h3 class="cpv-section-title">
                 <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/></svg>
-                {{ tabLabelKey | translate }}
+                {{ listTitleKey(occupation) | translate }}
                 <span class="cpv-list-count">{{ listItems(index).length }}</span>
               </h3>
               <button *ngIf="editing" type="button" class="cpv-add" [attr.aria-expanded]="activeTab === 'denominations' ? null : pickerColumn === index"
@@ -234,12 +232,13 @@
                                [showCode]="true" [searchCode]="true" [placeholder]="'comparativa.searchCatalog' | translate"
                                [emptyText]="(pickerOptionsOf(index).length ? 'comparativa.noMatches' : 'comparativa.loadingCatalog') | translate"
                                (picked)="addPicked(index, $event)"></app-option-picker>
+            <p *ngIf="editing && !itemTextEditable" class="ui-hint cpv-catalog-hint">{{ 'comparativa.catalogTextHint' | translate }}</p>
 
             <ul *ngIf="listItems(index).length; else emptyList" class="cpv-items">
               <li *ngFor="let item of listItems(index); let position = index" class="cpv-item" [class.editing]="editing">
                 <span class="cpv-item-code" [class.new]="!item.code">{{ item.code || ('comparativa.newItem' | translate) }}</span>
-                <textarea *ngIf="editing; else itemText" class="ui-textarea cpv-input cpv-item-input" rows="2"
-                          [attr.aria-label]="(tabLabelKey | translate) + ' ' + (position + 1)" [(ngModel)]="item.text" [name]="activeTab + index + '-' + position"></textarea>
+                <textarea *ngIf="itemTextEditable; else itemText" class="ui-textarea cpv-input cpv-item-input" rows="2"
+                          [attr.aria-label]="(listTitleKey(occupation) | translate) + ' ' + (position + 1)" [(ngModel)]="item.text" [name]="activeTab + index + '-' + position"></textarea>
                 <ng-template #itemText><span class="cpv-item-text">{{ item.text }}</span></ng-template>
                 <button *ngIf="editing" type="button" class="ui-icon-btn cpv-remove" [title]="'comparativa.remove' | translate"
                         [attr.aria-label]="'comparativa.remove' | translate" (click)="removeItem(index, position)">

@@ -49,7 +49,7 @@
       <div class="rp-view-tabs" role="tablist" [attr.aria-label]="'reportes.viewsAria' | translate">
         <button type="button" role="tab" class="rp-view-tab" [class.active]="view === 'full'" [attr.aria-selected]="view === 'full'" (click)="view = 'full'">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM3 10h18M3 15h18M9 5v14M15 5v14"/></svg>
-          {{ 'reportes.view.full' | translate }}<span class="rp-badge-count">{{ columns.length + 2 }}</span>
+          {{ 'reportes.view.full' | translate }}<span class="rp-badge-count" [attr.aria-label]="'reportes.recordsPill' | translate: { count: filtered.length }">{{ filtered.length }}</span>
         </button>
         <button type="button" role="tab" class="rp-view-tab" [class.active]="view === 'cards'" [attr.aria-selected]="view === 'cards'" (click)="view = 'cards'">
           <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v14H3zM9 5v14"/></svg>
@@ -198,7 +198,7 @@
                             [title]="cellLabel(record, criterion)" [attr.aria-label]="cellLabel(record, criterion)"
                             (click)="$event.stopPropagation(); openCriterion(record, criterion)"></button>
                   </span>
-                  <span class="rp-meta">{{ 'reportes.cards.applyCount' | translate: { count: applyCount(record), total: criteriaOf(record).length } }}</span>
+                  <ng-container *ngTemplateOutlet="gradeCountsView; context: { $implicit: record }"></ng-container>
                 </td>
                 <td class="rp-col-result"><span class="rp-result" [ngClass]="'rp-result-' + record.evaluation"><span class="rp-dot" aria-hidden="true"></span>{{ 'reportes.evaluation.' + record.evaluation | translate }}</span></td>
               </tr>
@@ -303,54 +303,33 @@
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-department">{{ 'reportes.column.department' | translate }}</label>
-        <select class="ui-select" id="rp-department" [(ngModel)]="draftFilters.department" (ngModelChange)="draftFilters.city = ''">
-          <option value="">{{ 'reportes.filters.allM' | translate }}</option>
-          <option *ngFor="let item of options('department')" [value]="item">{{ item }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-department" [options]="filterChoices('department')" [allLabel]="'reportes.filters.allM' | translate"
+                             [(ngModel)]="draftFilters.department" (ngModelChange)="draftFilters.city = ''"></app-filter-combobox>
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-city">{{ 'reportes.column.city' | translate }}</label>
-        <select class="ui-select" id="rp-city" [(ngModel)]="draftFilters.city">
-          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
-          <option *ngFor="let item of options('city')" [value]="item">{{ item }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-city" [options]="filterChoices('city')" [allLabel]="'reportes.filters.allF' | translate" [(ngModel)]="draftFilters.city"></app-filter-combobox>
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-company">{{ 'reportes.filters.company' | translate }}</label>
-        <select class="ui-select" id="rp-company" [(ngModel)]="draftFilters.company">
-          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
-          <option *ngFor="let item of options('company')" [value]="item">{{ item }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-company" [options]="filterChoices('company')" [allLabel]="'reportes.filters.allF' | translate" [(ngModel)]="draftFilters.company"></app-filter-combobox>
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-profession">{{ 'reportes.column.profession' | translate }}</label>
-        <select class="ui-select" id="rp-profession" [(ngModel)]="draftFilters.profession">
-          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
-          <option *ngFor="let item of options('profession')" [value]="item">{{ item }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-profession" [options]="filterChoices('profession')" [allLabel]="'reportes.filters.allF' | translate" [(ngModel)]="draftFilters.profession"></app-filter-combobox>
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-position">{{ 'reportes.column.position' | translate }}</label>
-        <select class="ui-select" id="rp-position" [(ngModel)]="draftFilters.position">
-          <option value="">{{ 'reportes.filters.allM' | translate }}</option>
-          <option *ngFor="let item of options('position')" [value]="item">{{ item }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-position" [options]="filterChoices('position')" [allLabel]="'reportes.filters.allM' | translate" [(ngModel)]="draftFilters.position"></app-filter-combobox>
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-coincidence">{{ 'reportes.filters.coincidence' | translate }}</label>
-        <select class="ui-select" id="rp-coincidence" [(ngModel)]="draftFilters.coincidence">
-          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
-          <option value="aplica">{{ 'reportes.state.aplica' | translate }}</option>
-          <option value="no_aplica">{{ 'reportes.state.no_aplica' | translate }}</option>
-          <option value="parcial">{{ 'reportes.state.parcial' | translate }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-coincidence" [options]="filterChoices('coincidence')" [allLabel]="'reportes.filters.allF' | translate" [(ngModel)]="draftFilters.coincidence"></app-filter-combobox>
       </div>
       <div class="ui-field">
         <label class="ui-label" for="rp-classification">{{ 'reportes.filters.classification' | translate }}</label>
-        <select class="ui-select" id="rp-classification" [(ngModel)]="draftFilters.classification">
-          <option value="">{{ 'reportes.filters.allF' | translate }}</option>
-          <option *ngFor="let item of classifications" [value]="item">{{ 'reportes.classification.' + item | translate }}</option>
-        </select>
+        <app-filter-combobox inputId="rp-classification" [options]="filterChoices('classification')" [allLabel]="'reportes.filters.allF' | translate"
+                             [(ngModel)]="draftFilters.classification"></app-filter-combobox>
       </div>
     </div>
     <footer class="ui-modal-actions">
@@ -362,3 +341,10 @@
 
 <app-reporte-estadisticas *ngIf="statsOpen" [records]="filtered" (closed)="statsOpen = false"></app-reporte-estadisticas>
 <app-reporte-detalle *ngIf="detail as record" [record]="record" [focusCriterion]="focusCriterion" (closed)="detail = null; focusCriterion = null"></app-reporte-detalle>
+
+<!-- La calificación real de un envío: cuántos criterios quedaron en cada una, con su color («58 Aplica · 7 Con propuesta de mejora · 16 No aplica»). -->
+<ng-template #gradeCountsView let-record>
+  <span class="rp-grade-counts">
+    <span *ngFor="let grade of gradesOf(record)" class="rp-grade-count" [ngClass]="'rp-verdict-text-' + grade.state">{{ grade.count }} {{ 'reportes.state.' + grade.state | translate }}</span>
+  </span>
+</ng-template>

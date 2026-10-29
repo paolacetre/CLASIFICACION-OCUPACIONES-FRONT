@@ -27,7 +27,8 @@ export function createTestDenominations(): DenominationCorrelation[] {
     ['0011', 'Gobernador', '11110', 'Gobernador', 'Activo', ''],
     ['0011', 'Jefe de estado', '11110', 'Jefe de estado', 'Activo', ''],
     ['0011', 'Miembro del poder ejecutivo y legislativo', '11110', 'Miembro del poder ejecutivo y legislativo', 'Activo', ''],
-    ['0012', 'Director de departamento administrativo', '11120', 'Director de departamento administrativo', 'Activo', ''],
+    // Con la palabra más larga de la tabla real, para que la prueba de diseño mida el peor caso.
+    ['0012', 'Director de relaciones intergubernamentales', '11120', 'Director de relaciones intergubernamentales', 'Activo', ''],
     ['0012', 'Secretario de despacho', '11120', 'Secretario de despacho', 'Activo', ''],
     ['0012', 'Gobernador indígena', '11130', 'Gobernador indígena', 'Activo', ''],
     ['0013', 'Gerente general de banco', '12113', 'Gerente de banco', 'Inactivo', 'Denominación en revisión']
@@ -68,7 +69,22 @@ export function createTestOccupationCorrelations(): OccupationCorrelation[] {
     ['0014', 'Directores y gerentes generales de salud, educación, servicios social y comunitario', '11200', 'Directores y gerentes generales'],
     ['0015', 'Directores y gerentes generales de comercio, medios de comunicación y otros servicios', '11200', 'Directores y gerentes generales']
   ];
-  return rows.map(([cnoOccupationCode, name, cuocOccupationCode, cuocName], index) => ({ id: index + 1, cnoOccupationCode, name, cuocOccupationCode, cuocName }));
+  const descriptions: Record<string, string> = {
+    '0011': 'Formulan, aprueban, modifican y derogan leyes y políticas públicas, y representan al Estado en el país y en el exterior.',
+    '11110': 'Formulan y asesoran sobre las políticas de los gobiernos y dirigen su ejecución.',
+    // Con la palabra compuesta más larga de la tabla real.
+    '0014': 'Dirigen servicios de salud, educación y atención pedagógico-terapéuticas-reeducativas a la comunidad.'
+  };
+  return rows.map(([cnoOccupationCode, name, cuocOccupationCode, cuocName], index) => ({
+    id: index + 1,
+    cnoOccupationCode,
+    name,
+    cnoDescription: descriptions[cnoOccupationCode] ?? '',
+    cuocOccupationCode,
+    cuocName,
+    cuocDescription: descriptions[cuocOccupationCode] ?? '',
+    observation: cnoOccupationCode === '0015' ? 'Revisar con la mesa sectorial' : ''
+  }));
 }
 
 export function createTestKnowledgeCorrelations(): KnowledgeCorrelation[] {

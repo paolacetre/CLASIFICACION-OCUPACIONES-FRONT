@@ -16,6 +16,7 @@ import {
   searchableText
 } from './validaciones.model';
 import { ValidacionesService } from './validaciones.service';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../shared/ui/filter-combobox.component';
 import { PAGE_SIZES, normalizeText, pageCountOf } from '../../shared/ui/list';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 
@@ -38,7 +39,7 @@ const STATE_ICONS: Record<ReviewState, string> = {
 @Component({
   selector: 'app-validaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, ValidacionEditorComponent, PaginationComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, ValidacionEditorComponent, PaginationComponent, FilterComboboxComponent],
   templateUrl: './validaciones.component.html',
   styleUrl: './validaciones.component.css'
 })
@@ -155,6 +156,10 @@ export class ValidacionesComponent implements OnInit {
 
   goToPage(page: number): void {
     this.page = Math.min(Math.max(1, page), this.pageCount);
+  }
+
+  stateOptions(): ComboOption[] {
+    return comboOptions(this.states, (state) => state, (state) => this.translation.translate(`validaciones.state.${state}`));
   }
 
   onFiltersChange(): void {

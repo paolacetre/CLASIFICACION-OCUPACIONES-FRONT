@@ -22,7 +22,7 @@ import { AnalisisService, ANALYSIS_REJECTED, SAVED_NOT_SENT } from './analisis.s
 import { SEARCH_DEBOUNCE_MS } from '../../shared/ui/list';
 import { GuideDialogComponent, GuideStep } from '../../shared/ui/guide-dialog.component';
 import { FilterOption } from '../consulta-ocupaciones/consulta-ocupaciones.model';
-import { FilterComboboxComponent } from '../consulta-ocupaciones/filter-combobox/filter-combobox.component';
+import { FilterComboboxComponent } from '../../shared/ui/filter-combobox.component';
 
 export * from './analisis.model';
 

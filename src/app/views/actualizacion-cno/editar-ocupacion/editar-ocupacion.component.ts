@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { TranslationService } from '../../../shared/i18n/translation.service';
 import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog.component';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../../shared/ui/filter-combobox.component';
 import { CatalogItem, OCCUPATION_TEXT_PATTERN, PickOption, occupationLimits } from '../actualizacion-cno.model';
 import { ActualizacionCnoService, CATALOG_NOT_FOUND, CatalogError, nextRowKey } from '../actualizacion-cno.service';
 import { CatalogSelectorComponent } from '../catalog-selector/catalog-selector.component';
@@ -33,7 +34,7 @@ const toOptions = (items: CatalogItem[]): PickOption[] => items.map((item) => ({
 @Component({
   selector: 'app-editar-ocupacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ClassTranslatePipe, ConfirmDialogComponent, CatalogSelectorComponent],
+  imports: [CommonModule, FormsModule, ClassTranslatePipe, ConfirmDialogComponent, CatalogSelectorComponent, FilterComboboxComponent],
   templateUrl: './editar-ocupacion.component.html',
   styleUrl: './editar-ocupacion.component.css'
 })
@@ -169,6 +170,11 @@ export class EditarOcupacionComponent implements OnInit {
       case 'traceability':
         return occupation.traceability.length > this.limits.traceabilityMax ? 'ocupacionWizard.errorMax' : null;
     }
+  }
+
+  /** Áreas y niveles del catálogo para los desplegables (se guarda el código y se ve el nombre). */
+  catalogOptions(list: 'areas' | 'levels'): ComboOption[] {
+    return comboOptions(this.catalogs?.[list], (item) => item.code, (item) => item.name);
   }
 
   areaName(): string {

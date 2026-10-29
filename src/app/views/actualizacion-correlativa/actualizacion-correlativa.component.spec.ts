@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { ToastService } from '../../shared/toast/toast.service';
 import { ActualizacionCorrelativaComponent } from './actualizacion-correlativa.component';
 import { ActualizacionCorrelativaService } from './actualizacion-correlativa.service';
-import { FakeActualizacionCorrelativaService } from './actualizacion-correlativa.testing';
+import { FakeActualizacionCorrelativaService, TEST_CNO_ROWS, TEST_CUOC_ROWS } from './actualizacion-correlativa.testing';
 
 describe('ActualizacionCorrelativaComponent', () => {
   let fixture: ComponentFixture<ActualizacionCorrelativaComponent>;
@@ -82,6 +82,42 @@ describe('ActualizacionCorrelativaComponent', () => {
     expect(comp.cno.codes()).toEqual(['0012']);
     expect(comp.cuoc.codes()).toEqual(['11120', '11130']);
     expect(el.querySelector('.acr-bar')?.textContent).toContain('Editando la correlativa de 0012');
+  }));
+
+  it('edits a relation that already has more than ten CUOC without dropping any, and keeps its observation', fakeAsync(() => {
+    const fake = TestBed.inject(ActualizacionCorrelativaService) as unknown as FakeActualizacionCorrelativaService;
+    fake.relationsData = [{ cno: { ...TEST_CNO_ROWS[4] }, cuoc: TEST_CUOC_ROWS.map((row) => ({ ...row })), observation: 'Cargada por Excel' }];
+    comp.loadRelations();
+    render();
+    comp.edit(comp.relations()[0]);
+    render();
+    expect(comp.cuoc.selectedCount()).toBe(11);
+    expect(el.querySelectorAll('app-catalog-panel')[1].querySelector('.cp-limit')?.textContent).toContain('ya tiene 11 ocupaciones, más que el máximo de 10');
+
+    // Se puede quitar una y volver a ponerla, pero no pasar de las que traía.
+    comp.cuoc.toggle(TEST_CUOC_ROWS[0]);
+    comp.cuoc.toggle(TEST_CUOC_ROWS[0]);
+    comp.cuoc.toggle({ code: '99999', name: 'Otra' });
+    expect(comp.cuoc.selectedCount()).toBe(11);
+    expect(comp.cuoc.limitWarning()).toBeTrue();
+
+    comp.openConfirm();
+    expect(comp.confirmOpen()).toBeTrue();
+    comp.confirmRelation();
+    render();
+    expect(fake.relationsData[0].cuoc.length).toBe(11);
+    expect(fake.relationsData[0].observation).toBe('Cargada por Excel');
+    expect(comp.cuoc.limit).toBe(10);
+  }));
+
+  it('warns instead of overwriting when, while editing, the CNO is changed to one that already has a correlative', fakeAsync(() => {
+    const toast = spyOn(TestBed.inject(ToastService), 'warning');
+    comp.edit(comp.relations()[1]);
+    render();
+    comp.cno.toggle(TEST_CNO_ROWS[0]);
+    comp.openConfirm();
+    expect(comp.confirmOpen()).toBeFalse();
+    expect(toast).toHaveBeenCalled();
   }));
 
   it('filters existing relations by code or name on either side', fakeAsync(() => {

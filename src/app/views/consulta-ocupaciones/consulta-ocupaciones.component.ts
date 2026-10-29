@@ -11,7 +11,7 @@ import { ToastService } from '../../shared/toast/toast.service';
 import { PAGE_SIZES, SEARCH_DEBOUNCE_MS, pageCountOf } from '../../shared/ui/list';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 import { GuideDialogComponent, GuideStep } from '../../shared/ui/guide-dialog.component';
-import { FilterComboboxComponent } from './filter-combobox/filter-combobox.component';
+import { FilterComboboxComponent } from '../../shared/ui/filter-combobox.component';
 import {
   ConsultaClassification,
   ConsultaDetail,

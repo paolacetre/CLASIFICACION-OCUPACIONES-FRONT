@@ -56,19 +56,15 @@
               </div>
               <div class="ui-field">
                 <label class="ui-label" for="eo-area">{{ 'ocupacionWizard.area' | ctranslate }}</label>
-                <select id="eo-area" class="ui-select" name="area" [(ngModel)]="current.areaCode" aria-describedby="eo-area-hint">
-                  <option value="">{{ 'ocupacionWizard.areaPlaceholder' | ctranslate }}</option>
-                  <option *ngFor="let item of catalogs?.areas" [value]="item.code">{{ item.name }}</option>
-                </select>
+                <app-filter-combobox inputId="eo-area" name="area" [options]="catalogOptions('areas')" [allLabel]="'ocupacionWizard.areaPlaceholder' | ctranslate"
+                                     describedBy="eo-area-hint" [(ngModel)]="current.areaCode"></app-filter-combobox>
                 <span id="eo-area-hint" class="ui-hint">{{ 'editarOcupacion.areaHint' | ctranslate }}</span>
                 <span *ngIf="submitted && fieldError('area') as error" class="eo-error" role="alert">{{ error | ctranslate }}</span>
               </div>
               <div class="ui-field">
                 <label class="ui-label" for="eo-level">{{ 'ocupacionWizard.level' | ctranslate }}</label>
-                <select id="eo-level" class="ui-select" name="level" [(ngModel)]="current.levelCode" aria-describedby="eo-level-hint">
-                  <option value="">{{ 'ocupacionWizard.levelPlaceholder' | ctranslate }}</option>
-                  <option *ngFor="let item of catalogs?.levels" [value]="item.code">{{ item.name }}</option>
-                </select>
+                <app-filter-combobox inputId="eo-level" name="level" [options]="catalogOptions('levels')" [allLabel]="'ocupacionWizard.levelPlaceholder' | ctranslate"
+                                     describedBy="eo-level-hint" [(ngModel)]="current.levelCode"></app-filter-combobox>
                 <span id="eo-level-hint" class="ui-hint">{{ 'editarOcupacion.levelHint' | ctranslate }}</span>
                 <span *ngIf="submitted && fieldError('level') as error" class="eo-error" role="alert">{{ error | ctranslate }}</span>
               </div>

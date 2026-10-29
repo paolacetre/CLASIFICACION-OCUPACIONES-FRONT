@@ -50,9 +50,13 @@ export interface InstrumentoDto {
   nombre?: string | null;
   descripcion?: string | null;
   nivelCualificacion?: string | null;
+  /** Código del nivel: en la CNO, «Nivel 1 (A)»; en la CUOC, el número que ya va en el nombre («Nivel 4»). */
+  codNivelCualificacion?: string | null;
   areaDesempeno?: string | null;
   /** YYYY-MM-DD. */
   fechaRegistro?: string | null;
+  /** YYYY-MM-DD, si la ocupación quedó inactiva. */
+  fechaInactividad?: string | null;
   trazabilidad?: string | null;
   /** Una sola por comparativa. */
   observacion?: string | null;
@@ -101,14 +105,17 @@ function catalogOf(panelOrigen: string): AnalysisOccupation['catalog'] {
 
 /** Ocupación completa (detalle de la comparativa). */
 export function toOccupation(dto: InstrumentoDto): AnalysisOccupation {
+  const catalog = catalogOf(dto.panelOrigen);
   return {
-    catalog: catalogOf(dto.panelOrigen),
+    catalog,
     code: text(dto.codigoOriginal) || text(dto.ocupacion),
     copyCode: text(dto.ocupacion),
     // El backend no entrega el estado de la copia.
     status: '',
     name: text(dto.nombre),
     level: text(dto.nivelCualificacion),
+    // Como en Análisis, solo la CNO muestra el código con el nombre («Nivel 1 (A) - Profesionales…»).
+    levelCode: catalog === 'CNO' ? text(dto.codNivelCualificacion) || undefined : undefined,
     area: text(dto.areaDesempeno),
     description: text(dto.descripcion),
     functions: items(dto.funciones, 'descripcion'),
@@ -117,6 +124,7 @@ export function toOccupation(dto: InstrumentoDto): AnalysisOccupation {
     denominations: items(dto.denominaciones, 'nombre'),
     related: items(dto.ocupacionesRelacionadas, 'nombre'),
     registeredAt: toDisplayDate(dto.fechaRegistro),
+    ...(toDisplayDate(dto.fechaInactividad) ? { inactiveAt: toDisplayDate(dto.fechaInactividad) } : {}),
     traceability: text(dto.trazabilidad)
   };
 }

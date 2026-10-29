@@ -11,8 +11,10 @@ import { ReporteEstadisticasComponent } from './reporte-estadisticas/reporte-est
 import { criterionTitle, exportRecords } from './reportes.export';
 import {
   CLASSIFICATIONS,
+  CRITERION_STATES,
   CriterionState,
   EVALUATIONS,
+  GRADED_STATES,
   LIST_FAMILIES,
   ReportCriterion,
   ReportFilters,
@@ -23,10 +25,12 @@ import {
   dateTime,
   distinctValues,
   emptyFilters,
+  gradeCounts,
   matchesFilters,
   searchableText
 } from './reportes.model';
 import { ReportesService } from './reportes.service';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../shared/ui/filter-combobox.component';
 import { PAGE_SIZES, normalizeText, pageCountOf } from '../../shared/ui/list';
 import { PaginationComponent } from '../../shared/ui/pagination.component';
 
@@ -53,10 +57,9 @@ const FULL_COLUMNS: readonly ReportSortColumn[] = [
 
 /** Íconos de los indicadores (trazos SVG). */
 const EVALUATION_ICONS: Record<string, string> = {
-  aprobado: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3',
-  con_mejoras: 'M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z',
-  parcial: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 8v4M12 16h.01',
-  no_aprobado: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM15 9l-6 6M9 9l6 6'
+  aplica: 'M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4 12 14.01l-3-3',
+  propuesta_mejora: 'M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z',
+  no_aplica: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM15 9l-6 6M9 9l6 6'
 };
 
 /** Filtros de la ficha («Calificación por criterio»). */
@@ -64,15 +67,15 @@ type VerdictFilter = 'todos' | CriterionState;
 
 /**
  * Vista «Resumen» (Estadísticas > Reportes; copia de la versión desplegada): los formularios que el
- * experto validó, con su calificación por criterio. Indicadores por resultado (Aprobados, Con
- * mejoras, Parciales, No aprobados), búsqueda, filtros, «Estadísticas», «Exportar Excel» y dos
+ * experto validó, con su calificación por criterio. Indicadores por resultado, con las tres calificaciones
+ * (Aplica, Con propuesta de mejora, No aplica), búsqueda, filtros, «Estadísticas», «Exportar Excel» y dos
  * vistas: «Reporte completo» (todas las columnas; clic en una fila abre el detalle por ocupación) y
  * «Fichas» (resumen con el mapa de calificaciones y la ficha desplegable).
  */
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DialogDirective, ReporteDetalleComponent, ReporteEstadisticasComponent, PaginationComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DialogDirective, ReporteDetalleComponent, ReporteEstadisticasComponent, PaginationComponent, FilterComboboxComponent],
   templateUrl: './reportes.component.html',
   styleUrl: './reportes.component.css'
 })
@@ -173,6 +176,17 @@ export class ReportesComponent implements OnInit {
     return distinctValues(source, (record) => record[field]);
   }
 
+  /** Los mismos desplegables como opciones; coincidencia y clasificación van traducidas. */
+  filterChoices(field: 'department' | 'city' | 'company' | 'profession' | 'position' | 'coincidence' | 'classification'): ComboOption[] {
+    if (field === 'coincidence') {
+      return comboOptions(GRADED_STATES, (state) => state, (state) => this.t(`reportes.state.${state}`));
+    }
+    if (field === 'classification') {
+      return comboOptions(this.classifications, (item) => item, (item) => this.t(`reportes.classification.${item}`));
+    }
+    return comboOptions(this.options(field), (item) => item);
+  }
+
   openFilters(): void {
     this.draftFilters = { ...this.filters };
     this.filtersOpen = true;
@@ -262,7 +276,7 @@ export class ReportesComponent implements OnInit {
   /** Conteo de cada veredicto de una ficha (solo los que tienen al menos uno). */
   verdictCounts(record: ReportRecord): Array<{ state: VerdictFilter; total: number }> {
     const criteria = allCriteria(record);
-    const states: VerdictFilter[] = ['todos', 'aplica', 'parcial', 'requiere_ajuste', 'no_aplica', 'sin_dato'];
+    const states: VerdictFilter[] = ['todos', ...CRITERION_STATES];
     return states
       .map((state) => ({ state, total: state === 'todos' ? criteria.length : criteria.filter((item) => item.state === state).length }))
       .filter((item) => item.total > 0);
@@ -320,8 +334,9 @@ export class ReportesComponent implements OnInit {
     return record.occupations.map((occupation) => `${occupation.code} · ${occupation.name}`).join(' | ') || '—';
   }
 
-  applyCount(record: ReportRecord): number {
-    return allCriteria(record).filter((criterion) => criterion.state === 'aplica').length;
+  /** La calificación real de un envío: cuántos criterios quedaron en cada una («58 Aplica · 7 Con propuesta de mejora · 16 No aplica»). */
+  gradesOf(record: ReportRecord): Array<{ state: CriterionState; count: number }> {
+    return gradeCounts(allCriteria(record));
   }
 
   /* ---------- Exportar ---------- */

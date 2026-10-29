@@ -467,7 +467,7 @@
   margin: 6px 0 4px 0;
 }
 
-.cc-configure .ui-select {
+.cc-configure app-filter-combobox {
   flex: 1 1 180px;
 }
 

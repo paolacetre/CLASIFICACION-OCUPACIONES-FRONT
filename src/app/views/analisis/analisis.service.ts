@@ -170,12 +170,12 @@ export class AnalisisService {
     });
   }
 
-  /** Ocupaciones del catálogo por código o parte del nombre. */
+  /** Ocupaciones del catálogo por código o parte del nombre, con el área a la que pertenecen (como la versión desplegada). */
   search(catalog: AnalysisCatalog, query: string): Observable<AnalysisSearchResult[]> {
     const page = { page: 1, pageSize: SEARCH_LIMIT, sort: 'code', ascending: true } as const;
-    const results: Observable<{ items: { code: string; name: string }[] }> =
+    const results: Observable<{ items: { code: string; name: string; area: string }[] }> =
       catalog === 'CNO' ? this.cnoService.search({ query, level: '', area: '', status: '', ...page }) : this.cuocService.search({ query, area: '', status: '', ...page });
-    return results.pipe(map(({ items }) => items.map(({ code, name }) => ({ catalog, code, name }))));
+    return results.pipe(map(({ items }) => items.map(({ code, name, area }) => ({ catalog, code, name, area }))));
   }
 
   /** La ocupación completa del catálogo, lista para agregarla al análisis. */

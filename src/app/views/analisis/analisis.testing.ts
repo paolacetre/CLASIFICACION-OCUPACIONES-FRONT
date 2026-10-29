@@ -85,11 +85,11 @@ export class FakeAnalisisService implements Pick<AnalisisService, keyof Analisis
   /** GET /api/:catalogo/ocupaciones?q= — ocupaciones del catálogo por código o parte del nombre. */
   search(catalog: AnalysisCatalog, text: string): Observable<AnalysisSearchResult[]> {
     const page = { page: 1, pageSize: SEARCH_LIMIT, sort: 'code', ascending: true } as const;
-    const results: Observable<{ items: { code: string; name: string }[] }> =
+    const results: Observable<{ items: { code: string; name: string; area: string }[] }> =
       catalog === 'CNO'
         ? this.cnoService.search({ query: text, level: '', area: '', status: '', ...page })
         : this.cuocService.search({ query: text, area: '', status: '', ...page });
-    return results.pipe(map(({ items }) => items.map(({ code, name }) => ({ catalog, code, name }))));
+    return results.pipe(map(({ items }) => items.map(({ code, name, area }) => ({ catalog, code, name, area }))));
   }
 
   /** GET /api/:catalogo/ocupaciones/:codigo — la ocupación completa, lista para agregarla al análisis. */

@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, computed, signal } from '@angular/core';
+import { Component, Input, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../shared/i18n/translate.pipe';
+import { TranslationService } from '../../../shared/i18n/translation.service';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../../shared/ui/filter-combobox.component';
 import { CatalogCriteria, CatalogPage, CatalogRow, CorrelativeItem } from '../actualizacion-correlativa.model';
 import { PAGE_SIZES, pageCountOf } from '../../../shared/ui/list';
 import { PaginationComponent } from '../../../shared/ui/pagination.component';
@@ -16,7 +18,18 @@ export class CatalogPanel {
    * Con tope 1 la lista se comporta como una elección única (elegir otra reemplaza la anterior);
    * con un tope mayor, al llegar al máximo se avisa en vez de seguir agregando.
    */
-  constructor(readonly limit: number) {}
+  constructor(readonly maxSelection: number) {}
+
+  /** Cuántas ocupaciones traía la relación que se está editando (0 si no se edita ninguna). */
+  private readonly editedCount = signal(0);
+
+  /**
+   * Tope vigente: el del panel o, si la relación que se edita ya trae más (cargada por Excel), las
+   * que trae, para no obligar a borrar ninguna. Se puede cambiar unas por otras, no agregar más.
+   */
+  get limit(): number {
+    return Math.max(this.maxSelection, this.editedCount());
+  }
 
   /** Lo que se escribe en el buscador; la pantalla lo pasa a `query` tras una pausa. */
   readonly searchText = signal('');
@@ -63,6 +76,8 @@ export class CatalogPanel {
   readonly pageCount = computed(() => pageCountOf(this.total(), this.pageSize()));
 
   readonly selectedCount = computed(() => this.selection().size);
+  /** La selección pasa del tope del panel: solo ocurre al editar una relación que ya venía así. */
+  readonly overLimit = computed(() => this.selection().size > this.maxSelection);
   readonly codes = computed(() => [...this.selection().keys()]);
   readonly items = computed<CorrelativeItem[]>(() => [...this.selection()].map(([code, name]) => ({ code, name })));
   readonly activeFilters = computed(() => [this.area(), this.status()].filter(Boolean).length);
@@ -130,14 +145,19 @@ export class CatalogPanel {
     this.limitWarning.set(reachedLimit);
   }
 
-  /** Deja marcada una relación existente (recortada al tope) y vuelve a la página 1, donde se ve fijada. */
+  /**
+   * Deja marcada una relación existente, completa, y vuelve a la página 1, donde se ve fijada. No
+   * se recorta al tope: guardar reemplaza todas las CUOC de la CNO y las que sobraran se borrarían.
+   */
   select(items: ReadonlyArray<CorrelativeItem>): void {
-    this.selection.set(new Map(items.slice(0, this.limit).map((item) => [item.code, item.name])));
+    this.editedCount.set(items.length);
+    this.selection.set(new Map(items.map((item) => [item.code, item.name])));
     this.limitWarning.set(false);
     this.page.set(1);
   }
 
   clearSelection(): void {
+    this.editedCount.set(0);
     this.selection.set(new Map());
     this.limitWarning.set(false);
   }
@@ -175,16 +195,31 @@ export class CatalogPanel {
 @Component({
   selector: 'app-catalog-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent, FilterComboboxComponent],
   templateUrl: './catalog-panel.component.html',
   styleUrl: './catalog-panel.component.css'
 })
 export class CatalogPanelComponent {
+  private readonly translation = inject(TranslationService);
+
   @Input({ required: true }) panel!: CatalogPanel;
   @Input({ required: true }) side!: 'cno' | 'cuoc';
 
   readonly statuses = ['Activo', 'Inactivo'] as const;
   readonly skeleton = Array.from({ length: 6 });
+
+  areaOptions(): ComboOption[] {
+    return comboOptions(this.panel.areas(), (area) => area);
+  }
+
+  /** «Activo» e «Inactivo» se filtran por su valor; el texto va en el idioma guardado. */
+  statusOptions(): ComboOption[] {
+    return comboOptions(this.statuses, (status) => status, (status) => this.translation.translate(`actualizacionCorrelativa.status.${status}`));
+  }
+
+  chooseStatus(status: string): void {
+    this.panel.setStatus(status as CatalogCriteria['status']);
+  }
 
   /** Miles con punto, como el resto del sistema. */
   format(value: number): string {

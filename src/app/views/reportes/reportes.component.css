@@ -86,7 +86,7 @@
 /* ---------- Indicadores ---------- */
 .rp-kpis {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
@@ -102,17 +102,13 @@
   border-radius: var(--border-radius);
 }
 
-.rp-kpi-con_mejoras {
-  --kpi-fg: var(--accent-color-hover);
-  --kpi-bg: var(--accent-color-soft);
+/* Con propuesta de mejora en azul, como en Validación experta. */
+.rp-kpi-propuesta_mejora {
+  --kpi-fg: #0c7fb0;
+  --kpi-bg: color-mix(in srgb, var(--brand-blue) 12%, #fff);
 }
 
-.rp-kpi-parcial {
-  --kpi-fg: var(--state-warn-fg);
-  --kpi-bg: var(--state-warn-bg);
-}
-
-.rp-kpi-no_aprobado {
+.rp-kpi-no_aplica {
   --kpi-fg: var(--state-error-fg);
   --kpi-bg: var(--state-error-bg);
 }
@@ -309,6 +305,19 @@
   font-weight: var(--fw-semibold);
 }
 
+/* «58 Aplica · 7 Con propuesta de mejora · 16 No aplica», cada uno con su color. */
+.rp-grade-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin-top: 6px;
+  font-size: calc(12px * var(--type-scale));
+}
+
+.rp-grade-count {
+  white-space: nowrap;
+}
+
 .rp-meta {
   display: block;
   margin-top: 4px;
@@ -330,22 +339,17 @@
   white-space: nowrap;
 }
 
-.rp-result-aprobado {
+.rp-result-aplica {
   background: var(--state-ok-bg);
   color: var(--state-ok-fg);
 }
 
-.rp-result-con_mejoras {
-  background: var(--accent-color-soft);
-  color: var(--accent-color-hover);
+.rp-result-propuesta_mejora {
+  background: color-mix(in srgb, var(--brand-blue) 12%, #fff);
+  color: #0c7fb0;
 }
 
-.rp-result-parcial {
-  background: var(--state-warn-bg);
-  color: var(--state-warn-fg);
-}
-
-.rp-result-no_aprobado {
+.rp-result-no_aplica {
   background: var(--state-error-bg);
   color: var(--state-error-fg);
 }
@@ -490,9 +494,9 @@
   color: #059669;
 }
 
-.rp-map-parcial {
-  background: #fbbf24;
-  color: #b45309;
+.rp-map-propuesta_mejora {
+  background: #38bdf8;
+  color: #0284c7;
 }
 
 .rp-map-requiere_ajuste {
@@ -666,7 +670,10 @@
   color: var(--state-ok-fg);
 }
 
-.rp-verdict-text-parcial,
+.rp-verdict-text-propuesta_mejora {
+  color: #0c7fb0;
+}
+
 .rp-verdict-text-requiere_ajuste {
   color: var(--state-warn-fg);
 }
@@ -731,10 +738,6 @@
 }
 
 @container (max-width: 1100px) {
-  .rp-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .rp-sheet-blocks {
     grid-template-columns: 1fr;
   }

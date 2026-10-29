@@ -52,7 +52,11 @@
           <!-- Toda la fila agrega la ocupación: no hace falta acertar en "Agregar". -->
           <button type="button" class="ui-list-item analisis-result-row" [disabled]="isFull || isSelected(result)" (click)="add(result)">
             <span class="ui-badge ui-badge-info">{{ result.code }}</span>
-            <span class="analisis-result-name">{{ result.name }}</span>
+            <span class="analisis-result-text">
+              <span class="analisis-result-name">{{ result.name }}</span>
+              <!-- A qué pertenece: «CUOC · Administración, Finanzas y Derecho», como la versión desplegada. -->
+              <span class="analisis-result-meta">{{ result.catalog }}<ng-container *ngIf="result.area"> · {{ result.area }}</ng-container></span>
+            </span>
             <span *ngIf="isSelected(result); else addLabel" class="ui-hint">{{ 'analisis.alreadyAdded' | translate }}</span>
             <ng-template #addLabel><span class="analisis-result-add">+ {{ 'analisis.add' | translate }}</span></ng-template>
           </button>

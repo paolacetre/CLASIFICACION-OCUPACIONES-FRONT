@@ -189,4 +189,10 @@ describe('AnalisisService', () => {
     expect(csv).toContain('"CNO";"2111";"Con ""comillas"""');
     expect(csv).toContain('"F-2111.01 Planear"');
   });
+
+  it('should search the catalog keeping the area each occupation belongs to', async () => {
+    setup();
+    const [first] = await firstValueFrom(service.search('CNO', '2112'));
+    expect(first).toEqual({ catalog: 'CNO', code: '2112', name: 'Químicos', area: 'Ciencias Naturales, Aplicadas y Relacionadas' });
+  });
 });

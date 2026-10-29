@@ -28,12 +28,15 @@ export interface ProposalDraft {
   municipality: string;
   organization: string;
   position: string;
-  profession: string;
   sector: string;
 
   /* ---------- Propuesta ocupacional ---------- */
   occupationName: string;
-  /** Clave del área de desempeño ('1' a '9') y del nivel de cualificación ('nivel1'…). */
+  /**
+   * Área de desempeño y nivel de cualificación tal como se eligen en el catálogo CNO del servidor
+   * («1. Finanzas y Administración», «Nivel 1 (A) - Profesionales, Dirección y Gerencia»): así los lee
+   * el experto. Su número (`areaCode()`, `levelCode()`) viaja aparte.
+   */
   area: string;
   level: string;
   description: string;
@@ -41,18 +44,37 @@ export interface ProposalDraft {
   functions: string[];
   denominations: string[];
   relatedOccupations: string[];
-  /** Nombres de las habilidades y los conocimientos marcados. */
+  /** Nombres de las habilidades y los conocimientos marcados del catálogo. */
   skills: string[];
-  otherSkills: string;
+  /** Las que no están en el catálogo: una por campo, que se abre con «+ Agregar»; los vacíos no se guardan. */
+  otherSkills: string[];
   knowledge: string[];
-  otherKnowledge: string;
+  otherKnowledge: string[];
+}
+
+/** Listas del formulario que salen del catálogo CNO del servidor. */
+export interface Instrument3Catalogs {
+  areas: SelectOption[];
+  levels: SelectOption[];
+  skills: string[];
+  knowledge: string[];
+}
+
+/** Número del área a partir de su texto («1. Finanzas y Administración» → 1); 0 si no hay área. */
+export function areaCode(area: string): number {
+  return Number(/^\s*(\d+)/.exec(area)?.[1] ?? 0);
+}
+
+/** Número del nivel a partir de su código («Nivel 3,4 (C) - Auxiliares…» → 3); 0 si no hay nivel. */
+export function levelCode(level: string): number {
+  return Number(/\d+/.exec(level)?.[0] ?? 0);
 }
 
 /** Datos generales de quien diligencia: el servidor los recuerda por usuario para no volver a escribirlos. */
-export type Informant = Pick<ProposalDraft, 'fullName' | 'email' | 'phone' | 'department' | 'municipality' | 'organization' | 'position' | 'profession' | 'sector'>;
+export type Informant = Pick<ProposalDraft, 'fullName' | 'email' | 'phone' | 'department' | 'municipality' | 'organization' | 'position' | 'sector'>;
 
 /** Campos de los datos generales que el servidor recuerda del analista. */
-export const INFORMANT_FIELDS: (keyof Informant)[] = ['fullName', 'email', 'phone', 'department', 'municipality', 'organization', 'position', 'profession', 'sector'];
+export const INFORMANT_FIELDS: (keyof Informant)[] = ['fullName', 'email', 'phone', 'department', 'municipality', 'organization', 'position', 'sector'];
 
 /** Pone en el borrador los datos generales que el servidor recuerda (solo los que tienen valor). */
 export function applyInformant(draft: ProposalDraft, informant: Informant | null): ProposalDraft {
@@ -92,7 +114,6 @@ export function createEmptyDraft(informant: { name?: string; email?: string } = 
     municipality: '',
     organization: '',
     position: '',
-    profession: '',
     sector: '',
     occupationName: '',
     area: '',
@@ -102,9 +123,9 @@ export function createEmptyDraft(informant: { name?: string; email?: string } = 
     denominations: Array.from({ length: INITIAL_DENOMINATIONS }, () => ''),
     relatedOccupations: Array.from({ length: INITIAL_RELATED }, () => ''),
     skills: [],
-    otherSkills: '',
+    otherSkills: [],
     knowledge: [],
-    otherKnowledge: ''
+    otherKnowledge: []
   };
 }
 
@@ -118,7 +139,9 @@ export function draftOf(proposal: Proposal): ProposalDraft {
     denominations: padded(draft.denominations, INITIAL_DENOMINATIONS),
     relatedOccupations: padded(draft.relatedOccupations, INITIAL_RELATED),
     skills: [...draft.skills],
-    knowledge: [...draft.knowledge]
+    otherSkills: [...draft.otherSkills],
+    knowledge: [...draft.knowledge],
+    otherKnowledge: [...draft.otherKnowledge]
   };
 }
 

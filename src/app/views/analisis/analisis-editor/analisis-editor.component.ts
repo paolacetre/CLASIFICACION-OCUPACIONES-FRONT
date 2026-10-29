@@ -5,7 +5,7 @@ import { DialogDirective } from '../../../shared/dialog/dialog.directive';
 import { TranslatePipe } from '../../../shared/i18n/translate.pipe';
 import { TranslationService } from '../../../shared/i18n/translation.service';
 import { ToastService } from '../../../shared/toast/toast.service';
-import { FilterComboboxComponent } from '../../consulta-ocupaciones/filter-combobox/filter-combobox.component';
+import { FilterComboboxComponent } from '../../../shared/ui/filter-combobox.component';
 import { FilterOption } from '../../consulta-ocupaciones/consulta-ocupaciones.model';
 import {
   AnalysisItem,

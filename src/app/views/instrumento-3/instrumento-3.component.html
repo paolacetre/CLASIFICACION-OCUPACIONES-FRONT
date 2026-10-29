@@ -2,7 +2,8 @@
   <header class="ui-card i3-header">
     <div class="ui-card-header i3-header-main">
       <div class="ui-card-icon" aria-hidden="true">
-        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>
+        <!-- El mismo ícono de Instrumento 3 en el menú -->
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M9 3h6v3H9z"/><path d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3"/><path d="m9 14 2 2 4-4"/></svg>
       </div>
       <div class="ui-card-header-main">
         <h1 class="ui-page-title">{{ 'instrumento3.title' | translate }}</h1>
@@ -43,17 +44,16 @@
         </div>
         <div class="ui-field">
           <label class="i3-label" for="i3-department">{{ 'instrumento3.fieldDepartment' | translate }}</label>
-          <select class="ui-select" id="i3-department" name="department" [(ngModel)]="draft.department" (ngModelChange)="onDepartmentChange()" [disabled]="saving">
-            <option value="">{{ 'instrumento3.chooseDepartment' | translate }}</option>
-            <option *ngFor="let option of departments" [value]="option.value">{{ option.label }}</option>
-          </select>
+          <app-filter-combobox inputId="i3-department" [options]="departments" [value]="draft.department" [allLabel]="'instrumento3.chooseDepartment' | translate"
+                               [searchable]="true" [searchPlaceholder]="'instrumento3.optionSearch' | translate" [emptyText]="'instrumento3.optionEmpty' | translate"
+                               [disabled]="saving" (valueChange)="chooseDepartment($event)"></app-filter-combobox>
         </div>
         <div class="ui-field">
           <label class="i3-label" for="i3-municipality">{{ 'instrumento3.fieldMunicipality' | translate }}</label>
-          <select class="ui-select" id="i3-municipality" name="municipality" [(ngModel)]="draft.municipality" [disabled]="saving || !municipalities.length">
-            <option value="">{{ (municipalities.length ? 'instrumento3.chooseMunicipality' : 'instrumento3.chooseDepartmentFirst') | translate }}</option>
-            <option *ngFor="let option of municipalities" [value]="option.value">{{ option.label }}</option>
-          </select>
+          <app-filter-combobox inputId="i3-municipality" [options]="municipalities" [value]="draft.municipality"
+                               [allLabel]="(municipalities.length ? 'instrumento3.chooseMunicipality' : 'instrumento3.chooseDepartmentFirst') | translate"
+                               [searchable]="true" [searchPlaceholder]="'instrumento3.optionSearch' | translate" [emptyText]="'instrumento3.optionEmpty' | translate"
+                               [disabled]="saving || !municipalities.length" (valueChange)="draft.municipality = $event"></app-filter-combobox>
         </div>
         <div class="ui-field">
           <label class="i3-label" for="i3-organization">{{ 'instrumento3.fieldOrganization' | translate }}</label>
@@ -64,15 +64,10 @@
           <input class="ui-input" id="i3-position" name="position" type="text" [(ngModel)]="draft.position" [disabled]="saving">
         </div>
         <div class="ui-field">
-          <label class="i3-label" for="i3-profession">{{ 'instrumento3.fieldProfession' | translate }}</label>
-          <input class="ui-input" id="i3-profession" name="profession" type="text" [(ngModel)]="draft.profession" [disabled]="saving">
-        </div>
-        <div class="ui-field">
           <label class="i3-label" for="i3-sector">{{ 'instrumento3.fieldSector' | translate }}</label>
-          <select class="ui-select" id="i3-sector" name="sector" [(ngModel)]="draft.sector" [disabled]="saving">
-            <option value="">{{ 'instrumento3.chooseSector' | translate }}</option>
-            <option *ngFor="let option of sectors" [value]="option.value">{{ option.label }}</option>
-          </select>
+          <app-filter-combobox inputId="i3-sector" [options]="sectors" [value]="draft.sector" [allLabel]="'instrumento3.chooseSector' | translate"
+                               [searchable]="true" [searchPlaceholder]="'instrumento3.optionSearch' | translate" [emptyText]="'instrumento3.optionEmpty' | translate"
+                               [disabled]="saving" (valueChange)="draft.sector = $event"></app-filter-combobox>
         </div>
       </div>
     </section>
@@ -89,6 +84,8 @@
 
     <p class="i3-orange">{{ 'instrumento3.readNotice' | translate }}</p>
 
+    <p *ngIf="catalogsError" class="ui-alert ui-alert-warn" role="alert">{{ 'instrumento3.catalogsError' | translate }}</p>
+
     <!-- Las nueve secciones: el título, lo que se pide y dónde se responde -->
     <div class="i3-sections">
       <div class="i3-section">
@@ -102,28 +99,28 @@
         </div>
       </div>
 
-      <div class="i3-section">
+      <div class="i3-section i3-section-select">
         <div class="i3-srow i3-srow-ctrl">
           <h2 class="i3-srow-label"><label for="i3-area">2. {{ 'instrumento3.s2Title' | translate }}</label><span class="i3-required" aria-hidden="true">*</span></h2>
           <p class="i3-srow-desc">{{ 'instrumento3.s2Text' | translate }}</p>
           <div class="i3-srow-control">
-            <select class="ui-select" id="i3-area" name="area" [class.invalid]="hasError('area')" [attr.aria-invalid]="hasError('area')" [(ngModel)]="draft.area" [disabled]="saving">
-              <option value="">{{ 'instrumento3.choose' | translate }}</option>
-              <option *ngFor="let option of areas" [value]="option.value">{{ option.label }}</option>
-            </select>
+            <app-filter-combobox inputId="i3-area" [options]="catalogs.areas" [value]="draft.area"
+                                 [allLabel]="(catalogsLoading ? 'instrumento3.loadingCatalogs' : 'instrumento3.choose') | translate"
+                                 [searchable]="true" [searchPlaceholder]="'instrumento3.optionSearch' | translate" [emptyText]="'instrumento3.optionEmpty' | translate"
+                                 [disabled]="saving" [invalid]="hasError('area')" (valueChange)="draft.area = $event"></app-filter-combobox>
           </div>
         </div>
       </div>
 
-      <div class="i3-section">
+      <div class="i3-section i3-section-select">
         <div class="i3-srow i3-srow-ctrl">
           <h2 class="i3-srow-label"><label for="i3-level">3. {{ 'instrumento3.s3Title' | translate }}</label><span class="i3-required" aria-hidden="true">*</span></h2>
           <p class="i3-srow-desc">{{ 'instrumento3.s3Text' | translate }}</p>
           <div class="i3-srow-control">
-            <select class="ui-select" id="i3-level" name="level" [class.invalid]="hasError('level')" [attr.aria-invalid]="hasError('level')" [(ngModel)]="draft.level" [disabled]="saving">
-              <option value="">{{ 'instrumento3.choose' | translate }}</option>
-              <option *ngFor="let option of levels" [value]="option.value">{{ option.label }}</option>
-            </select>
+            <app-filter-combobox inputId="i3-level" [options]="catalogs.levels" [value]="draft.level"
+                                 [allLabel]="(catalogsLoading ? 'instrumento3.loadingCatalogs' : 'instrumento3.choose') | translate"
+                                 [searchable]="true" [searchPlaceholder]="'instrumento3.optionSearch' | translate" [emptyText]="'instrumento3.optionEmpty' | translate"
+                                 [disabled]="saving" [invalid]="hasError('level')" (valueChange)="draft.level = $event"></app-filter-combobox>
           </div>
         </div>
       </div>
@@ -201,14 +198,23 @@
           <p class="i3-srow-desc">{{ 'instrumento3.s8Text' | translate }}</p>
         </div>
         <div class="i3-scontent">
+          <p *ngIf="catalogsLoading" class="ui-hint">{{ 'instrumento3.loadingCatalogs' | translate }}</p>
           <div class="i3-chips" role="group" [attr.aria-label]="'instrumento3.s8Title' | translate">
             <label *ngFor="let option of choices('skills')" class="i3-chip" [class.on]="isChosen('skills', option)">
               <input type="checkbox" [name]="'skills-' + option" [checked]="isChosen('skills', option)" [disabled]="saving" (change)="toggleChoice('skills', option)">
               {{ option }}
             </label>
           </div>
-          <label class="i3-note" for="i3-other-skills">{{ 'instrumento3.otherSkills' | translate }}</label>
-          <input class="ui-input" id="i3-other-skills" name="otherSkills" type="text" [(ngModel)]="draft.otherSkills" [disabled]="saving">
+          <!-- Las que no están en el catálogo: un campo por cada «+ Agregar» -->
+          <div *ngFor="let item of draft.otherSkills; let index = index; trackBy: trackByIndex" class="i3-item">
+            <input class="ui-input" type="text" [id]="'i3-otherSkills-' + index" [name]="'otherSkills-' + index" [placeholder]="'instrumento3.otherSkillN' | translate: { n: index + 1 }"
+                   [attr.aria-label]="'instrumento3.otherSkillN' | translate: { n: index + 1 }" [(ngModel)]="draft.otherSkills[index]" [disabled]="saving">
+            <button type="button" class="i3-remove" [disabled]="saving" [title]="'instrumento3.remove' | translate"
+                    [attr.aria-label]="('instrumento3.remove' | translate) + ': ' + ('instrumento3.otherSkillN' | translate: { n: index + 1 })" (click)="removeOther('otherSkills', index)">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="i3-add" [disabled]="saving" (click)="addOther('otherSkills')">+ {{ 'instrumento3.addSkill' | translate }}</button>
         </div>
       </div>
 
@@ -218,14 +224,23 @@
           <p class="i3-srow-desc">{{ 'instrumento3.s9Text' | translate }}</p>
         </div>
         <div class="i3-scontent">
+          <p *ngIf="catalogsLoading" class="ui-hint">{{ 'instrumento3.loadingCatalogs' | translate }}</p>
           <div class="i3-chips" role="group" [attr.aria-label]="'instrumento3.s9Title' | translate">
             <label *ngFor="let option of choices('knowledge')" class="i3-chip" [class.on]="isChosen('knowledge', option)">
               <input type="checkbox" [name]="'knowledge-' + option" [checked]="isChosen('knowledge', option)" [disabled]="saving" (change)="toggleChoice('knowledge', option)">
               {{ option }}
             </label>
           </div>
-          <label class="i3-note" for="i3-other-knowledge">{{ 'instrumento3.otherKnowledge' | translate }}</label>
-          <input class="ui-input" id="i3-other-knowledge" name="otherKnowledge" type="text" [(ngModel)]="draft.otherKnowledge" [disabled]="saving">
+          <!-- Los que no están en el catálogo: un campo por cada «+ Agregar» -->
+          <div *ngFor="let item of draft.otherKnowledge; let index = index; trackBy: trackByIndex" class="i3-item">
+            <input class="ui-input" type="text" [id]="'i3-otherKnowledge-' + index" [name]="'otherKnowledge-' + index" [placeholder]="'instrumento3.otherKnowledgeN' | translate: { n: index + 1 }"
+                   [attr.aria-label]="'instrumento3.otherKnowledgeN' | translate: { n: index + 1 }" [(ngModel)]="draft.otherKnowledge[index]" [disabled]="saving">
+            <button type="button" class="i3-remove" [disabled]="saving" [title]="'instrumento3.remove' | translate"
+                    [attr.aria-label]="('instrumento3.remove' | translate) + ': ' + ('instrumento3.otherKnowledgeN' | translate: { n: index + 1 })" (click)="removeOther('otherKnowledge', index)">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="i3-add" [disabled]="saving" (click)="addOther('otherKnowledge')">+ {{ 'instrumento3.addKnowledge' | translate }}</button>
         </div>
       </div>
     </div>

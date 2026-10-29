@@ -6,6 +6,7 @@ import { MOCK_LATENCY_MS } from '../../shared/api/mock-api';
 import { MockCredentialsStore } from '../../shared/api/mock-credentials';
 import { clearTestSession, startTestSession } from '../../shared/auth/session.testing';
 import { ToastService } from '../../shared/toast/toast.service';
+import { comboChoices, comboPick } from '../../shared/ui/filter-combobox.testing';
 import { UsuariosComponent } from './usuarios.component';
 import { UserDraft, permissionsOf } from './usuarios.model';
 import { UsuariosService } from './usuarios.service';
@@ -56,7 +57,7 @@ describe('UsuariosComponent', () => {
     // Solo los roles que tienen usuarios, en el orden de los roles.
     expect(texts('.role-title')).toEqual(['Administradores', 'Analistas']);
     expect(texts('.table-head')[0]).toBe('USUARIOREGISTROPERMISOSACCIONES');
-    expect(Array.from(section('Analistas').querySelectorAll('.role-stats > *')).map((item) => item.textContent)).toEqual(['2 usuarios', '1 activos', '1 inactivos']);
+    expect(Array.from(section('Analistas').querySelectorAll('.role-stats > *')).map((item) => item.textContent)).toEqual(['2 usuarios', '1 activo', '1 inactivo']);
 
     const admin = section('Administradores').querySelector('.user-row')!;
     expect(admin.querySelector('.user-name strong')?.textContent).toBe('SENA Admin');
@@ -76,12 +77,24 @@ describe('UsuariosComponent', () => {
 
   it('should offer the six roles of the backend in the filter and in the new user form', () => {
     create();
-    expect(texts('.segmented-roles button span:first-child')).toEqual(['Todos', 'Administrador', 'Analista', 'Experto', 'Ciudadano', 'APE', 'Tendencias ocupacionales']);
-    expect(texts('.segmented-roles .count-pill')).toEqual(['2', '1', '1', '0', '0', '0', '0']);
+    // El filtro de rol es el desplegable común, con cuántos usuarios tiene cada rol.
+    expect(comboChoices(fixture, 'filter-role')).toEqual([
+      'Todos los roles',
+      'Administrador (1)',
+      'Analista (1)',
+      'Experto (0)',
+      'Ciudadano (0)',
+      'APE (0)',
+      'Tendencias ocupacionales (0)'
+    ]);
+    comboPick(fixture, 'filter-role', 'Analista');
+    expect(comp.selectedRole).toBe('Analista');
+    comboPick(fixture, 'filter-role', '');
+    expect(comp.selectedRole).toBe('Todos');
 
     comp.startCreate();
     fixture.detectChanges();
-    expect(texts('#form-role option')).toEqual(['Administrador', 'Analista', 'Experto', 'Ciudadano', 'APE', 'Tendencias ocupacionales']);
+    expect(comboChoices(fixture, 'form-role')).toEqual(['Administrador', 'Analista', 'Experto', 'Ciudadano', 'APE', 'Tendencias ocupacionales']);
     // Un usuario nuevo empieza con el rol de menos permisos.
     expect(comp.formUser.role).toBe('Ciudadano');
   });
@@ -117,17 +130,26 @@ describe('UsuariosComponent', () => {
     create();
     comp.users.push({ ...createTestUsers()[1], id: 3, name: 'Importada Excel', email: 'importada@sena.edu.co', username: 'importada', origin: 'Excel', role: 'Ciudadano' });
     fixture.detectChanges();
-    expect(el.querySelector('.registered-count')?.textContent).toBe('3 registrados');
-    expect(texts('.segmented-origins button span:first-child')).toEqual(['Todos', 'Creados manualmente', 'Importados de Excel']);
-    expect(texts('.segmented-origins .count-pill')).toEqual(['3', '2', '1']);
+    expect(el.querySelector('.users-count-pill')?.textContent?.trim()).toBe('3 registrados');
+    // Indicadores: el número y lo que cuenta.
+    expect(texts('.users-kpi-label')).toEqual(['Usuarios', 'Activos', 'Inactivos', 'Importados de Excel']);
+    expect(texts('.users-kpi-count')).toEqual(['3', '3', '0', '1']);
+    expect(comboChoices(fixture, 'filter-origin')).toEqual(['Todos los orígenes', 'Creados manualmente (2)', 'Importados de Excel (1)']);
 
-    (el.querySelectorAll('.segmented-origins button')[2] as HTMLButtonElement).click();
-    fixture.detectChanges();
+    comboPick(fixture, 'filter-origin', 'Excel');
     expect(comp.filteredUsers.map((user) => user.name)).toEqual(['Importada Excel']);
     expect(texts('.role-title')).toEqual(['Ciudadanos']);
     expect(comp.filtersCount).toBe(1);
+    expect(el.querySelector('.users-kpi-excel')?.classList).toContain('active');
     comp.clearFilters();
     expect(comp.selectedOrigin).toBe('Todos');
+
+    // Un clic en un indicador filtra por lo que cuenta; «Usuarios» quita los filtros.
+    (el.querySelector('.users-kpi-excel') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(comp.filteredUsers.map((user) => user.name)).toEqual(['Importada Excel']);
+    (el.querySelector('.users-kpi-total') as HTMLButtonElement).click();
+    expect(comp.hasActiveFilters).toBeFalse();
   });
 
   it('should import users from an Excel, show what happened and reload the list', fakeAsync(() => {

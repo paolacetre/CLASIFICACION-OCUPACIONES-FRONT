@@ -6,7 +6,10 @@ import { DialogDirective } from '../../../shared/dialog/dialog.directive';
 import { TranslatePipe } from '../../../shared/i18n/translate.pipe';
 import { TranslationService } from '../../../shared/i18n/translation.service';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { SESSION } from '../../../shared/session';
 import { ConfirmDialogComponent } from '../../../shared/ui/confirm-dialog.component';
+import { ComboOption, ComboTone, FilterComboboxComponent, comboOptions } from '../../../shared/ui/filter-combobox.component';
+import { PROJECT_STORAGE_PREFIX } from '../../../proyecto/config';
 import type { SelectOption } from '../../instrumento-3/instrumento-3.model';
 import {
   GRADES,
@@ -22,6 +25,7 @@ import {
   ReviewRecord,
   SECTIONS,
   SectionId,
+  TEXT_MAX_LENGTH,
   Verdict,
   derivedVerdict,
   detailRequired,
@@ -34,19 +38,41 @@ import { REVIEW_FORBIDDEN, REVIEW_INVALID, REVIEW_NOT_SENT, ReviewError, Validac
 const TEXT_FIELDS: ReadonlyArray<keyof Informant> = ['fullName', 'email', 'phone'];
 const EXTRA_FIELDS: ReadonlyArray<keyof Informant> = ['company', 'position', 'profession'];
 
+/** Ítems de una sección de lista bajo un mismo encabezado («5. Funciones»). */
+interface ItemGroup {
+  title: string;
+  items: ReviewItem[];
+}
+
+/** Color de cada calificación en el desplegable «Opción» (el mismo de su fila). */
+const GRADE_TONES: Record<Exclude<Grade, ''>, ComboTone> = { aplica: 'ok', no_aplica: 'error', requiere_ajuste: 'warn', propuesta_mejora: 'info' };
+
+/** Pausa sin cambios tras la que el guardado automático guarda el avance. */
+export const AUTO_SAVE_DELAY_MS = 4000;
+
+/**
+ * Respaldo, en este navegador, de los comentarios escritos en ítems que aún no tienen «Opción»: el servidor solo
+ * recibe ítems calificados, así que sin esto se perderían al cerrar. Uno por instrumento y por quien revisa.
+ */
+function notesStorageKey(record: ReviewRecord, email: string): string {
+  return `${PROJECT_STORAGE_PREFIX}_validacion_notas_${record.kind}-${record.id}_${email}`;
+}
+
+
 /**
  * Editor de una validación experta (el modal «Revisar» de la versión desplegada): a la izquierda
  * las ocupaciones del instrumento con su avance y las siete secciones; a la derecha la sección
  * elegida, con «Datos generales» (los del informante, que es quien revisa) y las observaciones
  * generales, o los ítems a calificar: Aplica, No aplica, Requiere ajuste (pide el ajuste) o
  * Propuesta de mejora (pide la propuesta). En Instrumento 2 cada ocupación admite además una
- * propuesta de área y descripción. «Guardar cambios» guarda el avance y «Enviar definitivamente»
+ * propuesta de área y descripción. El avance se guarda solo (guardado automático) y también con
+ * «Guardar cambios», que dice si queda algo pendiente; «Enviar definitivamente»
  * exige todo calificado (y en Instrumento 2 los datos del informante) y deriva el veredicto.
  */
 @Component({
   selector: 'app-validacion-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, DialogDirective, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, DialogDirective, ConfirmDialogComponent, FilterComboboxComponent],
   templateUrl: './validacion-editor.component.html',
   styleUrl: './validacion-editor.component.css'
 })
@@ -56,6 +82,7 @@ export class ValidacionEditorComponent implements OnInit {
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+  private readonly session = inject(SESSION);
 
   @Input({ required: true }) record!: ReviewRecord;
   @Output() saved = new EventEmitter<void>();
@@ -63,6 +90,7 @@ export class ValidacionEditorComponent implements OnInit {
 
   readonly sections = SECTIONS;
   readonly grades = GRADES;
+  readonly textMax = TEXT_MAX_LENGTH;
   readonly textFields = TEXT_FIELDS;
   readonly extraFields = EXTRA_FIELDS;
 
@@ -86,6 +114,15 @@ export class ValidacionEditorComponent implements OnInit {
   confirmSendOpen = false;
   confirmCloseOpen = false;
   private dirty = false;
+  /** Cambia con cada edición: si se editó mientras se guardaba, lo nuevo sigue pendiente. */
+  private revision = 0;
+
+  /** Guardado automático: el avance se guarda al cambiar de sección u ocupación, tras una pausa sin cambios y al cerrar. */
+  private autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Ya hubo un guardado en esta visita (o la validación ya existía en el servidor). */
+  private everSaved = false;
+  /** Al cerrar no se pudo guardar: el siguiente «Cerrar» pide confirmación para salir sin guardar. */
+  private closeSaveFailed = false;
 
   departments: SelectOption[] = [];
   private municipalitiesByDepartment: Record<string, SelectOption[]> = {};
@@ -93,6 +130,7 @@ export class ValidacionEditorComponent implements OnInit {
   /** Carga el catálogo de departamentos y municipios aparte y pide la revisión (ítems, informante y lo ya calificado). */
   ngOnInit(): void {
     this.editable = isEditable(this.record.state);
+    this.destroyRef.onDestroy(() => this.cancelAutoSave());
     // El catálogo de departamentos y municipios pesa 40 kB: se carga aparte. Si no llega, los
     // desplegables muestran solo lo ya guardado y el resto de la revisión sigue funcionando.
     import('../../instrumento-3/geografia').then(
@@ -109,6 +147,7 @@ export class ValidacionEditorComponent implements OnInit {
         next: (review) => {
           this.review = review;
           this.gradesById = Object.fromEntries(Object.entries(review.grades).map(([id, value]) => [id, { ...value }]));
+          this.restoreNotes();
           this.informant = { ...review.informant };
           this.observations = review.observations;
           // Cada ocupación empieza con la propuesta ya guardada o, si no hay, con lo que envió el analista.
@@ -149,14 +188,19 @@ export class ValidacionEditorComponent implements OnInit {
     return occupation?.items.filter((item) => item.section === section) ?? [];
   }
 
+  /** Cambiar de ocupación o de sección guarda lo hecho hasta ahí (guardado automático). */
   selectOccupation(index: number): void {
     this.occupationIndex = index;
     this.scrollContentTop();
+    this.autoSaveNow();
   }
 
-  selectSection(section: SectionId): void {
+  selectSection(section: SectionId, autoSave = true): void {
     this.section = section;
     this.scrollContentTop();
+    if (autoSave) {
+      this.autoSaveNow();
+    }
   }
 
   /** Anterior / Siguiente: recorre las secciones y, al terminar una ocupación, pasa a la siguiente. */
@@ -235,6 +279,28 @@ export class ValidacionEditorComponent implements OnInit {
     return item.n ? `${item.criterion}. ${label} ${item.n}` : `${item.criterion}. ${label}`;
   }
 
+  /**
+   * Ítems de una sección de lista agrupados por criterio, para pintarlos bajo un solo encabezado («5. Funciones»);
+   * en Habilidades y Conocimientos, las «otras» que escribió el analista forman su propio grupo.
+   */
+  get sectionGroups(): ItemGroup[] {
+    const groups: ItemGroup[] = [];
+    for (const item of this.sectionItems) {
+      const title = `${item.criterion}. ${this.translation.translate(item.labelKey)}`;
+      const last = groups[groups.length - 1];
+      if (last?.title === title) {
+        last.items.push(item);
+      } else {
+        groups.push({ title, items: [item] });
+      }
+    }
+    return groups;
+  }
+
+  trackGroup(_index: number, group: ItemGroup): string {
+    return group.title;
+  }
+
   /* ---------- Calificar ---------- */
 
   /** Opción elegida en el desplegable («-- Seleccione» la deja sin calificar). */
@@ -243,6 +309,7 @@ export class ValidacionEditorComponent implements OnInit {
       return;
     }
     this.gradesById = { ...this.gradesById, [item.id]: { grade, detail: this.gradeOf(item).detail } };
+    this.storeNotes();
     this.markDirty();
   }
 
@@ -253,6 +320,7 @@ export class ValidacionEditorComponent implements OnInit {
 
   setDetail(item: ReviewItem, detail: string): void {
     this.gradesById = { ...this.gradesById, [item.id]: { ...this.gradeOf(item), detail } };
+    this.storeNotes();
     this.markDirty();
   }
 
@@ -263,7 +331,90 @@ export class ValidacionEditorComponent implements OnInit {
 
   markDirty(): void {
     this.dirty = true;
+    this.revision++;
     this.feedback = '';
+    this.scheduleAutoSave();
+  }
+
+  /* ---------- Guardado automático ---------- */
+
+  /** El botón dice «Cambios guardados»: no queda nada sin guardar de lo que ya está en el servidor. */
+  get upToDate(): boolean {
+    return !this.dirty && (this.everSaved || !!this.review?.hasSavedValidation);
+  }
+
+  private scheduleAutoSave(): void {
+    if (!this.editable) {
+      return;
+    }
+    this.cancelAutoSave();
+    this.autoSaveTimer = setTimeout(() => this.autoSaveNow(), AUTO_SAVE_DELAY_MS);
+  }
+
+  private cancelAutoSave(): void {
+    if (this.autoSaveTimer) {
+      clearTimeout(this.autoSaveTimer);
+      this.autoSaveTimer = null;
+    }
+  }
+
+  /** Guarda el avance ya, si hay cambios; si otro guardado está en curso, lo intenta después. */
+  private autoSaveNow(): void {
+    this.cancelAutoSave();
+    if (!this.editable || !this.dirty || !this.review) {
+      return;
+    }
+    if (this.saving) {
+      this.scheduleAutoSave();
+      return;
+    }
+    this.persist(
+      'en_revision',
+      this.gradedItems,
+      () => (this.feedback = this.t('validaciones.editor.autoSaved', { time: new Date().toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }) })),
+      true
+    );
+  }
+
+  /** Guarda en este navegador los comentarios de ítems sin calificar (el servidor no los recibe). */
+  private storeNotes(): void {
+    const notes = Object.fromEntries(
+      Object.entries(this.gradesById).filter(([, value]) => !value.grade && value.detail.trim()).map(([id, value]) => [id, value.detail])
+    );
+    try {
+      const key = notesStorageKey(this.record, this.session.email);
+      if (Object.keys(notes).length) {
+        localStorage.setItem(key, JSON.stringify(notes));
+      } else {
+        localStorage.removeItem(key);
+      }
+    } catch {
+      // Sin almacenamiento, esos comentarios solo duran mientras el editor esté abierto.
+    }
+  }
+
+  /** Al abrir, devuelve los comentarios respaldados a los ítems que siguen sin calificar en el servidor. */
+  private restoreNotes(): void {
+    let notes: Record<string, string> = {};
+    try {
+      notes = JSON.parse(localStorage.getItem(notesStorageKey(this.record, this.session.email)) ?? '{}') as Record<string, string>;
+    } catch {
+      return;
+    }
+    const known = new Set(this.allItems.map((item) => item.id));
+    for (const [id, detail] of Object.entries(notes)) {
+      if (known.has(id) && typeof detail === 'string' && !this.gradesById[id]?.grade) {
+        this.gradesById[id] = { grade: '', detail };
+      }
+    }
+  }
+
+  private clearNotes(): void {
+    try {
+      localStorage.removeItem(notesStorageKey(this.record, this.session.email));
+    } catch {
+      // Nada que borrar.
+    }
   }
 
   /* ---------- Datos generales ---------- */
@@ -278,6 +429,27 @@ export class ValidacionEditorComponent implements OnInit {
     this.markDirty();
   }
 
+  /** Departamentos y municipios se guardan por nombre; mientras carga el catálogo se ofrece el que ya traía la validación. */
+  placeOptions(field: 'department' | 'municipality'): ComboOption[] {
+    const items = field === 'department' ? this.departments : this.municipalities;
+    const saved = this.informant?.[field] ?? '';
+    const names = items.length ? items.map((item) => item.label) : saved ? [saved] : [];
+    return comboOptions(names, (name) => name);
+  }
+
+  /**
+   * Las calificaciones con su color: Aplica verde, No aplica rojo y Propuesta de mejora azul. Un ítem guardado antes
+   * con «Requiere ajuste» (naranja) la conserva entre sus opciones, para que se vea y se pueda cambiar.
+   */
+  gradeOptions(item: ReviewItem): ComboOption[] {
+    const current = this.gradeOf(item).grade;
+    const grades = current && !this.grades.includes(current) ? [...this.grades, current] : this.grades;
+    return comboOptions(grades, (grade) => grade, (grade) => this.t(`validaciones.grade.${grade}`)).map((option) => ({
+      ...option,
+      tone: GRADE_TONES[option.value as Exclude<Grade, ''>]
+    }));
+  }
+
   get today(): string {
     return displayDate(new Date().toISOString());
   }
@@ -289,11 +461,17 @@ export class ValidacionEditorComponent implements OnInit {
     if (!this.editable || this.saving) {
       return;
     }
-    const items = this.allItems.filter((item) => this.gradeOf(item).grade);
+    this.cancelAutoSave();
+    const items = this.gradedItems;
     this.persist('en_revision', items, () => {
       this.feedback = this.t('validaciones.editor.progressSaved', { done: items.length, total: this.allItems.length });
       this.toast.success(this.t('validaciones.editor.toastProgress'));
     });
+  }
+
+  /** Lo que el servidor recibe: los ítems con «Opción». */
+  private get gradedItems(): ReviewItem[] {
+    return this.allItems.filter((item) => this.gradeOf(item).grade);
   }
 
   /** «Enviar definitivamente»: todo calificado y con su detalle; si falta algo, lleva al primero. */
@@ -301,11 +479,12 @@ export class ValidacionEditorComponent implements OnInit {
     if (!this.editable || this.saving) {
       return;
     }
+    this.cancelAutoSave();
     this.submitAttempted = true;
     // El servidor exige los datos del informante para cerrar un Instrumento 2: se avisa antes.
     if (this.record.kind === 'I2' && REQUIRED_INFORMANT_FIELDS.some((field) => !this.informant[field].trim())) {
       this.feedback = this.t('validaciones.editor.informantMissing');
-      this.selectSection('general');
+      this.selectSection('general', false);
       this.toast.warning(this.feedback);
       return;
     }
@@ -329,9 +508,14 @@ export class ValidacionEditorComponent implements OnInit {
 
   /** Envío definitivo ya confirmado: guarda con el veredicto calculado y cierra el editor. */
   confirmSend(): void {
+    if (this.saving) {
+      return;
+    }
+    this.cancelAutoSave();
     this.confirmSendOpen = false;
     const verdict = this.verdict;
     this.persist(verdict, this.allItems, () => {
+      this.clearNotes();
       this.toast.success(this.t(verdict === 'aprobada' ? 'validaciones.editor.toastApproved' : 'validaciones.editor.toastAdjustments'));
       this.closed.emit();
     });
@@ -339,9 +523,11 @@ export class ValidacionEditorComponent implements OnInit {
 
   /**
    * Guarda la validación (avance o definitiva) con el informante, las observaciones, las calificaciones y las propuestas de área y
-   * descripción.
+   * descripción. Lo que está en pantalla no se toca: si se editó mientras se guardaba, queda pendiente para el siguiente
+   * guardado. `quiet` (guardado automático) no avisa a la bandeja ni muestra el aviso de éxito.
    */
-  private persist(verdict: Verdict, items: ReviewItem[], done: () => void): void {
+  private persist(verdict: Verdict, items: ReviewItem[], done: () => void, quiet = false, failed: () => void = () => undefined): void {
+    const revision = this.revision;
     this.saving = true;
     this.feedback = '';
     this.service
@@ -356,14 +542,22 @@ export class ValidacionEditorComponent implements OnInit {
       .subscribe({
         next: () => {
           this.saving = false;
-          this.dirty = false;
-          this.saved.emit();
+          this.everSaved = true;
+          this.closeSaveFailed = false;
+          this.dirty = this.revision !== revision;
+          if (!quiet) {
+            this.saved.emit();
+          }
           done();
+          if (this.dirty) {
+            this.scheduleAutoSave();
+          }
         },
         error: (error: unknown) => {
           this.saving = false;
           this.feedback = this.errorMessage(error);
           this.toast.error(this.feedback);
+          failed();
         }
       });
   }
@@ -431,9 +625,17 @@ export class ValidacionEditorComponent implements OnInit {
 
   /* ---------- Cerrar ---------- */
 
-  /** Cerrar con cambios sin guardar pide confirmación. */
+  /**
+   * Cerrar con cambios sin guardar los guarda y cierra. Si no se pueden guardar (p. ej. sin conexión), se queda abierto,
+   * explica el error y la siguiente vez pide confirmación para cerrar sin guardar.
+   */
   requestClose(): void {
     if (this.saving) {
+      return;
+    }
+    if (this.dirty && this.editable && !this.closeSaveFailed) {
+      this.cancelAutoSave();
+      this.persist('en_revision', this.gradedItems, () => this.closed.emit(), true, () => (this.closeSaveFailed = true));
       return;
     }
     if (this.dirty && this.editable) {

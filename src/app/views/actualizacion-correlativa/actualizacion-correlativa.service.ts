@@ -34,6 +34,7 @@ interface CorrelativaOcupacionDto {
   nombOcupacionCno: string | null;
   codOcupacionCuoc: string;
   nombOcupacionCuoc: string | null;
+  observacion?: string | null;
 }
 
 /** Respuesta de `POST /api/correlativa/upload/:tipo`. */
@@ -110,7 +111,8 @@ export class ActualizacionCorrelativaService {
             cnoCode: row.codOcupacionCno,
             cnoName: text(row.nombOcupacionCno),
             cuocCode: row.codOcupacionCuoc,
-            cuocName: text(row.nombOcupacionCuoc)
+            cuocName: text(row.nombOcupacionCuoc),
+            observation: text(row.observacion)
           }))
         )
       )
@@ -119,14 +121,16 @@ export class ActualizacionCorrelativaService {
 
   /**
    * `POST /api/correlativa/ocupaciones`: guarda la correlativa de una ocupación CNO. El backend
-   * reemplaza las CUOC que esa CNO tuviera, así que sirve igual para crear que para editar.
+   * reemplaza las filas que esa CNO tuviera (también su observación), así que sirve igual para
+   * crear que para editar; por eso la observación que ya tenía se reenvía.
    */
-  save(cno: CorrelativeItem, cuoc: CorrelativeItem[]): Observable<void> {
+  save(cno: CorrelativeItem, cuoc: CorrelativeItem[], observation = ''): Observable<void> {
     return defer(() => {
       return this.http.post('/api/correlativa/ocupaciones', {
         codOcupacionCno: cno.code,
         nombOcupacionCno: cno.name,
-        cuoc: cuoc.map((item) => ({ codigo: item.code, nombre: item.name }))
+        cuoc: cuoc.map((item) => ({ codigo: item.code, nombre: item.name })),
+        ...(observation ? { observacion: observation } : {})
       });
     }).pipe(
       map(() => undefined),

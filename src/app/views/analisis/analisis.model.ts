@@ -11,6 +11,8 @@ export interface AnalysisSearchResult {
   catalog: AnalysisCatalog;
   code: string;
   name: string;
+  /** Área a la que pertenece (de desempeño en CNO, de cualificación en CUOC); cadena vacía si no la tiene. */
+  area: string;
 }
 
 /** Componente de una ocupación (función, habilidad, conocimiento, denominación u ocupación relacionada). */
@@ -48,6 +50,8 @@ export interface AnalysisOccupation {
   related: AnalysisItem[];
   /** Fecha de registro tal como la guarda la base de datos; cadena vacía si no hay dato. */
   registeredAt: string;
+  /** Fecha de inactivación (DD/MM/YYYY), si la tiene: la muestra el detalle de Instrumento 2. */
+  inactiveAt?: string;
   /** Información adicional: trazabilidad de la ocupación (editable en la copia). */
   traceability: string;
   /**

@@ -34,10 +34,8 @@
       </div>
       <div class="ui-input-icon ve-state-filter">
         <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 6v6c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V6Z"/></svg>
-        <select class="ui-select" [attr.aria-label]="'validaciones.stateFilter' | translate" [(ngModel)]="stateFilter" (ngModelChange)="onFiltersChange()">
-          <option value="">{{ 'validaciones.stateFilter' | translate }}</option>
-          <option *ngFor="let state of states" [value]="state">{{ 'validaciones.state.' + state | translate }}</option>
-        </select>
+        <app-filter-combobox [ariaLabel]="'validaciones.stateFilter' | translate" [options]="stateOptions()" [allLabel]="'validaciones.stateFilter' | translate"
+                             [(ngModel)]="stateFilter" (ngModelChange)="onFiltersChange()"></app-filter-combobox>
       </div>
     </div>
 

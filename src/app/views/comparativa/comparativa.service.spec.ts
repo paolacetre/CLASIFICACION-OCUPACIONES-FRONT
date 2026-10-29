@@ -60,6 +60,7 @@ describe('ComparativaService', () => {
     nombre: 'Directores generales',
     descripcion: 'Dirigen la organización.',
     nivelCualificacion: 'Nivel 0',
+    codNivelCualificacion: 'N0',
     areaDesempeno: 'Dirección y Gerencia',
     fechaRegistro: '2026-09-22',
     trazabilidad: 'CIUO 1120',
@@ -136,6 +137,7 @@ describe('ComparativaService', () => {
       status: '',
       name: 'Directores generales',
       level: 'Nivel 0',
+      levelCode: 'N0',
       area: 'Dirección y Gerencia',
       description: 'Dirigen la organización.',
       functions: [{ code: 'F-0011.01', text: 'Planear la operación' }],
@@ -147,6 +149,8 @@ describe('ComparativaService', () => {
       traceability: 'CIUO 1120'
     });
     expect(comparison?.occupations[1]).toEqual(jasmine.objectContaining({ catalog: 'CUOC', code: '01100', functions: [] }));
+    // Como en Análisis, solo la CNO lleva el código del nivel (en la CUOC ya va en el nombre: «Nivel 4»).
+    expect(comparison?.occupations[1].levelCode).toBeUndefined();
 
     let error = '';
     service.get(99).subscribe({ error: (e: Error) => (error = e.message) });

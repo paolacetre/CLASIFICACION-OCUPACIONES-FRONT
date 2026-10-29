@@ -6,13 +6,15 @@ import { Observable, Subject, catchError, map, of, switchMap, timer } from 'rxjs
 import { TranslatePipe } from '../../shared/i18n/translate.pipe';
 import { TranslationService } from '../../shared/i18n/translation.service';
 import { ToastService } from '../../shared/toast/toast.service';
-import { AnalysisCatalog, AnalysisItem, AnalysisListKey, AnalysisOccupation, AnalysisOptions } from '../analisis/analisis.model';
+import { AnalysisCatalog, AnalysisItem, AnalysisListKey, AnalysisOccupation, AnalysisOptions, levelText } from '../analisis/analisis.model';
 import { AnalisisService } from '../analisis/analisis.service';
 import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog.component';
+import { ComboOption, FilterComboboxComponent, comboOptions } from '../../shared/ui/filter-combobox.component';
 import { PickOption } from '../actualizacion-cno/actualizacion-cno.model';
 import { ActualizacionCnoService } from '../actualizacion-cno/actualizacion-cno.service';
 import { OptionPickerComponent } from '../actualizacion-cno/option-picker/option-picker.component';
 import {
+  CATALOG_TEXT_LISTS,
   COMPARISON_ASPECTS,
   COMPARISON_STATUSES,
   Comparison,
@@ -68,7 +70,7 @@ interface AspectChip {
 @Component({
   selector: 'app-comparativa',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent, ConfirmDialogComponent, OptionPickerComponent, GuideDialogComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, PaginationComponent, ConfirmDialogComponent, OptionPickerComponent, GuideDialogComponent, FilterComboboxComponent],
   templateUrl: './comparativa.component.html',
   styleUrl: './comparativa.component.css'
 })
@@ -279,6 +281,16 @@ export class ComparativaComponent implements OnInit {
     return this.tabs.find((tab) => tab.id === this.activeTab)?.labelKey ?? '';
   }
 
+  /** Título de la lista abierta en una tarjeta: en la CUOC las habilidades se llaman destrezas, como en el resto de la app. */
+  listTitleKey(occupation: AnalysisOccupation): string {
+    return this.activeTab === 'skills' && occupation.catalog === 'CUOC' ? 'comparativa.skillsCuoc' : this.tabLabelKey;
+  }
+
+  /** En modo edición el texto de cada elemento se reescribe, salvo en las listas del catálogo (`CATALOG_TEXT_LISTS`). */
+  get itemTextEditable(): boolean {
+    return this.editing && this.activeTab !== 'info' && !CATALOG_TEXT_LISTS.includes(this.activeTab);
+  }
+
   /** Lista de la pestaña abierta para una ocupación, desde su borrador (igual a lo guardado mientras no se edita). */
   listItems(index: number): AnalysisItem[] {
     return this.activeTab === 'info' ? [] : (this.drafts[index]?.[this.activeTab] ?? []);
@@ -381,6 +393,24 @@ export class ComparativaComponent implements OnInit {
   /** Áreas para el desplegable de una ocupación (con el valor actual, como los niveles). */
   areaOptions(index: number): string[] {
     return this.withCurrent(this.optionsOf(index)?.areas ?? [], this.drafts[index]?.area ?? '');
+  }
+
+  /** Nivel como en Análisis: en la CNO con su código («Nivel 1 (A) - Profesionales…»); en la CUOC, su nombre («Nivel 4»). */
+  levelLabel(occupation: AnalysisOccupation): string {
+    return levelText(occupation);
+  }
+
+  /** Texto de un nivel en el desplegable (el valor sigue siendo el nombre, que es como lo busca el servidor). */
+  levelOptionLabel(index: number, option: string): string {
+    return this.optionsOf(index)?.levelLabels?.[option] ?? option;
+  }
+
+  levelChoices(index: number): ComboOption[] {
+    return comboOptions(this.levelOptions(index), (option) => option, (option) => this.levelOptionLabel(index, option));
+  }
+
+  areaChoices(index: number): ComboOption[] {
+    return comboOptions(this.areaOptions(index), (option) => option);
   }
 
   /** Abre el detalle de una comparativa. Si falla estando incrustada, se cierra. */

@@ -8,16 +8,18 @@ import { normalizeText } from '../../shared/ui/list';
 
 /** Encabezados del archivo de "Descargar consultadas". */
 const EXPORT_HEADERS: Record<string, string> = {
-  id: 'ID',
   cnoOccupationCode: 'Código ocupación CNO',
   cnoDenominationCode: 'Código denominación CNO',
-  denominationDescription: 'Descripción denominación',
+  denominationDescription: 'Denominación CNO',
   cuocOccupationCode: 'Código ocupación CUOC',
-  description: 'Descripción',
+  cuocDenominationCode: 'Código denominación CUOC',
+  description: 'Denominación CUOC',
   status: 'Estado',
   observation: 'Observación',
-  name: 'Nombre',
-  cuocName: 'Nombre CUOC',
+  name: 'Ocupación CNO',
+  cnoDescription: 'Descripción CNO',
+  cuocName: 'Ocupación CUOC',
+  cuocDescription: 'Descripción CUOC',
   cnoKnowledgeCode: 'Código conocimiento CNO',
   cnoKnowledgeName: 'Nombre conocimiento CNO',
   cuocKnowledgeCode: 'Código conocimiento CUOC',
@@ -49,11 +51,11 @@ export function pageOf(kind: CorrelativaKind, rows: CorrelationRow[], query: Cor
   return { items: matches.slice(start, start + query.pageSize), total: matches.length };
 }
 
-/** CSV (que Excel abre) con las filas de una o varias pestañas, cada una con sus columnas. */
+/** CSV (que Excel abre) con las filas de una o varias pestañas, cada una con sus columnas (y la descripción al lado de la columna que la muestra). */
 export function toCsv(sections: [CorrelativaKind, CorrelationRow[]][]): Blob {
   const lines: string[][] = [];
   for (const [kind, rows] of sections) {
-    const fields = CORRELATIVA_COLUMNS[kind].map((column) => column.field);
+    const fields = CORRELATIVA_COLUMNS[kind].flatMap((column) => (column.descriptionField ? [column.field, column.descriptionField] : [column.field]));
     lines.push(fields.map((field) => EXPORT_HEADERS[field]));
     for (const row of rows) {
       const values = row as unknown as Record<string, unknown>;

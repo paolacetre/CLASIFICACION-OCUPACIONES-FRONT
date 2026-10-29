@@ -392,7 +392,8 @@
 }
 
 .ui-input-icon > .ui-input,
-.ui-input-icon > .ui-select {
+.ui-input-icon > .ui-select,
+.ui-input-icon > app-filter-combobox .fc-trigger {
   padding-left: 44px;
   background-color: var(--neutral-50);
   border-color: transparent;
@@ -797,11 +798,21 @@
   cursor: not-allowed;
 }
 
-/* Selector "N por página", al final de los controles de la paginación. */
+/* Selector "N por página", al final de los controles de la paginación (el desplegable común, más bajo). */
 .ui-page-size {
   width: auto;
-  min-height: 36px;
   margin-left: 8px;
+}
+
+.ui-page-size .fc-trigger {
+  min-height: 36px;
+}
+
+/* Desplegable común más bajo, para filas compactas (p. ej. «Opción» en Validación experta). */
+.ui-combo-sm .fc-trigger {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: calc(14px * var(--type-scale));
 }
 
 /* Tabla adaptable: pon `ui-table-responsive` en el `.ui-table-wrap` y
