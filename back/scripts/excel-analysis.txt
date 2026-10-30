@@ -1,0 +1,39 @@
+=== PESTAÑAS ENCONTRADAS ===
+  1. "Ocupaciones - C.N.O. (2)"
+  2. "Ocupaciones - C.N.O."
+  3. "Descripciones - C.N.O."
+  4. "Funciones - C.N.O."
+  5. "Denominaciones - C.N.O."
+  6. "Relacionadas - C.N.O."
+  7. "Habilidades - C.N.O."
+  8. "Conocimientos - C.N.O."
+  9. "Area_cualificacion"
+  10. "Area_desempeño"
+
+Pestañas con "ocupacion": Ocupaciones - C.N.O. (2), Ocupaciones - C.N.O.
+
+Pestaña "Ocupaciones - C.N.O (2)" encontrada como: "Ocupaciones - C.N.O. (2)"
+Total filas: 611
+Columnas: ["cod_ocupacion_cno","cod_desempeño_cno","cod_cualificacion_cno","nomb_ocupacion_cno","desc_ocupacion_cno","estado","fecha_inactivacion","fecha_registro"]
+Primera fila: {"cod_ocupacion_cno":"0011","cod_desempeño_cno":"0","cod_cualificacion_cno":"0","nomb_ocupacion_cno":"Miembros del poder ejecutivo y legislativo","desc_ocupacion_cno":"Definen, formulan y orientan la política del poder público en todos sus niveles; promulgan, modifican o derogan leyes y normas. Por lo general son elegidos por voto popular. ","estado":true,"fecha_inactivacion":"","fecha_registro":""}
+Segunda fila: {"cod_ocupacion_cno":"0012","cod_desempeño_cno":"0","cod_cualificacion_cno":"0","nomb_ocupacion_cno":"Personal directivo de la administración pública","desc_ocupacion_cno":"Planean, organizan, dirigen y controlan a través de otros directores, las principales actividades gubernamentales del orden nacional, departamental, municipal, entidades territoriales, consejos y comisiones; establecen directrices; vigilan la interpretaci","estado":true,"fecha_inactivacion":"","fecha_registro":""}
+
+Ocupaciones únicas: 0
+Ocupaciones con conocimientos: 0
+Máximo conocimientos por ocupación: 0
+
+=== Pestaña "Ocupaciones - C.N.O." ===
+Filas: 590
+Columnas: ["Código de la ocupación - C.N.O.","Nombre de la ocupación - C.N.O."]
+
+=== Pestaña "Conocimientos - C.N.O." ===
+Filas: 3001
+Conocimientos únicos: 70
+
+=== "Area_desempeño" ===
+Filas: 10
+Columnas: ["cod_desempeño_cno","nom_desempeño_cno","desc_desempeño_cno"]
+
+=== "Area_cualificacion" ===
+Filas: 10
+Columnas: ["cod_cualificacion_cno","niveles_cualificacion_cno","descripcion"]

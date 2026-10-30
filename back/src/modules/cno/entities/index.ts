@@ -1,0 +1,10 @@
+export { CnoAreaDesempeno } from './cno-area-desempeno.entity';
+export { CnoConocimiento } from './cno-conocimiento.entity';
+export { CnoFuncion } from './cno-funcion.entity';
+export { CnoNivelCualificacion } from './cno-nivel-cualificacion.entity';
+export { CnoOcupacion } from './cno-ocupacion.entity';
+export { CnoDenominacion } from './cno-denominacion.entity';
+export { CnoRegFunciones } from './cno-reg-funciones.entity';
+export { CnoRegHabilidad } from './cno-reg-habilidad.entity';
+export { CnoRegConocimiento } from './cno-reg-conocimiento.entity';
+export { CnoRelacionada } from './cno-relacionada.entity';

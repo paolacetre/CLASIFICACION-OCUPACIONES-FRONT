@@ -1,0 +1,47 @@
+CONSULTAS CNO Y CUOC
+====================
+
+Dos archivos de consultas SQL (PostgreSQL) sobre el esquema "clasificacion":
+
+  consultas_cno.sql   -> Clasificación Nacional de Ocupaciones (CNO)
+  consultas_cuoc.sql  -> Clasificación Única de Ocupaciones para Colombia (CUOC)
+
+Solo contienen SELECT: no modifican ni borran datos.
+
+Qué incluye cada archivo
+------------------------
+  - Resumen de registros por tabla
+  - Catálogos base (áreas, niveles y, en CUOC, la jerarquía de grupos)
+  - Listado de ocupaciones con su área y su nivel
+  - Ficha de una ocupación: denominaciones, funciones, conocimientos,
+    habilidades/destrezas, relacionadas/afines y correlativa CNO <-> CUOC
+  - Búsqueda por texto sin tildes
+  - Totales por ocupación, por área y por nivel
+  - Controles de calidad (ocupaciones sin denominaciones, sin funciones,
+    sin correlativa, denominaciones sin nombre)
+  - Copias creadas desde el módulo de Análisis
+
+Nota: las ocupaciones con id_comparativa distinto de NULL son copias hechas
+en Análisis; el catálogo original es id_comparativa IS NULL.
+
+Cómo ejecutarlas
+----------------
+Opción 1: psql (el archivo completo)
+  psql -U postgres -d clasificacion -f consultas_cno.sql
+
+  Con el proyecto en Docker:
+  docker exec -i clasificacion_bd psql -U postgres -d clasificacion < consultas_cno.sql
+
+  La ocupación que se consulta y el texto que se busca se cambian en estas
+  líneas al inicio de cada archivo:
+    \set ocup '0011'
+    \set texto 'gerente'
+
+Opción 2: pgAdmin, DBeaver u otro cliente gráfico
+  Estos programas no entienden las líneas que empiezan con "\set".
+  Copia solo la consulta que necesites y reemplaza :'ocup' o :'texto'
+  por el valor entre comillas simples. Ejemplo:
+    WHERE o.cod_ocupacion_cno = '0011'
+
+Requisito: la búsqueda por texto usa la extensión "unaccent" de PostgreSQL
+(CREATE EXTENSION IF NOT EXISTS unaccent;).

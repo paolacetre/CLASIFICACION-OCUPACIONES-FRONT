@@ -47,5 +47,3 @@ Thumbs.db
 # Respaldos locales (volcados de la base con hashes de contraseñas y copias del código)
 /respaldos
 
-# Backend: copia local del repo del equipo; este repositorio es solo el front
-/back

@@ -1,0 +1,43 @@
+# Node y artefactos
+node_modules
+dist
+coverage
+.cache
+.tmp
+*.tsbuildinfo
+
+# Git y CI
+.git
+.gitignore
+.gitattributes
+.github
+
+# Secretos
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE / SO
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+
+# No necesarios en la imagen
+scripts
+# ...salvo el runner de migraciones: la imagen de producción lo ejecuta al
+# arrancar para aplicar los .sql pendientes antes de servir (ver Dockerfile).
+!scripts/db-migrate.js
+*.ps1
+*.md
+documentos
+vercel.json
+api
+pgdata
+Dockerfile
+.dockerignore

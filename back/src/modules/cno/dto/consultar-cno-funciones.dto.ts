@@ -1,0 +1,78 @@
+import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+
+/** Campos por los que la tabla de funciones puede ordenarse. */
+export const ORDENES_CONSULTA_CNO_FUNC = ['descripcion', 'ocupacion', 'estado'] as const;
+export type OrdenConsultaCnoFunc = (typeof ORDENES_CONSULTA_CNO_FUNC)[number];
+
+/**
+ * Consulta de la pestaña "Funciones" de la pantalla CNO: texto + filtros
+ * (heredados de la ocupación dueña) + orden + paginación, resuelto en el
+ * servidor.
+ */
+export class ConsultarCnoFuncionesDto {
+  @ApiPropertyOptional({ description: 'Texto a buscar en la descripción de la función' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  q?: string;
+
+  @ApiPropertyOptional({ description: 'Nivel de cualificación exacto de la ocupación dueña' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  nivel?: string;
+
+  @ApiPropertyOptional({ description: 'Área de desempeño exacta de la ocupación dueña' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  area?: string;
+
+  @ApiPropertyOptional({ description: 'Estado (Activo/Inactivo)' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  estado?: string;
+
+  @ApiPropertyOptional({ description: 'Código CNO de la ocupación para filtrar' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  codOcupacion?: string;
+
+  @ApiPropertyOptional({ description: 'Número de página (1-indexado)', default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page: number = 1;
+
+  @ApiPropertyOptional({ description: 'Registros por página (máx. 500)', default: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  limit: number = 10;
+
+  @ApiPropertyOptional({ description: 'Campo de ordenamiento', enum: ORDENES_CONSULTA_CNO_FUNC, default: 'descripcion' })
+  @IsOptional()
+  @IsIn(ORDENES_CONSULTA_CNO_FUNC)
+  orden: OrdenConsultaCnoFunc = 'descripcion';
+
+  @ApiPropertyOptional({ description: 'Dirección del ordenamiento', enum: ['ASC', 'DESC'], default: 'ASC' })
+  @IsOptional()
+  @IsIn(['ASC', 'DESC'])
+  direccion: 'ASC' | 'DESC' = 'ASC';
+}
+
+/** Fila de la tabla de resultados de la pestaña Funciones. */
+export interface CnoFuncionResultado {
+  codigo: string;
+  descFuncionCno: string;
+  estado: string;
+  codOcupacion: string;
+  nombOcupacion: string;
+}

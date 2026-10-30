@@ -1,0 +1,13 @@
+export { CuocGranGrupo } from './cuoc-gran-grupo.entity';
+export { CuocSubgrupoPrincipal } from './cuoc-subgrupo-principal.entity';
+export { CuocSubgrupo } from './cuoc-subgrupo.entity';
+export { CuocGrupoPrimario } from './cuoc-grupo-primario.entity';
+export { CuocNivelCompetencia } from './cuoc-nivel-competencia.entity';
+export { CuocOcupacion } from './cuoc-ocupacion.entity';
+export { CuocDenominacion } from './cuoc-denominacion.entity';
+export { CuocFuncion } from './cuoc-funcion.entity';
+export { CuocAreaCualificacion } from './cuoc-area-cualificacion.entity';
+export { CuocConocimiento } from './cuoc-conocimiento.entity';
+export { CuocRegConocimiento } from './cuoc-reg-conocimiento.entity';
+export { CuocDestreza } from './cuoc-destreza.entity';
+export { CuocOcupacionAfin } from './cuoc-ocupacion-afin.entity';
